@@ -324,7 +324,7 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/nextjs,java,reactnative,react
 
-backend/application.yml
-backend/application.properties
-backend/.gradle
-backend/.idea
+application.yml
+application.properties
+.gradle
+.idea
