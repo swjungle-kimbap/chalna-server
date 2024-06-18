@@ -24,8 +24,8 @@ public class GlobalExceptionHandler {
         this.exceptions = Collections.unmodifiableMap(tempMap);
     }
 
-    @ExceptionHandler(GlobalException.class)
-    public ResponseEntity<CommonResponse<?>> customGlobalExceptionHandler(GlobalException e){
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CommonResponse<?>> customGlobalExceptionHandler(Exception e){
         if(exceptions.containsKey(e.getClass())){
             GlobalErrorCode errorCode = exceptions.get(e.getClass());
             return ResponseEntity.status(errorCode.getStatus()).body(CommonResponse.of(errorCode));

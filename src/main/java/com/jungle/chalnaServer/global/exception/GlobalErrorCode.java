@@ -9,8 +9,7 @@ import java.util.Set;
 
 @Getter
 public enum GlobalErrorCode {
-    UNEXPECTED_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"알 수 없는 오류가 발생했습니다.",Set.of()),
-    RUNTIME_ERROR(HttpStatus.INTERNAL_SERVER_ERROR,"서버 작업중 오류가 발생했습니다.",Set.of(GlobalException.class));
+    UNEXPECTED_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "알 수 없는 오류가 발생했습니다.", Set.of());
 
     private final HttpStatusCode status;
     private final String code;
