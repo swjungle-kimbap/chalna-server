@@ -1,16 +1,14 @@
 package com.jungle.chalnaServer.domain.member.service;
 
-import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberRequest;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import lombok.extern.slf4j.Slf4j;
+import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,11 +28,13 @@ public class MemberService {
         this.uploadDir = uploadDir;
     }
 
-    public MemberResponse updateMemberInfo(final Integer kakaoId, MemberRequest memberDto,  MultipartFile image) throws IOException {
+    public MemberResponse updateMemberInfo(final Integer kakaoId, MemberRequest memberDto, MultipartFile image) throws IOException {
 
         Member member = memberRepository.findByKakaoId(kakaoId)
                 .orElseThrow(MemberNotFoundException::new);
 
+        log.info("Updating member with ID: {}", kakaoId);
+        log.info("Received memberDto: {}", memberDto);
 
         // 이미지가 업로드된 경우에만 처리
         if (image != null && !image.isEmpty()) {
@@ -46,21 +46,20 @@ public class MemberService {
 
             // 파일 저장
             saveFile(image, filePath);
-            log.info("filePath ={}",filePath);
+            log.info("filePath ={}", filePath);
 
             // 파일 URL을 DB에 저장
             String fileUrl = "/uploads/" + saveFileName;
             member.updateProfileImageUrl(fileUrl);
-
         }
 
+        // null 값이 아닌 경우에만 업데이트
         if (memberDto.getUsername() != null) {
-            log.info("username = {}",memberDto.getUsername());
+            log.info("Updating username to: {}", memberDto.getUsername());
             member.updateUsername(memberDto.getUsername());
         }
-
         if (memberDto.getMessage() != null) {
-            log.info("message = {}", memberDto.getMessage());
+            log.info("Updating message to: {}", memberDto.getMessage());
             member.updateMessage(memberDto.getMessage());
         }
 
@@ -68,20 +67,19 @@ public class MemberService {
         log.info("Updated member: {}", member);
 
         return MemberResponse.of(member);
-
     }
 
-    // 파일 저장 이름
+    // 파일 저장 이름 생성
     private String createSaveFileName(String originImageName) {
-        String ext = extracExt(originImageName);
+        String ext = extractExt(originImageName);
         String uuid = UUID.randomUUID().toString();
-        return  uuid + "." +ext;
+        return uuid + "." + ext;
     }
 
-    // 확장자면
-    private String extracExt(String originImageName) {
+    // 확장자 추출
+    private String extractExt(String originImageName) {
         int pos = originImageName.lastIndexOf(".");
-        return  originImageName.substring(pos + 1);
+        return originImageName.substring(pos + 1);
     }
 
     // 파일 저장 메서드

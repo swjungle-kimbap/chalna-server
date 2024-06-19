@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @Getter
+@ToString
 @AllArgsConstructor
 @Builder
 public class MemberRequest {

@@ -26,6 +26,10 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  web:
+    resources:
+      static-locations: classpath:/static/,classpath:/static/uploads/,file:/opt/files/
+
 
 file:
-  upload-dir: src/main/resources/static/uploads
+  upload-dir: src/main/resources/static/uploads/
