@@ -1,8 +1,8 @@
-package com.jungle.chalnaServer.domain.member.auth.controller;
+package com.jungle.chalnaServer.domain.auth.controller;
 
-import com.jungle.chalnaServer.domain.member.auth.domain.dto.AuthRequest;
-import com.jungle.chalnaServer.domain.member.auth.domain.dto.AuthResponse;
-import com.jungle.chalnaServer.domain.member.auth.service.AuthService;
+import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
+import com.jungle.chalnaServer.domain.auth.service.AuthService;
+import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
