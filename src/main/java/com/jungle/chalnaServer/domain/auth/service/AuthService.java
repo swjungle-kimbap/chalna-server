@@ -1,9 +1,9 @@
-package com.jungle.chalnaServer.domain.member.auth.service;
+package com.jungle.chalnaServer.domain.auth.service;
 
-import com.jungle.chalnaServer.domain.member.auth.domain.dto.AuthRequest;
-import com.jungle.chalnaServer.domain.member.auth.domain.dto.AuthResponse;
+import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
+import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
+import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
-import com.jungle.chalnaServer.domain.member.auth.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.global.util.TokenService;
 import lombok.AllArgsConstructor;
