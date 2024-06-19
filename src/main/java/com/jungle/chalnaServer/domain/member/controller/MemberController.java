@@ -36,4 +36,10 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK,memberResponse,"Ok"));
     }
 
+    @GetMapping("/{kakaoId}")
+    public ResponseEntity<CommonResponse<?>> getMemberInfo(@PathVariable("kakaoId") final Integer kakaoId) {
+        MemberResponse memberResponse = memberService.getMemberInfo(kakaoId);
+        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK,memberResponse,"Ok"));
+    }
+
 }

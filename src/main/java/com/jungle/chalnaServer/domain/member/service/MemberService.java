@@ -89,4 +89,19 @@ public class MemberService {
         Files.createDirectories(path.getParent());
         Files.write(path, bytes);
     }
+
+
+    /* 사용자 정보를 조회하는 메서드 */
+    public MemberResponse getMemberInfo(final Integer kakaoId) {
+        Member member = memberRepository.findByKakaoId(kakaoId)
+                .orElseThrow(MemberNotFoundException::new);
+
+        log.info("사용자 정보 조회 성공");
+
+        /* 추후 토큰을 검사해서 해당 user의 사용자의 정보만 조회하도록 수정 */
+        MemberResponse memberResponse = MemberResponse.of(member);
+
+        return memberResponse;
+
+    }
 }
