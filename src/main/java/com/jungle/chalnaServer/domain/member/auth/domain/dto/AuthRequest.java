@@ -1,4 +1,4 @@
-package com.jungle.chalnaServer.domain.member.domain.dto;
+package com.jungle.chalnaServer.domain.member.auth.domain.dto;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
