@@ -1,10 +1,9 @@
 package com.jungle.chalnaServer.global.exception;
 
-import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
+import com.jungle.chalnaServer.domain.member.auth.exception.MemberNotFoundException;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.Set;
 

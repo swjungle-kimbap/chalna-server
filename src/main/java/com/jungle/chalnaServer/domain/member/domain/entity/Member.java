@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.domain.member.domain.entity;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.AuthRequest;
+import com.jungle.chalnaServer.domain.member.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

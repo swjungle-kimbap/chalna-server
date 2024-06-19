@@ -1,8 +1,8 @@
-package com.jungle.chalnaServer.domain.member.controller;
+package com.jungle.chalnaServer.domain.member.auth.controller;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.AuthRequest;
-import com.jungle.chalnaServer.domain.member.domain.dto.AuthResponse;
-import com.jungle.chalnaServer.domain.member.service.MemberService;
+import com.jungle.chalnaServer.domain.member.auth.domain.dto.AuthRequest;
+import com.jungle.chalnaServer.domain.member.auth.domain.dto.AuthResponse;
+import com.jungle.chalnaServer.domain.member.auth.service.AuthService;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
-public class MemberController {
+public class AuthController {
 
-    private final MemberService memberService;
+    private final AuthService memberService;
 
     @PostMapping("/signup")
     public ResponseEntity<CommonResponse<?>> signup(@RequestBody AuthRequest dto) {
