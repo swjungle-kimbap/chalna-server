@@ -33,6 +33,7 @@ public class AuthService {
             Member member = Member.builder()
                     .username(dto.username())
                     .kakaoId(dto.kakaoId())
+                    .profileImageUrl("/images/default_image.png")
                     .loginToken(loginToken)
                     .build();
 
