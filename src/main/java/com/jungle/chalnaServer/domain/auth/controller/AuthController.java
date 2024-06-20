@@ -8,6 +8,7 @@ import com.jungle.chalnaServer.global.auth.jwt.dto.CustomUserDetails;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,14 +37,14 @@ public class AuthController {
 
         Tokens tokens = memberService.login(dto);
 
-        response.setHeader(JwtService.AUTHORIZATION_HEADER, JwtService.BEARER_PREFIX + tokens.accessToken());
-        response.setHeader(JwtService.REFRESH_HEADER,JwtService.BEARER_PREFIX + tokens.refreshToken());
+        response.setHeader(JwtService.AUTHORIZATION_HEADER,tokens.accessToken());
+        response.setHeader(JwtService.REFRESH_HEADER,tokens.refreshToken());
 
 
         return CommonResponse.ok("로그인에 성공했습니다.");
     }
     @GetMapping("/test")
-    public String tokenTest(@AuthenticationPrincipal CustomUserDetails userDetails){
-        return userDetails.getUsername();
+    public String tokenTest(HttpServletRequest request){
+        return jwtService.getId(jwtService.resolveToken(request,JwtService.AUTHORIZATION_HEADER)).toString();
     }
 }

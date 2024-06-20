@@ -12,6 +12,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,7 +89,12 @@ public class JwtService {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-
+    public String resolveToken(HttpServletRequest request, String header) {
+        String token = request.getHeader(header);
+        if(token == null || token.trim().isEmpty())
+            return null;
+        return token.substring(7);
+    }
     public boolean isValidateToken(String token) {
         log.info(token);
         if(token == null || token.trim().isEmpty())

@@ -52,8 +52,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        String access = resolveToken(request, JwtService.AUTHORIZATION_HEADER);
-        String refresh = resolveToken(request, JwtService.REFRESH_HEADER);
+        String access = jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER);
+        String refresh = jwtService.resolveToken(request, JwtService.REFRESH_HEADER);
 
         if (!jwtService.isValidateToken(access)) {
             tokenInvalidException(response);
@@ -82,12 +82,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String resolveToken(HttpServletRequest request, String header) {
-        String token = request.getHeader(header);
-        if(token == null || token.trim().isEmpty())
-            return null;
-        return token.substring(7);
-    }
 
     private void tokenInvalidException(HttpServletResponse response) throws IOException {
         response.setStatus(HttpStatus.FORBIDDEN.value());
