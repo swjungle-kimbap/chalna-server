@@ -28,12 +28,12 @@ public class MemberService {
         this.uploadDir = uploadDir;
     }
 
-    public MemberResponse updateMemberInfo(final Integer kakaoId, MemberRequest memberDto, MultipartFile image) throws IOException {
+    public MemberResponse updateMemberInfo(Long id, MemberRequest memberDto, MultipartFile image) throws IOException {
 
-        Member member = memberRepository.findByKakaoId(kakaoId)
+        Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
-        log.info("Updating member with ID: {}", kakaoId);
+        log.info("Updating member with ID: {}", id);
         log.info("Received memberDto: {}", memberDto);
 
         // 이미지가 업로드된 경우에만 처리
@@ -92,8 +92,8 @@ public class MemberService {
 
 
     /* 사용자 정보를 조회하는 메서드 */
-    public MemberResponse getMemberInfo(final Integer kakaoId) {
-        Member member = memberRepository.findByKakaoId(kakaoId)
+    public MemberResponse getMemberInfo(Long id) {
+        Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
         log.info("사용자 정보 조회 성공");

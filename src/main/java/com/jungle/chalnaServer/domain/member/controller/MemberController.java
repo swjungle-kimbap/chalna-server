@@ -4,6 +4,8 @@ import com.jungle.chalnaServer.domain.member.domain.dto.MemberRequest;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
+import com.jungle.chalnaServer.global.util.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,27 +20,29 @@ import java.io.IOException;
 public class MemberController {
 
     private final MemberService memberService;
+    private final JwtService jwtService;
 
-
-    @PatchMapping("/{kakaoId}")
-    public CommonResponse<MemberResponse> updateMemberInfo(@PathVariable("kakaoId") final Integer kakaoId,
+    @PatchMapping
+    public CommonResponse<MemberResponse> updateMemberInfo(HttpServletRequest request,
                                                               @RequestParam(value = "username", required = false) String username,
                                                               @RequestParam(value = "message" , required = false) String message,
                                                               @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
-
+        Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
         MemberRequest memberDto = MemberRequest.builder()
                 .username(username)
                 .message(message)
                 .image(image)
                 .build();
 
-        MemberResponse memberResponse = memberService.updateMemberInfo(kakaoId, memberDto, image);
+        MemberResponse memberResponse = memberService.updateMemberInfo(id, memberDto, image);
         return CommonResponse.ok(memberResponse);
     }
 
-    @GetMapping("/{kakaoId}")
-    public CommonResponse<MemberResponse> getMemberInfo(@PathVariable("kakaoId") final Integer kakaoId) {
-        MemberResponse memberResponse = memberService.getMemberInfo(kakaoId);
+    @GetMapping
+    public CommonResponse<MemberResponse> getMemberInfo(HttpServletRequest request) {
+
+        Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
+        MemberResponse memberResponse = memberService.getMemberInfo(id);
         return CommonResponse.ok(memberResponse);
     }
 
