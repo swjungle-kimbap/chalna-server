@@ -28,11 +28,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CommonResponse<?>> customGlobalExceptionHandler(Exception e){
         if(exceptions.containsKey(e.getClass())){
             GlobalErrorCode errorCode = exceptions.get(e.getClass());
-            return ResponseEntity.status(errorCode.getStatus()).body(CommonResponse.of(errorCode));
+            return ResponseEntity.status(errorCode.getStatus()).body(CommonResponse.ok(errorCode));
         }
 
         log.error("Unexpected error occurred",e);
         GlobalErrorCode errorCode = GlobalErrorCode.UNEXPECTED_ERROR;
-        return ResponseEntity.status(errorCode.getStatus()).body(CommonResponse.of(errorCode));
+        return ResponseEntity.status(errorCode.getStatus()).body(CommonResponse.ok(errorCode));
     }
 }
