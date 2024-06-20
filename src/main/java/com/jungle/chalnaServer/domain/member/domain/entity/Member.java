@@ -28,7 +28,8 @@ public class Member extends BaseTimestampEntity {
 
     private String message;
 
-    private String profileImageUrl;
+    @Column(length = 256)
+    private String profileImageUrl = "/images/default_image.png";;
 
     @Column(nullable = false)
     private Integer kakaoId;

@@ -14,6 +14,7 @@ import org.springframework.web.servlet.resource.VersionResourceResolver;
 public class WebConfig implements WebMvcConfigurer {
 
     private final String UPLOADS_PATH = "file:src/main/resources/static/uploads/";
+    private final String IMAGES_PATH = "file:src/main/resources/static/images/";
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -22,6 +23,10 @@ public class WebConfig implements WebMvcConfigurer {
                 .resourceChain(true)
                 .addResolver(new VersionResourceResolver().addContentVersionStrategy("/**"));
 
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations(IMAGES_PATH)
+                .resourceChain(true)
+                .addResolver(new VersionResourceResolver().addContentVersionStrategy("/**"));
 
         registry.addResourceHandler("/apple-touch-icon.png")
                 .addResourceLocations(UPLOADS_PATH)
