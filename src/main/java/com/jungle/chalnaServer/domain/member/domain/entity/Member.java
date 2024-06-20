@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.member.domain.entity;
 
+import com.jungle.chalnaServer.domain.appsettings.domain.entity.MemberSetting;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Entity
@@ -42,6 +44,25 @@ public class Member extends BaseTimestampEntity {
 
     private String loginToken;
 
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private MemberSetting memberSetting;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.memberSetting == null) {
+            this.memberSetting = MemberSetting.builder()
+                    .member(this)
+                    .isAlarm(true)
+                    .isFriendAlarm(false)
+                    .isChatAlarm(true)
+                    .isTagAlarm(false)
+                    .interestTags(List.of())
+                    .alarmSound(true)
+                    .alarmVibration(true)
+                    .bluetooth(true)
+                    .build();
+        }
+    }
 
     public void update(AuthRequest dto) {
         this.loginToken = dto.getLoginToken();
