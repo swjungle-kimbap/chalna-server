@@ -3,14 +3,17 @@ package com.jungle.chalnaServer.domain.auth.controller;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.service.AuthService;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.global.auth.jwt.dto.CustomUserDetails;
+import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
+import com.jungle.chalnaServer.global.util.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,15 +22,28 @@ public class AuthController {
 
     private final AuthService memberService;
 
+    private final JwtService jwtService;
+
     @PostMapping("/signup")
-    public ResponseEntity<CommonResponse<?>> signup(@RequestBody AuthRequest dto) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public CommonResponse<AuthResponse> signup(@RequestBody AuthRequest.SIGNUP dto) {
         AuthResponse response = memberService.signup(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(CommonResponse.from(HttpStatus.CREATED,response,"created"));
+        return CommonResponse.from(HttpStatus.CREATED,response);
 }
 
     @PostMapping("/login")
-    public ResponseEntity<CommonResponse<?>> login(@RequestBody AuthRequest dto) {
-        String response = memberService.login(dto);
-        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.ok(response,"로그인 성공"));
+    public CommonResponse<String> login(@RequestBody AuthRequest.LOGIN dto, HttpServletResponse response) {
+
+        Tokens tokens = memberService.login(dto);
+
+        response.setHeader(JwtService.AUTHORIZATION_HEADER, JwtService.BEARER_PREFIX + tokens.accessToken());
+        response.setHeader(JwtService.REFRESH_HEADER,JwtService.BEARER_PREFIX + tokens.refreshToken());
+
+
+        return CommonResponse.ok("로그인에 성공했습니다.");
+    }
+    @GetMapping("/test")
+    public String tokenTest(@AuthenticationPrincipal CustomUserDetails userDetails){
+        return userDetails.getUsername();
     }
 }
