@@ -36,7 +36,9 @@ public class Member extends BaseTimestampEntity {
     @Column(nullable = false)
     private Integer kakaoId;
 
-    private String devicedId;
+    private String deviceId;
+
+    private String refreshToken;
 
     private String fcmToken;
 
@@ -64,10 +66,14 @@ public class Member extends BaseTimestampEntity {
         }
     }
 
-    public void update(AuthRequest dto) {
-        this.loginToken = dto.getLoginToken();
-        this.devicedId = dto.getDevicedId();
-        this.fcmToken = dto.getFcmToken();
+    public void updateInfo(String loginToken,String deviceId,String fcmToken) {
+        this.loginToken = loginToken;
+        this.deviceId = deviceId;
+        this.fcmToken = fcmToken;
+    }
+
+    public void updateRefreshToken(String refreshToken){
+        this.refreshToken = refreshToken;
     }
 
     public void updateUsername(String username) {

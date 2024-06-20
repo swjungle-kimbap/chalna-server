@@ -19,7 +19,6 @@ spring:
       port: 6379
       password:
 
-
   servlet:
     multipart:
       enabled: true
@@ -28,8 +27,12 @@ spring:
 
   web:
     resources:
-      static-locations: classpath:/static/,classpath:/static/uploads/,file:/opt/files/
-
+      static-locations: classpath:/static/,classpath:/static/uploads/,file:/opt/files/    
 
 file:
   upload-dir: src/main/resources/static/uploads/
+  
+jwt:
+  access-token-expiration-time: 600000
+  refresh-token-expiration-time: 604800000
+  secret: 2f2cbcfb5955e9f2ae796ee0988c3dbe15fb5446dc51df1f0244432b966b79de
