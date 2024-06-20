@@ -1,33 +1,45 @@
 package com.jungle.chalnaServer.domain.member.controller;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.AuthRequest;
-import com.jungle.chalnaServer.domain.member.domain.dto.AuthResponse;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberRequest;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
-@RequiredArgsConstructor
-@RequestMapping("/api/v1/auth")
+@AllArgsConstructor
+@RequestMapping("/api/v1/member")
 public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("/signup")
-    public ResponseEntity<CommonResponse<?>> signup(@RequestBody AuthRequest dto) {
-        AuthResponse response = memberService.signup(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(CommonResponse.from(HttpStatus.CREATED,response,"created"));
-}
 
-    @PostMapping("/login")
-    public ResponseEntity<CommonResponse<?>> login(@RequestBody AuthRequest dto) {
-        String response = memberService.login(dto);
-        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.ok(response,"로그인 성공"));
+    @PatchMapping("/{kakaoId}")
+    public ResponseEntity<CommonResponse<?>> updateMemberInfo(@PathVariable("kakaoId") final Integer kakaoId,
+                                                              @RequestParam(value = "username", required = false) String username,
+                                                              @RequestParam(value = "message" , required = false) String message,
+                                                              @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+
+        MemberRequest memberDto = MemberRequest.builder()
+                .username(username)
+                .message(message)
+                .image(image)
+                .build();
+
+        MemberResponse memberResponse = memberService.updateMemberInfo(kakaoId, memberDto, image);
+        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK,memberResponse,"Ok"));
     }
+
+    @GetMapping("/{kakaoId}")
+    public ResponseEntity<CommonResponse<?>> getMemberInfo(@PathVariable("kakaoId") final Integer kakaoId) {
+        MemberResponse memberResponse = memberService.getMemberInfo(kakaoId);
+        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK,memberResponse,"Ok"));
+    }
+
 }

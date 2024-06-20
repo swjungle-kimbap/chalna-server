@@ -1,10 +1,13 @@
 package com.jungle.chalnaServer.global.exception;
 
+import com.jungle.chalnaServer.domain.member.exception.FileStorageException;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.infra.fcm.exception.FCMTokenNotFoundException;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Set;
 
@@ -13,6 +16,8 @@ public enum GlobalErrorCode {
     UNEXPECTED_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "알 수 없는 오류가 발생했습니다.", Set.of()),
     MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당 회원을 찾을 수 없습니다.",Set.of(MemberNotFoundException.class)),
     FCM_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 회원의 토큰을 찾을 수 없습니다.", Set.of(FCMTokenNotFoundException.class));
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST,"올바르지 않은 입력 값입니다.",Set.of(HttpMessageNotReadableException.class,MethodArgumentNotValidException.class)),
+    FILE_STORAGE(HttpStatus.BAD_REQUEST,"저장할 디렉토리를 찾을 수 없습니다.",Set.of(FileStorageException.class));
 
     private final HttpStatusCode status;
     private final String code;
