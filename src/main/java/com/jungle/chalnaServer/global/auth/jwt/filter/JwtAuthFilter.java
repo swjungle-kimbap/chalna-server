@@ -34,11 +34,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final List<String> AUTHENTICATE_LIST = List.of(
             "/api/v1/auth/signup","/api/v1/auth/login"
     );
+    private static final List<String> AUTHENTICATE_PREFIX_LIST = List.of(
+            "/images/","/uploads/"
+    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info(request.getRequestURI());
-        if (AUTHENTICATE_LIST.contains(request.getRequestURI())) {
+
+        String uri = request.getRequestURI();
+        for (String prefix : AUTHENTICATE_PREFIX_LIST){
+            if (uri.startsWith(prefix)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+        }
+        if (AUTHENTICATE_LIST.contains(uri)) {
             filterChain.doFilter(request, response);
             return;
         }

@@ -21,7 +21,7 @@ public class MemberController {
 
 
     @PatchMapping("/{kakaoId}")
-    public ResponseEntity<CommonResponse<?>> updateMemberInfo(@PathVariable("kakaoId") final Integer kakaoId,
+    public CommonResponse<MemberResponse> updateMemberInfo(@PathVariable("kakaoId") final Integer kakaoId,
                                                               @RequestParam(value = "username", required = false) String username,
                                                               @RequestParam(value = "message" , required = false) String message,
                                                               @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
@@ -33,13 +33,13 @@ public class MemberController {
                 .build();
 
         MemberResponse memberResponse = memberService.updateMemberInfo(kakaoId, memberDto, image);
-        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK,memberResponse,"Ok"));
+        return CommonResponse.ok(memberResponse);
     }
 
     @GetMapping("/{kakaoId}")
-    public ResponseEntity<CommonResponse<?>> getMemberInfo(@PathVariable("kakaoId") final Integer kakaoId) {
+    public CommonResponse<MemberResponse> getMemberInfo(@PathVariable("kakaoId") final Integer kakaoId) {
         MemberResponse memberResponse = memberService.getMemberInfo(kakaoId);
-        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK,memberResponse,"Ok"));
+        return CommonResponse.ok(memberResponse);
     }
 
 }

@@ -19,11 +19,11 @@ public class AppSettingController {
     private final SettingService settingService;
 
     @PutMapping("/{kakaoId}")
-    public ResponseEntity<CommonResponse<?>> updateSettings(@PathVariable("kakaoId") final Integer id, @RequestBody SettingRequest dto) {
+    public CommonResponse<SettingResponse> updateSettings(@PathVariable("kakaoId") final Integer id, @RequestBody SettingRequest dto) {
 
         SettingResponse response = settingService.updateSettings(id,dto);
 
-        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK,response,"Ok"));
+        return CommonResponse.ok(response);
     }
 
 
