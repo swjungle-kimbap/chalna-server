@@ -2,6 +2,7 @@ package com.jungle.chalnaServer.domain.relation.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -9,7 +10,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Relation {
     @EmbeddedId
@@ -28,7 +28,9 @@ public class Relation {
     private LocalDateTime lastOverlapAt;
 
 
-
+    public Relation(RelationPK relationPK){
+        this.relationPK = relationPK;
+    }
     public void increaseOverlapCount(){
         this.overlapCount += 1;
         this.lastOverlapAt = LocalDateTime.now();
