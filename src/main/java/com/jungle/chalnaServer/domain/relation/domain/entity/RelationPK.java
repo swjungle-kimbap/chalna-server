@@ -16,4 +16,7 @@ public class RelationPK implements Serializable {
     private Long id;
 
     private Long otherId;
+    public RelationPK reverse(){
+        return new RelationPK(otherId, id);
+    }
 }

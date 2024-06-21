@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.relation.domain.entity;
 
+import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Relation {
+public class Relation extends BaseTimestampEntity {
     @EmbeddedId
     private RelationPK relationPK;
 
