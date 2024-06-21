@@ -6,10 +6,13 @@ import lombok.Getter;
 
 import java.util.List;
 
-@Getter
-@Builder
-@AllArgsConstructor
+
+
 public class MatchRequest {
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
     public static class Send {
         private List<String> receiverList;
         private String message;
