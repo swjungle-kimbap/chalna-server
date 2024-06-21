@@ -27,22 +27,22 @@ public class ChatRoomController {
 
     // 채팅방 목록 조회
     @GetMapping
-    public ResponseEntity<CommonResponse<?>> getChatRoomList() {
+    public CommonResponse<Map<String, Object>> getChatRoomList() {
         // member id 추가 필요.
         Long id = 1L;
         List<ChatRoomResponse> list = chatRoomService.getChatRoomList(id);
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("list", list);
-        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK, responseData, "OK"));
+        return CommonResponse.ok(responseData);
     }
 
     // 채팅 메시지 목록 조회
     @GetMapping("/message/{chatRoomId}")
-    public ResponseEntity<CommonResponse<?>> getChatRoomMessage(@PathVariable Long chatRoomId, @RequestParam LocalDateTime lastLeaveAt) {
+    public CommonResponse<Map<String, Object>> getChatRoomMessage(@PathVariable Long chatRoomId, @RequestParam LocalDateTime lastLeaveAt) {
         List<ChatMessageResponse> list = chatRoomService.getChatMessages(chatRoomId, lastLeaveAt);
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("list", list);
-        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.from(HttpStatus.OK, responseData, "OK"));
+        return CommonResponse.ok(responseData);
     }
 
     // 임시 api 채팅 방 만들기
