@@ -23,11 +23,16 @@ public class MatchNotification extends BaseTimestampEntity {
     private Long senderId;
     private Long receiverId;
     private String message;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    private MatchNotificationStatus status;
 
     @Column(name = "deleteAt")
     private LocalDateTime deleteAt;
 
-
-    //todo : update status + delete 날짜 기록 메서드 구현
+    
+    public void updateStatus(MatchNotificationStatus newStatus) {
+        this.status = newStatus;
+        this.deleteAt = LocalDateTime.now();
+    }
 }
