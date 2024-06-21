@@ -4,6 +4,7 @@ import com.jungle.chalnaServer.domain.member.exception.FileStorageException;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.relation.exception.RelationIdInvalidException;
 import com.jungle.chalnaServer.global.auth.jwt.exception.InvalidJwtTokenException;
+import com.jungle.chalnaServer.domain.settings.exception.TagsNotFoundException;
 import com.jungle.chalnaServer.infra.fcm.exception.FCMTokenNotFoundException;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,8 @@ public enum GlobalErrorCode {
     INVALID_TOKEN(HttpStatus.FORBIDDEN,"유효하지 않은 토큰입니다.",Set.of(InvalidJwtTokenException.class)),
     FCM_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 회원의 토큰을 찾을 수 없습니다.", Set.of(FCMTokenNotFoundException.class)),
     FILE_STORAGE(HttpStatus.BAD_REQUEST,"저장할 디렉토리를 찾을 수 없습니다.",Set.of(FileStorageException.class)),
-    RELATION_ID_INVALID(HttpStatus.BAD_REQUEST,"유효하지 않은 관계입니다.",Set.of(RelationIdInvalidException.class));
+    RELATION_ID_INVALID(HttpStatus.BAD_REQUEST,"유효하지 않은 관계입니다.",Set.of(RelationIdInvalidException.class)),
+    TAG_NOT_FOUND(HttpStatus.BAD_REQUEST,"삭제할 태그가 존재하지 않습니다.",Set.of(TagsNotFoundException.class));
 
     private final HttpStatusCode status;
     private final String code;

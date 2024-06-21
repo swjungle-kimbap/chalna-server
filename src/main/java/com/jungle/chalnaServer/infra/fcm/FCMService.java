@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class FCMService {
-    public void sendFCM(String fcmToken, FCMData fcmData) throws Exception{
+    public static void sendFCM(String fcmToken, FCMData fcmData) throws Exception{
 
         Message.Builder messageBuilder = Message.builder()
                 .setToken(fcmToken)
@@ -20,6 +20,5 @@ public class FCMService {
 
         String response = FirebaseMessaging.getInstance().send(message);
         System.out.println("Successfully sent message: " + response);
-
     }
 }

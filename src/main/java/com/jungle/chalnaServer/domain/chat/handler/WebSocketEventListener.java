@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +45,7 @@ public class WebSocketEventListener {
                 .id(chatRepository.makeMessageId())
                 .senderId(1) // 임시 사용자 정보.
                 .type(ChatMessage.MessageType.USER_ENTER)
+                .createdAt(LocalDateTime.now())
                 .build();
 
 

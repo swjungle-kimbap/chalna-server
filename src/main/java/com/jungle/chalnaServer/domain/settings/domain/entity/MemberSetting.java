@@ -1,6 +1,6 @@
-package com.jungle.chalnaServer.domain.appsettings.domain.entity;
+package com.jungle.chalnaServer.domain.settings.domain.entity;
 
-import com.jungle.chalnaServer.domain.appsettings.domain.dto.SettingRequest;
+import com.jungle.chalnaServer.domain.settings.domain.dto.SettingRequest;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
@@ -73,5 +73,22 @@ public class MemberSetting extends BaseTimestampEntity {
         }
     }
 
+    public void addInterestTag(String tag) {
+        if (this.interestTags != null && !this.interestTags.contains(tag)) {
+            this.interestTags.add(tag);
+        }
+    }
+
+    public void removeInterestTag(String tag) {
+        if (this.interestTags != null) {
+            this.interestTags.remove(tag);
+        }
+    }
+
+    public void clearInterestTags() {
+        if (this.interestTags != null) {
+            this.interestTags.clear();
+        }
+    }
 
 }
