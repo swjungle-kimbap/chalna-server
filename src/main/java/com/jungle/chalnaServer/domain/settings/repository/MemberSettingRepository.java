@@ -1,6 +1,6 @@
-package com.jungle.chalnaServer.domain.appsettings.repository;
+package com.jungle.chalnaServer.domain.settings.repository;
 
-import com.jungle.chalnaServer.domain.appsettings.domain.entity.MemberSetting;
+import com.jungle.chalnaServer.domain.settings.domain.entity.MemberSetting;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
