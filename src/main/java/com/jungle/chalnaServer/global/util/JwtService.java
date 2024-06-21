@@ -96,7 +96,6 @@ public class JwtService {
         return token.substring(7);
     }
     public boolean isValidateToken(String token) {
-        log.info(token);
         if(token == null || token.trim().isEmpty())
             return false;
         Long id = getId(token);
