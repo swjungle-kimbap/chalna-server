@@ -1,12 +1,16 @@
 package com.jungle.chalnaServer.domain.relation.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Relation {
     @EmbeddedId
     private RelationPK relationPK;
@@ -21,12 +25,12 @@ public class Relation {
     @Column(nullable = false)
     private Integer overlapCount = 0;
 
-    private LocalDateTime overlapCountTimestamp;
+    private LocalDateTime lastOverlapAt;
 
 
 
     public void increaseOverlapCount(){
         this.overlapCount += 1;
-        this.overlapCountTimestamp = LocalDateTime.now();
+        this.lastOverlapAt = LocalDateTime.now();
     }
 }
