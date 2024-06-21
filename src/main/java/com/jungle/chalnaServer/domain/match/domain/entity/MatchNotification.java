@@ -35,4 +35,8 @@ public class MatchNotification extends BaseTimestampEntity {
         this.status = newStatus;
         this.deleteAt = LocalDateTime.now();
     }
+
+    public LocalDateTime getCreatedAt() {
+        return super.getCreatedAt();
+    }
 }
