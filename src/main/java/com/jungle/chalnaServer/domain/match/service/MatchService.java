@@ -10,11 +10,13 @@ import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,7 +30,7 @@ public class MatchService {
         this.matchNotiRepository = matchNotiRepository;
     }
 
-    public MatchResponse matchMessageSend(MatchRequest.Send dto, Long senderId) throws Exception {
+    public Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId) throws Exception {
         Member member = memberRepository.findById(senderId)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -56,13 +58,14 @@ public class MatchService {
                     .receiverId(receiverId)
                     .message(dto.getMessage())
                     .status(MatchNotificationStatus.SEND)
+                    .deleteAt(LocalDateTime.now().plusMinutes(4L))
                     .build();
 
             matchNotiRepository.save(matchNotification);
             FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString()));
         }
 
-        return MatchResponse.of("인연 보내기 성공");
+        return MatchResponse.MatchMessageSend("인연 보내기 성공");
     }
 
 }
