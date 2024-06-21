@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.global.exception;
 
+import com.jungle.chalnaServer.domain.match.exception.NotificationNotFoundException;
 import com.jungle.chalnaServer.domain.member.exception.FileStorageException;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.settings.exception.TagsNotFoundException;
@@ -20,7 +21,8 @@ public enum GlobalErrorCode {
     INVALID_TOKEN(HttpStatus.FORBIDDEN,"유효하지 않은 토큰입니다.",Set.of()),
     FCM_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 회원의 토큰을 찾을 수 없습니다.", Set.of(FCMTokenNotFoundException.class)),
     FILE_STORAGE(HttpStatus.BAD_REQUEST,"저장할 디렉토리를 찾을 수 없습니다.",Set.of(FileStorageException.class)),
-    TAG_NOT_FOUND(HttpStatus.BAD_REQUEST,"삭제할 태그가 존재하지 않습니다.",Set.of(TagsNotFoundException.class));
+    TAG_NOT_FOUND(HttpStatus.BAD_REQUEST,"삭제할 태그가 존재하지 않습니다.",Set.of(TagsNotFoundException.class)),
+    NOTIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당 메시지를 찾을 수 없습니다.", Set.of(NotificationNotFoundException.class));
 
     private final HttpStatusCode status;
     private final String code;
