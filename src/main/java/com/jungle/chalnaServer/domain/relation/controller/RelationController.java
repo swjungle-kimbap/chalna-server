@@ -6,10 +6,7 @@ import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -21,5 +18,10 @@ public class RelationController {
     @GetMapping("/{otherId}")
     public CommonResponse<RelationResponse> getRelation(@AuthUserId final Long id, @PathVariable final Long otherId) {
         return CommonResponse.ok(relationService.findByOtherId(id, otherId));
+    }
+
+    @PostMapping("/{otherId}")
+    public CommonResponse<RelationResponse> overLap(@AuthUserId final Long id, @PathVariable final Long otherId) {
+        return CommonResponse.ok(relationService.findAndIncreaseOverlap(id, otherId));
     }
 }
