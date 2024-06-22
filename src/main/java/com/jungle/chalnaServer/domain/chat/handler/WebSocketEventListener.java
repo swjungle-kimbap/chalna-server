@@ -40,16 +40,29 @@ public class WebSocketEventListener {
         chatRoomSubscriptions.computeIfAbsent(chatRoomId, k -> new CopyOnWriteArraySet<>()).add(sessionId);
         sessionChatRoomMap.put(sessionId, chatRoomId);
 
+        Long memberId = (Long) headerAccessor.getSessionAttributes().get("memberId");
+        Long messageId = chatRepository.makeMessageId();
+        LocalDateTime now = LocalDateTime.now();
+
+
         // 이 방에 사용자가 입장했다는 걸 알려주기.
         ChatMessageResponse chatMessage = ChatMessageResponse.builder()
-                .id(chatRepository.makeMessageId())
-                .senderId(1) // 임시 사용자 정보.
+                .id(messageId)
+                .content("다른 사용자가 입장했습니다.")
+                .senderId(memberId)
                 .type(ChatMessage.MessageType.USER_ENTER)
-                .createdAt(LocalDateTime.now())
+                .status(true)
+                .createdAt(now)
                 .build();
 
 
         messagingTemplate.convertAndSend("/topic/" + chatRoomId, chatMessage);
+
+        ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.USER_ENTER, memberId,
+                Long.parseLong(chatRoomId), "다른 사용자가 입장했습니다.", true,
+                now, now);
+
+        chatRepository.saveMessage(message);
 
         System.out.println("session Connected : " + sessionId);
     }
@@ -74,8 +87,8 @@ public class WebSocketEventListener {
 
     }
 
-    public Integer getConnectedCount(String chatRoomId) {
-        return chatRoomSubscriptions.getOrDefault(chatRoomId, new CopyOnWriteArraySet<>()).size();
+    public Integer getConnectedCount(Long chatRoomId) {
+        return chatRoomSubscriptions.getOrDefault(chatRoomId.toString(), new CopyOnWriteArraySet<>()).size();
     }
 
 }

@@ -28,7 +28,7 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
 
     private static final String[] AUTHENTICATE_WHITELIST = {
-            "/api/v1/auth/**","/images/**","/uploads/**","/health-check"
+            "/api/v1/auth/**","/images/**","/uploads/**","/health-check", "/ws/**"
     };
 
     @Bean

@@ -32,20 +32,27 @@ public class ChatRepository {
         return redisTemplate.opsForValue().increment(MESSAGE_ID_KEY, 1);
     }
 
-    public List<ChatMessage> getMessagesAfterUpdateDate(Long chatRoomId, LocalDateTime updateDate) {
+    public List<ChatMessage> getMessagesAfterUpdateDate(Long memberId, Long chatRoomId, LocalDateTime updateDate) {
         List<ChatMessage> messages = new ArrayList<>();
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
+        LocalDateTime now = LocalDateTime.now();
 
         // Redis List의 길이 구하기
         Long listSize = redisTemplate.opsForList().size(roomKey);
         if( listSize != null && listSize > 0 ) {
             List<Object> rawMessages = redisTemplate.opsForList().range(roomKey, 0, listSize-1);
 
-            for(Object rawMessage : rawMessages) {
+            for (int i = 0; i < rawMessages.size(); i++) {
+                Object rawMessage = rawMessages.get(i);
                 ChatMessage message = objectMapper.convertValue(rawMessage, ChatMessage.class);
+
                 if (message.getUpdatedAt() != null && message.getUpdatedAt().isAfter(updateDate)) {
-                    message.setStatus(false);
-                    message.setUpdatedAt(LocalDateTime.now());
+                    if (!message.getSenderId().equals(memberId)) {
+                        message.setStatus(true);
+                        message.setUpdatedAt(now);
+                        redisTemplate.opsForList().set(roomKey, i, objectMapper.convertValue(message, Object.class));
+                    }
+
                     messages.add(message);
                 }
             }

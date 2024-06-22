@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 public class ChatMessage {
     private Long id;
     private MessageType type;
-    private Integer senderId;
-    private Integer chatRoomId;
+    private Long senderId;
+    private Long chatRoomId;
     private String content;
     private Boolean status; // 읽음 여부(True: 안읽음, False: 읽음)
 
@@ -33,7 +33,7 @@ public class ChatMessage {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    public ChatMessage(Long id, MessageType type, Integer senderId, Integer chatRoomId, String content, Boolean status,LocalDateTime createdAt, LocalDateTime updatedAt){
+    public ChatMessage(Long id, MessageType type, Long senderId, Long chatRoomId, String content, Boolean status,LocalDateTime createdAt, LocalDateTime updatedAt){
         this.id = id;
         this.type = type;
         this.senderId = senderId;
@@ -43,18 +43,6 @@ public class ChatMessage {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
-
-//    @JsonCreator
-//    public ChatMessage(@JsonProperty("id") Long id, @JsonProperty("type") MessageType type,
-//                       @JsonProperty("senderId") Integer senderId, @JsonProperty("chatRoomId") Integer chatRoomId,
-//                       @JsonProperty("content") String content, @JsonProperty("status") Boolean status){
-//        this.id = id;
-//        this.type = type;
-//        this.senderId = senderId;
-//        this.chatRoomId = chatRoomId;
-//        this.content = content;
-//        this.status = status;
-//    }
 
     public enum MessageType {
         CHAT, // 그냥 메시지

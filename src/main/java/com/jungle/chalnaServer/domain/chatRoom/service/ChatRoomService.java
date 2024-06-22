@@ -41,29 +41,23 @@ public class ChatRoomService {
         for (ChatRoomMember chatroomMember : chatroomMembers) {
             ChatRoom chatRoom = chatroomMember.getChatRoom();
             ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId());
-            log.info("1");
             List<MemberInfo> memberInfos = chatRoom.getMembers().stream()
                     .map(member -> {
-                        log.info("2");
                         Member memberEntity = memberRepository.findById(member.getMemberId()).orElse(null);
-                        log.info("3");
                         return new MemberInfo(
                                 member.getMemberId(),
                                 memberEntity != null ? memberEntity.getUsername() : null
                         );
                     })
                     .collect(Collectors.toList());
-            log.info("4");
             ChatRoomResponse apply = new ChatRoomResponse(chatRoom, memberInfos, new ChatMessageResponse(recentMessage));
-            log.info("5");
             list.add(apply);
-            log.info("6");
         } return list;
     }
 
     // 채팅방 메시지 요청
-    public List<ChatMessageResponse> getChatMessages(Long chatRoomId, LocalDateTime lastLeaveAt) {
-        return chatRepository.getMessagesAfterUpdateDate(chatRoomId, lastLeaveAt).stream()
+    public List<ChatMessageResponse> getChatMessages(Long memberId, Long chatRoomId, LocalDateTime lastLeaveAt) {
+        return chatRepository.getMessagesAfterUpdateDate(memberId, chatRoomId, lastLeaveAt).stream()
                 .map(message -> {
                     ChatMessageResponse chatMessageResponse = new ChatMessageResponse(message);
                     return chatMessageResponse;

@@ -26,15 +26,15 @@ public class ChatService {
     private WebSocketEventListener webSocketEventListener;
 
 
-    public void sendMessage(String roomId, ChatMessageRequest requestMessage) {
+    public void sendMessage(Long memberId, Long roomId, ChatMessageRequest requestMessage) {
         Long id = chatRepository.makeMessageId();
-        Integer senderId = 1; // 임시 사용자 ID, 추후 사용자 정보 가져와서 수정해야 함.
+        Long senderId = memberId;
         LocalDateTime now = LocalDateTime.now();
         Boolean status = true;
         // push 알림 보내기. 채팅룸에 멤버 정보를 확인해서 다른 멤버가 채팅방에 없는 경우 알림 보내기
         if (webSocketEventListener.getConnectedCount(roomId) == 1){
             log.info("send push message");
-            status = false;
+                status = false;
             // push 메시지 보내기
         }
 
@@ -53,7 +53,7 @@ public class ChatService {
 
         // Redis에 메시지 저장
         ChatMessage message = new ChatMessage(id, requestMessage.getType(), senderId,
-                Integer.parseInt(roomId), requestMessage.getContent(),  status,
+                roomId, requestMessage.getContent(), status,
                 now, now);
 
         chatRepository.saveMessage(message);

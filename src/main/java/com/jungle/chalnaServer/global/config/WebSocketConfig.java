@@ -1,6 +1,9 @@
 package com.jungle.chalnaServer.global.config;
 
+import com.jungle.chalnaServer.domain.chat.handler.Stomphandler;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -8,7 +11,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @EnableWebSocketMessageBroker
 @Configuration
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final Stomphandler stomphandler;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) { // stomp end point 등록
@@ -22,4 +28,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app");  // Client에서 SEND 요청을 처리
         registry.enableSimpleBroker("/topic");  // SimpleBroker의 기능과 외부 Message Broker에 메세지를 전달하는 기능
     }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(stomphandler);
+    }
+
 }
