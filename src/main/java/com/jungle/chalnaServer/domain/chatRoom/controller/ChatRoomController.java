@@ -1,6 +1,7 @@
 package com.jungle.chalnaServer.domain.chatRoom.controller;
 
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
+import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomRequest;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.service.ChatRoomService;
@@ -50,13 +51,10 @@ public class ChatRoomController {
 
     // 임시 api 채팅 방 만들기
     @PostMapping
-    public void makeChatRoom() {
-        List<Long> memberIdList = new ArrayList<Long>();
-        memberIdList.add(1L);
-        memberIdList.add(2L);
+    public void makeChatRoom(@RequestBody ChatRoomRequest chatRoomRequest) {
+        List<Long> memberIdList = chatRoomRequest.getMemberIdList();
         chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, 2, memberIdList);
     }
-
 
 
     // 채팅방 나가기
