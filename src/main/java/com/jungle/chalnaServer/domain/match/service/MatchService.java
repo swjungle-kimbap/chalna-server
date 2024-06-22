@@ -1,5 +1,7 @@
 package com.jungle.chalnaServer.domain.match.service;
 
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.service.ChatRoomService;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
@@ -30,11 +32,13 @@ public class MatchService {
     private final MemberRepository memberRepository;
     private final MatchNotificationRepository matchNotiRepository;
     private final ChatRoomService chatRoomService;
+    private final ChatRepository chatRepository;
 
-    public MatchService(MemberRepository memberRepository, MatchNotificationRepository matchNotiRepository, ChatRoomService chatRoomService) {
+    public MatchService(MemberRepository memberRepository, MatchNotificationRepository matchNotiRepository, ChatRoomService chatRoomService, ChatRepository chatRepository) {
         this.memberRepository = memberRepository;
         this.matchNotiRepository = matchNotiRepository;
         this.chatRoomService = chatRoomService;
+        this.chatRepository = chatRepository;
     }
 
 
@@ -88,6 +92,7 @@ public class MatchService {
 
         if (matchNotification.getStatus() != SEND) return MatchResponse.MatchReject("이미 처리된 요청입니다.");
 
+        // matchNotification 저장
         matchNotification.updateStatus(MatchNotificationStatus.ACCEPT);
         matchNotiRepository.save(matchNotification);
 
@@ -98,6 +103,19 @@ public class MatchService {
         memberIdList.add(matchNotification.getReceiverId());
         Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, 2, memberIdList);
 
+        // Redis 저장
+        Long chatId = chatRepository.makeMessageId();
+
+        ChatMessage message = new ChatMessage(chatId,
+                ChatMessage.MessageType.CHAT,
+                matchNotification.getSenderId(),
+                chatRoomId,
+                matchNotification.getMessage(),
+                true,
+                LocalDateTime.now(),
+                LocalDateTime.now());
+
+        chatRepository.saveMessage(message);
         return MatchResponse.MatchReject(Long.toString(chatRoomId));
     }
 
