@@ -1,0 +1,132 @@
+package com.jungle.chalnaServer.domain.match.service;
+
+import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chatRoom.service.ChatRoomService;
+import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
+import com.jungle.chalnaServer.domain.match.domain.dto.MatchResponse;
+import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotification;
+import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus;
+import com.jungle.chalnaServer.domain.match.exception.NotificationNotFoundException;
+import com.jungle.chalnaServer.domain.match.repository.MatchNotificationRepository;
+import com.jungle.chalnaServer.domain.member.domain.entity.Member;
+import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
+import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.infra.fcm.FCMService;
+import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus.ACCEPT;
+import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus.SEND;
+
+@Service
+public class MatchService {
+    private final MemberRepository memberRepository;
+    private final MatchNotificationRepository matchNotiRepository;
+    private final ChatRoomService chatRoomService;
+
+    public MatchService(MemberRepository memberRepository, MatchNotificationRepository matchNotiRepository, ChatRoomService chatRoomService) {
+        this.memberRepository = memberRepository;
+        this.matchNotiRepository = matchNotiRepository;
+        this.chatRoomService = chatRoomService;
+    }
+
+
+    public Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId) throws Exception {
+        Member member = memberRepository.findById(senderId)
+                .orElseThrow(MemberNotFoundException::new);
+
+        List<String> receiverList = dto.getReceiverList();
+        List<String> interestTag = dto.getInterestTag(); // tag 처리 추후 보완
+
+        System.out.println(receiverList.size());
+        List<Long> receiverIds = receiverList.stream()
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+
+        System.out.println(receiverIds.size());
+        List<Member> validReceivers = receiverIds.stream()
+                .map(id -> memberRepository.findById(id).orElse(null))
+                //.filter(receiver -> receiver != null && receiver.getFcmToken() != null && !receiver.getFcmToken().isEmpty())
+                .collect(Collectors.toList());
+
+        System.out.println(validReceivers.size());
+
+        int cnt = 0;
+        for (Member receiver : validReceivers) {
+            cnt++;
+            Long receiverId = receiver.getId();
+            String fcmToken = receiver.getFcmToken();
+            System.out.println(receiverId);
+
+            MatchNotification matchNotification = MatchNotification.builder()
+                    .senderId(senderId)
+                    .receiverId(receiverId)
+                    .message(dto.getMessage())
+                    .status(MatchNotificationStatus.SEND)
+                    .deleteAt(LocalDateTime.now().plusMinutes(10L))
+                    .build();
+
+            matchNotiRepository.save(matchNotification);
+
+            FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString()));
+        }
+        System.out.println(cnt);
+
+        return MatchResponse.MatchMessageSend("인연 보내기 성공");
+    }
+
+    public Map<String, String> matchAccept(Long notificationId) {
+        MatchNotification matchNotification = matchNotiRepository.findById(notificationId)
+                .orElseThrow(NotificationNotFoundException::new);
+
+        if (matchNotification.getStatus() != SEND) return MatchResponse.MatchReject("이미 처리된 요청입니다.");
+
+        matchNotification.updateStatus(MatchNotificationStatus.ACCEPT);
+        matchNotiRepository.save(matchNotification);
+
+        if (matchNotification.getStatus() != ACCEPT) return MatchResponse.MatchReject("수락 처리 오류 입니다.");
+
+        List<Long> memberIdList = new ArrayList<>();
+        memberIdList.add(matchNotification.getSenderId());
+        memberIdList.add(matchNotification.getReceiverId());
+        Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, 2, memberIdList);
+
+        return MatchResponse.MatchReject(Long.toString(chatRoomId));
+    }
+
+    public Map<String, String> matchReject(Long notificationId) {
+        MatchNotification matchNotification = matchNotiRepository.findById(notificationId)
+                .orElseThrow(NotificationNotFoundException::new);
+
+        if (matchNotification.getStatus() != SEND) return MatchResponse.MatchReject("이미 처리된 요청입니다.");
+
+        matchNotification.updateStatus(MatchNotificationStatus.REJECT);
+        matchNotiRepository.save(matchNotification);
+
+        return MatchResponse.MatchReject("요청이 처리되었습니다.");
+    }
+
+
+    public List<Map<String, String>> matchList(Long receiverId) {
+        List<MatchNotification> notifications = matchNotiRepository.findByReceiverId(receiverId);
+
+        return notifications.stream()
+                .filter(notification -> notification.getDeleteAt() == null || notification.getDeleteAt().isAfter(LocalDateTime.now()))
+                .map(notification -> {
+                    Map<String, String> map = Map.of(
+                            "senderId", notification.getSenderId().toString(),
+                            "message", notification.getMessage(),
+                            "createAt", notification.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                    );
+                    return map;
+                })
+                .collect(Collectors.toList());
+    }
+}
