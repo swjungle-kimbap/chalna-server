@@ -17,13 +17,13 @@ public class ChatMessageResponse {
     Long id;
     ChatMessage.MessageType type;
     String content;
-    Integer senderId;
+    Long senderId;
     Boolean status;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime createdAt;
 
-    public ChatMessageResponse(Long id, ChatMessage.MessageType type, String content, Integer senderId, Boolean status,LocalDateTime createdAt) {
+    public ChatMessageResponse(Long id, ChatMessage.MessageType type, String content, Long senderId, Boolean status,LocalDateTime createdAt) {
         this.id = id;
         this.type = type;
         this.content = content;
