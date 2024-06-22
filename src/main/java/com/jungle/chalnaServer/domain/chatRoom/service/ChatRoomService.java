@@ -73,7 +73,7 @@ public class ChatRoomService {
 
     // 채팅방 만들기
     @Transactional
-    public Boolean makeChatRoom(ChatRoom.ChatRoomType type, Integer memberCount, List<Long> memberIdList) {
+    public Long makeChatRoom(ChatRoom.ChatRoomType type, Integer memberCount, List<Long> memberIdList) {
         ChatRoom chatRoom = new ChatRoom(type, memberCount);
         chatRoomRepository.save(chatRoom);
 
@@ -82,6 +82,6 @@ public class ChatRoomService {
             chatRoomMemberRepository.save(chatRoomMember);
         }
 
-        return true;
+        return chatRoom.getId();
     }
 }
