@@ -6,10 +6,16 @@ import com.jungle.chalnaServer.domain.match.domain.dto.MatchResponse;
 import com.jungle.chalnaServer.domain.match.service.MatchService;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+import static java.lang.Long.parseLong;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,12 +25,27 @@ public class MatchController {
     private final MatchService matchService;
     private final JwtService jwtService;
 
+    @GetMapping("/match")
+    public CommonResponse<List<Map<String, String>>> matchMessageList(HttpServletRequest request) {
+        return CommonResponse.from(HttpStatus.OK, matchService.matchList(jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER))));
+    }
     @PostMapping("/match")
-    public CommonResponse<MatchResponse> matchMessageSend(@RequestBody MatchRequest.Send dto, @RequestHeader("Authorization") String authorizationHeader) throws Exception {
+    public CommonResponse<Map<String, String>> matchMessageSend(@RequestBody MatchRequest.Send dto, HttpServletRequest request) throws Exception {
         //todo: requestDto header의 loginToken, receiver userId 검증
         //todo: response로 돌아오는 저장한 receiver userId 개수 requestDto receiver와 비교하여 성공 여부 검증
-        String token = authorizationHeader.replace(JwtService.BEARER_PREFIX, "").trim();
-        MatchResponse response = matchService.matchMessageSend(dto, jwtService.getId(token));
-        return CommonResponse.from(HttpStatus.CREATED, response);
+        String token = jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER);
+        Long senderId = jwtService.getId(token);
+
+        return CommonResponse.from(HttpStatus.CREATED, matchService.matchMessageSend(dto, senderId));
+    }
+
+    @PostMapping("/match/accept/{notificationId}")
+    public CommonResponse<Map<String, String>> matchAccept(@PathVariable("notificationId") String notificationId) {
+        return CommonResponse.from(HttpStatus.OK, matchService.matchAccept(Long.parseLong(notificationId)));
+    }
+
+    @PutMapping("/match/reject/{notificationId}")
+    public CommonResponse<Map<String, String>> matchReject(@PathVariable("notificationId") String notificationId) {
+        return CommonResponse.from(HttpStatus.OK, matchService.matchReject(Long.parseLong(notificationId)));
     }
 }

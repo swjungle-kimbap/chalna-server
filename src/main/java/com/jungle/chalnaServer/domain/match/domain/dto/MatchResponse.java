@@ -11,16 +11,24 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 public class MatchResponse {
-    private Object data;
-
-
-    public static MatchResponse of(String message) {
+    public static Map<String, String> MatchMessageSend(String message) {
         Map<String, String> messageMap = new HashMap<>();
         messageMap.put("message", message);
 
-        return MatchResponse.builder()
-                .data(messageMap)
-                .build();
+        return messageMap;
     }
 
+    public static Map<String, String> MatchReject(String message) {
+        Map<String, String> messageMap = new HashMap<>();
+        messageMap.put("message", message);
+
+        return messageMap;
+    }
+
+    public static Map<String, String> MatchAccept(String chatRoomId) {
+        Map<String, String> messageMap = new HashMap<>();
+        messageMap.put("chatRoomId", chatRoomId);
+
+        return messageMap;
+    }
 }
