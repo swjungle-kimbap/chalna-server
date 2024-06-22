@@ -1,8 +1,10 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   datasource:
-    url: jdbc:postgresql://localhost:5432/chalna
-    username: chalna
-    password: 1q2w3e4r
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -15,8 +17,8 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password:
 
   servlet:
@@ -27,12 +29,12 @@ spring:
 
   web:
     resources:
-      static-locations: classpath:/static/,classpath:/static/uploads/,file:/opt/files/    
+      static-locations: classpath:/static/,classpath:/static/uploads/,file:/opt/files/
 
 file:
   upload-dir: src/main/resources/static/uploads/
-  
+
 jwt:
   access-token-expiration-time: 600000
   refresh-token-expiration-time: 604800000
-  secret: 2f2cbcfb5955e9f2ae796ee0988c3dbe15fb5446dc51df1f0244432b966b79de
+  secret: ${JWT_SECRET}
