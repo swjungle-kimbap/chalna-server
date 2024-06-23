@@ -47,11 +47,4 @@ public class Relation extends BaseTimestampEntity {
         this.isBlocked = isBlocked;
     }
 
-    public void updateFriendStatus(FriendStatus friendStatus) {
-        this.friendStatus = friendStatus;
-    }
-
-    public void updateIsBlocked(boolean isBlocked){
-        this.isBlocked = isBlocked;
-    }
 }
