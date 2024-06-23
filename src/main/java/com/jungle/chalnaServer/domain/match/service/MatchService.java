@@ -13,8 +13,11 @@ import com.jungle.chalnaServer.domain.match.repository.MatchNotificationReposito
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
+import com.jungle.chalnaServer.domain.relation.service.RelationService;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,62 +31,45 @@ import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificati
 import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus.SEND;
 
 @Service
+@RequiredArgsConstructor
 public class MatchService {
     private final MemberRepository memberRepository;
     private final MatchNotificationRepository matchNotiRepository;
     private final ChatRoomService chatRoomService;
     private final ChatRepository chatRepository;
-
-    public MatchService(MemberRepository memberRepository, MatchNotificationRepository matchNotiRepository, ChatRoomService chatRoomService, ChatRepository chatRepository) {
-        this.memberRepository = memberRepository;
-        this.matchNotiRepository = matchNotiRepository;
-        this.chatRoomService = chatRoomService;
-        this.chatRepository = chatRepository;
-    }
-
+    private final RelationService relationService;
 
     public Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId) throws Exception {
         Member member = memberRepository.findById(senderId)
                 .orElseThrow(MemberNotFoundException::new);
 
-        List<String> receiverList = dto.getReceiverList();
+        Long receiverId = Long.parseLong(dto.getReceiverId());
         List<String> interestTag = dto.getInterestTag(); // tag 처리 추후 보완
 
-        System.out.println(receiverList.size());
-        List<Long> receiverIds = receiverList.stream()
-                .map(Long::parseLong)
-                .collect(Collectors.toList());
+        RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);
 
-        System.out.println(receiverIds.size());
-        List<Member> validReceivers = receiverIds.stream()
-                .map(id -> memberRepository.findById(id).orElse(null))
-                //.filter(receiver -> receiver != null && receiver.getFcmToken() != null && !receiver.getFcmToken().isEmpty())
-                .collect(Collectors.toList());
 
-        System.out.println(validReceivers.size());
+        Member receiver = memberRepository.findById(receiverId).orElseThrow(MemberNotFoundException::new);
 
-        int cnt = 0;
-        for (Member receiver : validReceivers) {
-            cnt++;
-            Long receiverId = receiver.getId();
-            String fcmToken = receiver.getFcmToken();
-            System.out.println(receiverId);
+        if (relationService.findByOtherId(receiverId, senderId).isBlocked()
+                || relationService.findByOtherId(senderId, receiverId).isBlocked())
+            return MatchResponse.MatchMessageSend("차단된 유저 입니다.");
 
-            MatchNotification matchNotification = MatchNotification.builder()
-                    .senderId(senderId)
-                    .receiverId(receiverId)
-                    .message(dto.getMessage())
-                    .status(MatchNotificationStatus.SEND)
-                    .deleteAt(LocalDateTime.now().plusMinutes(10L))
-                    .build();
+        String fcmToken = receiver.getFcmToken();
 
-            matchNotiRepository.save(matchNotification);
+        MatchNotification matchNotification = MatchNotification.builder()
+                .senderId(senderId)
+                .receiverId(receiverId)
+                .message(dto.getMessage())
+                .status(MatchNotificationStatus.SEND)
+                .deleteAt(LocalDateTime.now().plusMinutes(10L))
+                .build();
 
-            FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString()));
-        }
-        System.out.println(cnt);
+        matchNotiRepository.save(matchNotification);
 
-        return MatchResponse.MatchMessageSend("인연 보내기 성공");
+        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString()));
+
+        return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
     }
 
     public Map<String, String> matchAccept(Long notificationId) {
@@ -138,13 +124,68 @@ public class MatchService {
         return notifications.stream()
                 .filter(notification -> notification.getDeleteAt() == null || notification.getDeleteAt().isAfter(LocalDateTime.now()))
                 .map(notification -> {
+                    Long senderId = notification.getSenderId();
+                    RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);
+
                     Map<String, String> map = Map.of(
-                            "senderId", notification.getSenderId().toString(),
+                            "senderId", senderId.toString(),
                             "message", notification.getMessage(),
-                            "createAt", notification.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            "createAt", notification.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                            "overlapCount", relationResponse.overlapCount().toString()
                     );
                     return map;
                 })
                 .collect(Collectors.toList());
     }
+
+
+
+
+    public Map<String, String> matchAllReject(Long receiverId) {
+        List<MatchNotification> notifications = matchNotiRepository.findByReceiverId(receiverId);
+
+        notifications.forEach(notification -> {
+            notification.updateStatus(MatchNotificationStatus.REJECT);
+            matchNotiRepository.save(notification);
+        });
+
+        return MatchResponse.MatchReject("요청이 처리되었습니다.");
+    }
+
+    //아직 미사용 코드
+//    public Map<String, String> matchCommon(MatchRequest.Send dto, Long senderId) throws Exception {
+//        Member member = memberRepository.findById(senderId)
+//                .orElseThrow(MemberNotFoundException::new);
+//
+//        Long receiverId = Long.parseLong(dto.getReceiverId());
+//        Map<String, String> result = null;
+//
+//        String message = dto.getMessage();
+//        if (message != null && !message.isEmpty()) {
+//            result = matchMessageSend(dto, senderId);
+//        }
+//
+//        matchOverlapCountUp(senderId, receiverId);
+//        return MatchResponse.MatchMessageSend("match 요청 처리했습니다.");
+//    }
+//
+//    public void matchOverlapCountUp(Long senderId, Long receiverId) throws MatchOverlapFailedException {
+//        RelationPK senderPK = new RelationPK(senderId, receiverId);
+//        RelationPK receiverPK = new RelationPK(receiverId, senderId);
+//
+//
+//        Optional<Relation> senderRelationOpt = relationRepository.findByRelationPK(senderPK);
+//        Optional<Relation> receiverRelationOpt = relationRepository.findByRelationPK(receiverPK);
+//
+//
+//        senderRelationOpt.ifPresent(senderRelation -> {
+//            senderRelation.increaseOverlapCount();
+//            relationRepository.save(senderRelation);
+//        });
+//
+//        receiverRelationOpt.ifPresent(receiverRelation -> {
+//            receiverRelation.increaseOverlapCount();
+//            relationRepository.save(receiverRelation);
+//        });
+//    }
 }

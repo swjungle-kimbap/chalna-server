@@ -24,6 +24,7 @@ public class RelationController {
     public CommonResponse<RelationResponse> overLap(@AuthUserId final Long id, @PathVariable final Long otherId) {
         return CommonResponse.ok(relationService.findAndIncreaseOverlap(id, otherId));
     }
+
     @PatchMapping("/unblock/{otherId}")
     public CommonResponse<String> friendUnblock(@AuthUserId final Long id, @PathVariable final Long otherId){
         return CommonResponse.from("200",null,relationService.friendUnblock(id,otherId));
@@ -45,6 +46,7 @@ public class RelationController {
     public CommonResponse<String> friendAccept(@AuthUserId final Long id, @PathVariable final Long otherId) {
         return CommonResponse.from("200", null, relationService.friendAccept(id, otherId));
     }
+
 
     @PatchMapping("/reject/{otherId}")
     public CommonResponse<String> friendReject(@AuthUserId final Long id, @PathVariable final Long otherId) {
