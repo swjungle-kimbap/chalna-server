@@ -51,9 +51,10 @@ public class ChatRoomController {
 
     // 임시 api 채팅 방 만들기
     @PostMapping
-    public void makeChatRoom(@RequestBody ChatRoomRequest chatRoomRequest) {
+    public CommonResponse makeChatRoom(@RequestBody ChatRoomRequest chatRoomRequest) {
         List<Long> memberIdList = chatRoomRequest.getMemberIdList();
         chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, 2, memberIdList);
+        return CommonResponse.ok("ok");
     }
 
 
