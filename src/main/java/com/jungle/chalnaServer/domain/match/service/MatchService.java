@@ -8,11 +8,15 @@ import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchResponse;
 import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotification;
 import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus;
+import com.jungle.chalnaServer.domain.match.exception.MatchOverlapFailedException;
 import com.jungle.chalnaServer.domain.match.exception.NotificationNotFoundException;
 import com.jungle.chalnaServer.domain.match.repository.MatchNotificationRepository;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
+import com.jungle.chalnaServer.domain.relation.domain.entity.RelationPK;
+import com.jungle.chalnaServer.domain.relation.repository.RelationRepository;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
 import org.springframework.stereotype.Service;
@@ -22,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus.ACCEPT;
@@ -33,13 +38,20 @@ public class MatchService {
     private final MatchNotificationRepository matchNotiRepository;
     private final ChatRoomService chatRoomService;
     private final ChatRepository chatRepository;
+    private final RelationRepository relationRepository;
 
-    public MatchService(MemberRepository memberRepository, MatchNotificationRepository matchNotiRepository, ChatRoomService chatRoomService, ChatRepository chatRepository) {
+    public MatchService(MemberRepository memberRepository,
+                        MatchNotificationRepository matchNotiRepository,
+                        ChatRoomService chatRoomService,
+                        ChatRepository chatRepository,
+                        RelationRepository relationRepository) {
         this.memberRepository = memberRepository;
         this.matchNotiRepository = matchNotiRepository;
         this.chatRoomService = chatRoomService;
         this.chatRepository = chatRepository;
+        this.relationRepository = relationRepository;
     }
+
 
 
     public Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId) throws Exception {
@@ -64,7 +76,7 @@ public class MatchService {
 
         FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString()));
 
-        return MatchResponse.MatchMessageSend("인연 보내기 성공");
+        return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
     }
 
     public Map<String, String> matchAccept(Long notificationId) {
@@ -127,5 +139,44 @@ public class MatchService {
                     return map;
                 })
                 .collect(Collectors.toList());
+    }
+
+
+
+    //아직 미사용 코드
+    public Map<String, String> matchCommon(MatchRequest.Send dto, Long senderId) throws Exception {
+        Member member = memberRepository.findById(senderId)
+                .orElseThrow(MemberNotFoundException::new);
+
+        Long receiverId = Long.parseLong(dto.getReceiverId());
+        Map<String, String> result = null;
+
+        String message = dto.getMessage();
+        if (message != null && !message.isEmpty()) {
+            result = matchMessageSend(dto, senderId);
+        }
+
+        matchOverlapCountUp(senderId, receiverId);
+        return MatchResponse.MatchMessageSend("match 요청 처리했습니다.");
+    }
+
+    public void matchOverlapCountUp(Long senderId, Long receiverId) throws MatchOverlapFailedException {
+        RelationPK senderPK = new RelationPK(senderId, receiverId);
+        RelationPK receiverPK = new RelationPK(receiverId, senderId);
+
+
+        Optional<Relation> senderRelationOpt = relationRepository.findByRelationPK(senderPK);
+        Optional<Relation> receiverRelationOpt = relationRepository.findByRelationPK(receiverPK);
+
+
+        senderRelationOpt.ifPresent(senderRelation -> {
+            senderRelation.increaseOverlapCount();
+            relationRepository.save(senderRelation);
+        });
+
+        receiverRelationOpt.ifPresent(receiverRelation -> {
+            receiverRelation.increaseOverlapCount();
+            relationRepository.save(receiverRelation);
+        });
     }
 }
