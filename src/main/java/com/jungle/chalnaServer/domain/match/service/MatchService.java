@@ -72,7 +72,7 @@ public class MatchService {
         return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
     }
 
-    public Map<String, String> matchAccept(Long notificationId) {
+    public Map<String, String> matchAccept(Long notificationId) throws Exception {
         MatchNotification matchNotification = matchNotiRepository.findById(notificationId)
                 .orElseThrow(NotificationNotFoundException::new);
 
@@ -102,7 +102,18 @@ public class MatchService {
                 LocalDateTime.now());
 
         chatRepository.saveMessage(message);
-        return MatchResponse.MatchReject(Long.toString(chatRoomId));
+
+        // sender push 알림 추가
+        Member receiver = memberRepository.findById(matchNotification.getSenderId()).orElseThrow(MemberNotFoundException::new);
+        String fcmToken = receiver.getFcmToken();
+
+        FCMService.sendFCM(fcmToken, FCMData.instanceOfChatFCM(matchNotification.getReceiverId().toString(),
+                "인연과의 대화가 시작됐습니다.",
+                LocalDateTime.now().toString(),
+                chatRoomId.toString(),
+                ChatMessage.MessageType.CHAT.toString()));
+
+        return MatchResponse.MatchAccept(Long.toString(chatRoomId));
     }
 
     public Map<String, String> matchReject(Long notificationId) {
