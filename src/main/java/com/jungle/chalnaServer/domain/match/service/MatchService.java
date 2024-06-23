@@ -51,7 +51,15 @@ public class MatchService {
         Long receiverId = Long.parseLong(dto.getReceiverId());
         List<String> interestTag = dto.getInterestTag(); // tag 처리 추후 보완
 
+        RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);
+
+
         Member receiver = memberRepository.findById(receiverId).orElseThrow(MemberNotFoundException::new);
+
+        if (relationService.findByOtherId(receiverId, senderId).isBlocked()
+                || relationService.findByOtherId(senderId, receiverId).isBlocked())
+            return MatchResponse.MatchMessageSend("차단된 유저 입니다.");
+
         String fcmToken = receiver.getFcmToken();
 
         MatchNotification matchNotification = MatchNotification.builder()
