@@ -40,12 +40,12 @@ public class MatchController {
     }
 
     @PostMapping("/match/accept/{notificationId}")
-    public CommonResponse<Map<String, String>> matchAccept(@PathVariable("notificationId") String notificationId) {
-        return CommonResponse.from(HttpStatus.OK, matchService.matchAccept(Long.parseLong(notificationId)));
+    public CommonResponse<Map<String, String>> matchAccept(@PathVariable("notificationId") Long notificationId) {
+        return CommonResponse.from(HttpStatus.OK, matchService.matchAccept(notificationId));
     }
 
     @PutMapping("/match/reject/{notificationId}")
-    public CommonResponse<Map<String, String>> matchReject(@PathVariable("notificationId") String notificationId) {
-        return CommonResponse.from(HttpStatus.OK, matchService.matchReject(Long.parseLong(notificationId)));
+    public CommonResponse<Map<String, String>> matchReject(@PathVariable("notificationId") Long notificationId) {
+        return CommonResponse.from(HttpStatus.OK, matchService.matchReject(notificationId));
     }
 }
