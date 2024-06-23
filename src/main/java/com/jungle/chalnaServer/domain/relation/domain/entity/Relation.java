@@ -18,7 +18,7 @@ public class Relation extends BaseTimestampEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private FriendStatus friendStatus = FriendStatus.PENDING;
+    private FriendStatus friendStatus = FriendStatus.NOTHING;
 
     @Column(nullable = false)
     private boolean isBlocked = false;
@@ -28,12 +28,15 @@ public class Relation extends BaseTimestampEntity {
 
     private LocalDateTime lastOverlapAt;
 
-
     public Relation(RelationPK relationPK){
         this.relationPK = relationPK;
     }
     public void increaseOverlapCount(){
         this.overlapCount += 1;
         this.lastOverlapAt = LocalDateTime.now();
+    }
+
+    public void updateFriendStatus(FriendStatus friendStatus) {
+        this.friendStatus = friendStatus;
     }
 }
