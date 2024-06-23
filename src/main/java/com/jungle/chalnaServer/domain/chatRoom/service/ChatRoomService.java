@@ -15,11 +15,17 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +39,11 @@ public class ChatRoomService {
 
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     // 채팅방 목록 요청
     public List<ChatRoomResponse> getChatRoomList(Long memberId) {
@@ -75,7 +86,44 @@ public class ChatRoomService {
             ChatRoomMember chatRoomMember = new ChatRoomMember(memberId, chatRoom);
             chatRoomMemberRepository.save(chatRoomMember);
         }
+        scheduleRoomTermination(chatRoom.getId(), 5, TimeUnit.MINUTES);
 
         return chatRoom.getId();
+    }
+
+    public void scheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
+        scheduler.schedule(() -> {
+            log.info("timeout roomId {}", chatRoomId);
+            Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findById(chatRoomId);
+            optionalChatRoom.ifPresent(chatRoom -> {
+                // 채팅방의 상태를 대기 상태로 변경
+                chatRoom.updateType(ChatRoom.ChatRoomType.WAITING);
+                chatRoomRepository.save(chatRoom);
+
+                // 메시지 보내기
+                Long messageId = chatRepository.makeMessageId();
+                LocalDateTime now = LocalDateTime.now();
+                String content = "5분이 지났습니다.";
+
+                ChatMessageResponse chatMessage = ChatMessageResponse.builder()
+                        .id(messageId)
+                        .content(content)
+                        .senderId(0L)
+                        .type(ChatMessage.MessageType.TIMEOUT)
+                        .status(true)
+                        .createdAt(now)
+                        .build();
+
+
+                messagingTemplate.convertAndSend("/topic/" + chatRoomId, chatMessage);
+
+                ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.TIMEOUT, 0L,
+                        chatRoomId, content, true,
+                        now, now);
+
+                chatRepository.saveMessage(message);
+
+            });
+        }, delay, unit);
     }
 }
