@@ -46,42 +46,23 @@ public class MatchService {
         Member member = memberRepository.findById(senderId)
                 .orElseThrow(MemberNotFoundException::new);
 
-        List<String> receiverList = dto.getReceiverList();
+        Long receiverId = Long.parseLong(dto.getReceiverId());
         List<String> interestTag = dto.getInterestTag(); // tag 처리 추후 보완
 
-        System.out.println(receiverList.size());
-        List<Long> receiverIds = receiverList.stream()
-                .map(Long::parseLong)
-                .collect(Collectors.toList());
+        Member receiver = memberRepository.findById(receiverId).orElseThrow(MemberNotFoundException::new);
+        String fcmToken = receiver.getFcmToken();
 
-        System.out.println(receiverIds.size());
-        List<Member> validReceivers = receiverIds.stream()
-                .map(id -> memberRepository.findById(id).orElse(null))
-                //.filter(receiver -> receiver != null && receiver.getFcmToken() != null && !receiver.getFcmToken().isEmpty())
-                .collect(Collectors.toList());
+        MatchNotification matchNotification = MatchNotification.builder()
+                .senderId(senderId)
+                .receiverId(receiverId)
+                .message(dto.getMessage())
+                .status(MatchNotificationStatus.SEND)
+                .deleteAt(LocalDateTime.now().plusMinutes(10L))
+                .build();
 
-        System.out.println(validReceivers.size());
+        matchNotiRepository.save(matchNotification);
 
-        int cnt = 0;
-        for (Member receiver : validReceivers) {
-            cnt++;
-            Long receiverId = receiver.getId();
-            String fcmToken = receiver.getFcmToken();
-            System.out.println(receiverId);
-
-            MatchNotification matchNotification = MatchNotification.builder()
-                    .senderId(senderId)
-                    .receiverId(receiverId)
-                    .message(dto.getMessage())
-                    .status(MatchNotificationStatus.SEND)
-                    .deleteAt(LocalDateTime.now().plusMinutes(10L))
-                    .build();
-
-            matchNotiRepository.save(matchNotification);
-
-            FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString()));
-        }
-        System.out.println(cnt);
+        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString()));
 
         return MatchResponse.MatchMessageSend("인연 보내기 성공");
     }
