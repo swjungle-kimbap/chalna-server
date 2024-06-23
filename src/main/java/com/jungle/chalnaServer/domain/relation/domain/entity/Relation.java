@@ -32,8 +32,11 @@ public class Relation extends BaseTimestampEntity {
         this.relationPK = relationPK;
     }
     public void increaseOverlapCount(){
-        this.overlapCount += 1;
-        this.lastOverlapAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        if(this.lastOverlapAt == null || now.isAfter(this.lastOverlapAt.plusHours(4))) {
+            this.overlapCount += 1;
+            this.lastOverlapAt = now;
+        }
     }
 
     public void updateFriendStatus(FriendStatus friendStatus) {
