@@ -12,8 +12,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        show_sql: true
-        format_sql: true
+#        show_sql: true
+#        format_sql: true
 
   data:
     redis:
@@ -35,6 +35,6 @@ file:
   upload-dir: src/main/resources/static/uploads/
 
 jwt:
-  access-token-expiration-time: 600000
+  access-token-expiration-time: 604800000
   refresh-token-expiration-time: 604800000
   secret: ${JWT_SECRET}
