@@ -140,6 +140,18 @@ public class MatchService {
 
 
 
+
+    public Map<String, String> matchAllReject(Long receiverId) {
+        List<MatchNotification> notifications = matchNotiRepository.findByReceiverId(receiverId);
+
+        notifications.forEach(notification -> {
+            notification.updateStatus(MatchNotificationStatus.REJECT);
+            matchNotiRepository.save(notification);
+        });
+
+        return MatchResponse.MatchReject("요청이 처리되었습니다.");
+    }
+
     //아직 미사용 코드
 //    public Map<String, String> matchCommon(MatchRequest.Send dto, Long senderId) throws Exception {
 //        Member member = memberRepository.findById(senderId)
