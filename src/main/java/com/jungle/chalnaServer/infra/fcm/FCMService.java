@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.infra.fcm;
 
+import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
@@ -14,7 +15,10 @@ public class FCMService {
 
         Message.Builder messageBuilder = Message.builder()
                 .setToken(fcmToken)
-                .putAllData(fcmData.toMap());
+                .putAllData(fcmData.toMap())
+                .setAndroidConfig(AndroidConfig.builder()
+                        .setPriority(AndroidConfig.Priority.HIGH)
+                        .build());
 
         Message message = messageBuilder.build();
 
