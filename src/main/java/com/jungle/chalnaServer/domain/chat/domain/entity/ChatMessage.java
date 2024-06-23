@@ -47,6 +47,7 @@ public class ChatMessage {
     public enum MessageType {
         CHAT, // 그냥 메시지
         USER_ENTER, // 다른 사용자 입장
-        FRIEND_REQUEST // 친구 요청
+        FRIEND_REQUEST, // 친구 요청
+        TIMEOUT // 5분 타임아웃 알림
     }
 }
