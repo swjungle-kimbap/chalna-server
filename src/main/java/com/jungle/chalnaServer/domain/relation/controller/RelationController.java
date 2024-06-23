@@ -6,7 +6,6 @@ import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,9 +24,30 @@ public class RelationController {
     public CommonResponse<RelationResponse> overLap(@AuthUserId final Long id, @PathVariable final Long otherId) {
         return CommonResponse.ok(relationService.findAndIncreaseOverlap(id, otherId));
     }
-
-    @PatchMapping("/{otherId}")
+    @PatchMapping("/{otherId}/unblock")
+    public CommonResponse<String> friendUnblock(@AuthUserId final Long id, @PathVariable final Long otherId){
+        return CommonResponse.from("200",null,relationService.friendUnblock(id,otherId));
+    }
+    @PatchMapping("/{otherId}/block")
+    public CommonResponse<String> friendBlock(@AuthUserId final Long id, @PathVariable final Long otherId){
+        return CommonResponse.from("200",null,relationService.friendBlock(id,otherId));
+    }
+    @PatchMapping("/{otherId}/delete")
+    public CommonResponse<String> friendDelete(@AuthUserId final Long id, @PathVariable final Long otherId){
+        return CommonResponse.from("200",null,relationService.friendRemove(id,otherId));
+    }
+    @PatchMapping("/{otherId}/request")
     public CommonResponse<String> friendRequest(@AuthUserId final Long id, @PathVariable final Long otherId){
-        return CommonResponse.from("200",null,relationService.FriendRequest(id,otherId));
+        return CommonResponse.from("200",null,relationService.friendRequest(id,otherId));
+    }
+
+    @PatchMapping("/{otherId}/accept")
+    public CommonResponse<String> friendAccept(@AuthUserId final Long id, @PathVariable final Long otherId) {
+        return CommonResponse.from("200", null, relationService.friendAccept(id, otherId));
+    }
+
+    @PatchMapping("/{otherId}/reject")
+    public CommonResponse<String> friendReject(@AuthUserId final Long id, @PathVariable final Long otherId) {
+        return CommonResponse.from("200", null, relationService.friendReject(id, otherId));
     }
 }
