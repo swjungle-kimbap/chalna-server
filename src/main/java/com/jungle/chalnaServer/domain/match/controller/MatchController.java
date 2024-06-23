@@ -4,6 +4,7 @@ package com.jungle.chalnaServer.domain.match.controller;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchResponse;
 import com.jungle.chalnaServer.domain.match.service.MatchService;
+import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,5 +48,10 @@ public class MatchController {
     @PutMapping("/match/reject/{notificationId}")
     public CommonResponse<Map<String, String>> matchReject(@PathVariable("notificationId") Long notificationId) {
         return CommonResponse.from(HttpStatus.OK, matchService.matchReject(notificationId));
+    }
+
+    @PutMapping("/match/reject")
+    public CommonResponse<Map<String, String>> matchRejectAll(@AuthUserId Long receiverId) {
+        return CommonResponse.from(HttpStatus.OK, matchService.matchAllReject(receiverId));
     }
 }
