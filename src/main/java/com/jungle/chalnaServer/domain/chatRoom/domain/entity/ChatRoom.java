@@ -32,12 +32,17 @@ public class ChatRoom extends BaseTimestampEntity {
 
     public enum ChatRoomType{
         MATCH,
-        FRIEND
+        FRIEND,
+        WAITING  // 채팅방 열린지 5분 지난 후. 친구 수락/거절 대기 상태
     }
 
     public ChatRoom(ChatRoomType type, Integer memberCount) {
         this.type = type;
         this.memberCount = memberCount;
+    }
+
+    public void updateType(ChatRoomType newType){
+        this.type = newType;
     }
 
     public void updateRemovedAt() {
