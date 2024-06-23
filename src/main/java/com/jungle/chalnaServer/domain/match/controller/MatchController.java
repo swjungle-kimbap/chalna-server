@@ -41,7 +41,7 @@ public class MatchController {
     }
 
     @PostMapping("/match/accept/{notificationId}")
-    public CommonResponse<Map<String, String>> matchAccept(@PathVariable("notificationId") Long notificationId) {
+    public CommonResponse<Map<String, String>> matchAccept(@PathVariable("notificationId") Long notificationId) throws Exception {
         return CommonResponse.from(HttpStatus.OK, matchService.matchAccept(notificationId));
     }
 
