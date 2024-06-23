@@ -28,6 +28,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CommonResponse<?>> customGlobalExceptionHandler(Exception e){
         if(exceptions.containsKey(e.getClass())){
             GlobalErrorCode errorCode = exceptions.get(e.getClass());
+            log.warn("exception resolved: {}",e.getClass().getName());
             return ResponseEntity.status(errorCode.getStatus()).body(CommonResponse.ok(errorCode));
         }
 

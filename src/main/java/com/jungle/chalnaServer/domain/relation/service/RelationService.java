@@ -3,6 +3,7 @@ package com.jungle.chalnaServer.domain.relation.service;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
+import com.jungle.chalnaServer.domain.relation.domain.entity.FriendStatus;
 import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
 import com.jungle.chalnaServer.domain.relation.domain.entity.RelationPK;
 import com.jungle.chalnaServer.domain.relation.exception.RelationIdInvalidException;
@@ -35,6 +36,73 @@ public class RelationService {
         reverse.increaseOverlapCount();
         return RelationResponse.of(relation);
     }
+    public String friendUnblock(final Long id,final Long otherId){
+        RelationPK pk = new RelationPK(id, otherId);
+        Relation relation = findRelation(pk);
+
+        relation.updateIsBlocked(false);
+        return "요청에 성공했습니다.";
+    }
+    public String friendBlock(final Long id,final Long otherId){
+        RelationPK pk = new RelationPK(id, otherId);
+        Relation relation = findRelation(pk);
+
+        relation.updateFriendStatus(FriendStatus.NOTHING);
+        relation.updateIsBlocked(true);
+        return "요청에 성공했습니다.";
+    }
+
+    public String friendRemove(final Long id,final Long otherId){
+        RelationPK pk = new RelationPK(id, otherId);
+        Relation relation = findRelation(pk);
+
+        relation.updateFriendStatus(FriendStatus.NOTHING);
+        return "요청에 성공했습니다.";
+    }
+
+    public String friendAccept(final Long id, final Long otherId) {
+        RelationPK pk = new RelationPK(id, otherId);
+        Relation relation = findRelation(pk);
+        Relation reverse = findRelation(pk.reverse());
+
+
+        if (relation.getFriendStatus() == FriendStatus.PENDING && reverse.getFriendStatus() != FriendStatus.ACCEPTED) {
+            relation.updateFriendStatus(FriendStatus.ACCEPTED);
+            reverse.updateFriendStatus(FriendStatus.ACCEPTED);
+            return "요청에 성공했습니다.";
+        } else {
+            return "이미 친구거나, 요청하지 않은 상대입니다.";
+        }
+    }
+    public String friendReject(final Long id, final Long otherId) {
+        RelationPK pk = new RelationPK(id, otherId);
+        Relation relation = findRelation(pk);
+        Relation reverse = findRelation(pk.reverse());
+
+
+        if (relation.getFriendStatus() == FriendStatus.PENDING && reverse.getFriendStatus() != FriendStatus.ACCEPTED) {
+            relation.updateFriendStatus(FriendStatus.NOTHING);
+            return "요청에 성공했습니다.";
+        } else {
+            return "이미 친구거나, 요청하지 않은 상대입니다.";
+        }
+    }
+
+    public String friendRequest(final Long id, final Long otherId){
+        RelationPK pk = new RelationPK(id, otherId);
+        Relation relation = findRelation(pk);
+        Relation reverse = findRelation(pk.reverse());
+
+
+        if(relation.getFriendStatus() != FriendStatus.ACCEPTED && reverse.getFriendStatus() == FriendStatus.NOTHING){
+            reverse.updateFriendStatus(FriendStatus.PENDING);
+            return "요청에 성공했습니다.";
+        }
+        else{
+            return "이미 친구거나, 요청한 상태입니다.";
+        }
+    }
+
 
     private Relation findRelation(RelationPK pk) {
         if (pk.getId().equals(pk.getOtherId()))
@@ -49,7 +117,6 @@ public class RelationService {
     }
 
     private Relation createRelation(RelationPK pk) {
-        log.info("만듬");
         relationRepository.save(new Relation(pk.reverse()));
         return relationRepository.save(new Relation(pk));
     }
