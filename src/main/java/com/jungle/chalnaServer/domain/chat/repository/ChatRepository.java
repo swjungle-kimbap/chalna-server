@@ -25,7 +25,7 @@ public class ChatRepository {
     private static final String MESSAGE_ID_KEY = "chat:message:id:";
 
     public void saveMessage(ChatMessage chatMessage) {
-        redisTemplate.opsForList().leftPush(ROOM_KEY_PREFIX + chatMessage.getChatRoomId(), chatMessage);
+        redisTemplate.opsForList().rightPush(ROOM_KEY_PREFIX + chatMessage.getChatRoomId(), chatMessage);
     }
 
     public Long makeMessageId() {
@@ -62,9 +62,25 @@ public class ChatRepository {
 
 
     public ChatMessage getLatestMessage(Long chatRoomId) {
-        Object rawMeaage = redisTemplate.opsForList().index(ROOM_KEY_PREFIX + chatRoomId, 0);
-        ChatMessage message = objectMapper.convertValue(rawMeaage, ChatMessage.class);
-        return message;
+        long listSize = redisTemplate.opsForList().size(ROOM_KEY_PREFIX + chatRoomId);
+
+        if (listSize == 0) {
+            return null;
+        }
+
+        for (long i = listSize - 1; i >= 0; i--) {
+            Object rawMessage = redisTemplate.opsForList().index(ROOM_KEY_PREFIX + chatRoomId, i);
+            ChatMessage message = objectMapper.convertValue(rawMessage, ChatMessage.class);
+            if (message.getType() == ChatMessage.MessageType.CHAT || message.getType() == ChatMessage.MessageType.FRIEND_REQUEST) {
+                return message;
+            }
+        }
+        return null;
+
+
+//        Object rawMeaage = redisTemplate.opsForList().index(ROOM_KEY_PREFIX + chatRoomId, 0);
+//        ChatMessage message = objectMapper.convertValue(rawMeaage, ChatMessage.class);
+//        return message;
     }
 
 }
