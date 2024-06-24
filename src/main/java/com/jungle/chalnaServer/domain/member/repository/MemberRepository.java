@@ -14,4 +14,6 @@ public interface MemberRepository extends JpaRepository<Member,Long>, QuerydslPr
     Optional<Member> findByKakaoId(Long kakaoId);
     Optional<Member> findByLoginToken(String loginToken);
 
+    Optional<Member> findByDeviceId(String deviceId);
+
 }
