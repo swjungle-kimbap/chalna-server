@@ -14,9 +14,11 @@ public class GeoHashService {
 
     private final GeoOperations<String, String> geoOperations;
 
-    public List<POSITION> radius(String key, String target, Double distance) {
+    public List<POSITION> radius(String key, Point point, Double distance) {
         String geoKey = GEO_LOC_PREFIX + key;
-        return geoOperations.radius(geoKey, target, distance).getContent().stream()
+        geoOperations.add(geoKey, point, "tmp");
+        return geoOperations.radius(geoKey, "tmp", distance).getContent().stream()
+                .filter((r)->!r.getContent().getName().equals("tmp"))
                 .map((r) -> {
                     String name = r.getContent().getName();
                     return new POSITION(name, geoOperations.position(geoKey, name).get(0));

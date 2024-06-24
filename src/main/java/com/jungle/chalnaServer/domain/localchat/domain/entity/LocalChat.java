@@ -24,4 +24,10 @@ public class LocalChat extends BaseTimestampEntity {
     private Double latitude;
 
     private Double longitude;
+
+    public LocalChat(String name, Double latitude, Double longitude) {
+        this.name = name;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }
