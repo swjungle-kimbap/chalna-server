@@ -4,7 +4,6 @@ import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.service.AuthService;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
-import com.jungle.chalnaServer.global.auth.jwt.dto.CustomUserDetails;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
@@ -33,15 +32,15 @@ public class AuthController {
 }
 
     @PostMapping("/login")
-    public CommonResponse<String> login(@RequestBody AuthRequest.LOGIN dto, HttpServletResponse response) {
+    public CommonResponse<?> login(@RequestBody AuthRequest.LOGIN dto, HttpServletResponse response) {
 
         Tokens tokens = memberService.login(dto);
+        MemberInfo responses = memberService.getMemberInfo(dto);
 
         response.setHeader(JwtService.AUTHORIZATION_HEADER,tokens.accessToken());
         response.setHeader(JwtService.REFRESH_HEADER,tokens.refreshToken());
 
-
-        return CommonResponse.ok("로그인에 성공했습니다.");
+        return CommonResponse.from(HttpStatus.OK,responses);
     }
     @GetMapping("/test")
     public String tokenTest(HttpServletRequest request){

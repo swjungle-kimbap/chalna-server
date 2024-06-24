@@ -91,5 +91,11 @@ public class AuthService {
         return new Tokens(accessToken, refreshToken);
     }
 
+    public MemberInfo getMemberInfo(AuthRequest.LOGIN dto) {
+        Member member = memberRepository.findByLoginToken(dto.loginToken())
+                .orElseThrow(MemberNotFoundException::new);
+        return MemberInfo.of(member);
+    }
+
 
 }

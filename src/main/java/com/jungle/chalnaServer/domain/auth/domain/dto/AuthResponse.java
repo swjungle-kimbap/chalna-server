@@ -21,6 +21,9 @@ public class AuthResponse {
                 .build();
     }
 
+    public record LOGIN(Long id) {}
+
+
 //    public record KakaoUserInfo(Integer kakaoId, String username) {}
 
     @Getter
