@@ -1,14 +1,12 @@
 package com.jungle.chalnaServer.domain.member.controller;
 
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberRequest;
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,10 +21,10 @@ public class MemberController {
     private final JwtService jwtService;
 
     @PatchMapping
-    public CommonResponse<MemberResponse> updateMemberInfo(HttpServletRequest request,
-                                                              @RequestParam(value = "username", required = false) String username,
-                                                              @RequestParam(value = "message" , required = false) String message,
-                                                              @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+    public CommonResponse<MemberInfo> updateMemberInfo(HttpServletRequest request,
+                                                       @RequestParam(value = "username", required = false) String username,
+                                                       @RequestParam(value = "message" , required = false) String message,
+                                                       @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
         Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
         MemberRequest memberDto = MemberRequest.builder()
                 .username(username)
@@ -34,16 +32,14 @@ public class MemberController {
                 .image(image)
                 .build();
 
-        MemberResponse memberResponse = memberService.updateMemberInfo(id, memberDto, image);
-        return CommonResponse.ok(memberResponse);
+        return CommonResponse.ok(memberService.updateMemberInfo(id, memberDto, image));
     }
 
     @GetMapping
-    public CommonResponse<MemberResponse> getMemberInfo(HttpServletRequest request) {
+    public CommonResponse<MemberInfo> getMemberInfo(HttpServletRequest request) {
 
         Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
-        MemberResponse memberResponse = memberService.getMemberInfo(id);
-        return CommonResponse.ok(memberResponse);
+        return CommonResponse.ok(memberService.getMemberInfo(id));
     }
 
 }

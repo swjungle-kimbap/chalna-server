@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.domain.friend.service;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.entity.FriendStatus;
 import com.jungle.chalnaServer.domain.relation.domain.entity.QRelation;
@@ -20,7 +20,7 @@ public class FriendService {
     private final RelationRepository relationRepository;
 
 
-    public List<MemberResponse> findFriends(Long id){
+    public List<MemberInfo> findFriends(Long id){
         return getMemberList(getFriendIdList(id));
     }
 
@@ -36,7 +36,7 @@ public class FriendService {
         return friendIds;
     }
 
-    private List<MemberResponse> getMemberList(List<Long> ids){
-        return memberRepository.findAllById(ids).stream().map(MemberResponse::of).collect(Collectors.toList());
+    private List<MemberInfo> getMemberList(List<Long> ids){
+        return memberRepository.findAllById(ids).stream().map(MemberInfo::of).collect(Collectors.toList());
     }
 }
