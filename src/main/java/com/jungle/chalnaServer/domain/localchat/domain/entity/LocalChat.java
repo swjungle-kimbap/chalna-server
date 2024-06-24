@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.localchat.domain.entity;
 
+import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -18,15 +19,20 @@ public class LocalChat extends BaseTimestampEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private Integer memberCount = 0;
+    private String description;
+
+    @OneToOne
+    @JoinColumn(name = "chatRoomId")
+    private ChatRoom chatRoom;
 
     private Double latitude;
 
     private Double longitude;
 
-    public LocalChat(String name, Double latitude, Double longitude) {
+    public LocalChat(String name,String description,ChatRoom chatRoom,Double latitude, Double longitude) {
         this.name = name;
+        this.description = description;
+        this.chatRoom = chatRoom;
         this.latitude = latitude;
         this.longitude = longitude;
     }

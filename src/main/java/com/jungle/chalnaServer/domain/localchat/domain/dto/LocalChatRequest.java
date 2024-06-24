@@ -4,7 +4,7 @@ public class LocalChatRequest {
     public record RADIUS(Double latitude, Double longitude, Double distance){
 
     }
-    public record ADD(String name,Double latitude,Double longitude){
+    public record ADD(String name,String description,Double latitude,Double longitude){
 
     }
 }
