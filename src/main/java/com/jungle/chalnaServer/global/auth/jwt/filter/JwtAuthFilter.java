@@ -32,7 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
 
     private static final List<String> AUTHENTICATE_LIST = List.of(
-            "/api/v1/auth/signup","/api/v1/auth/login","/health-check"
+            "/api/v1/auth/signup","/api/v1/auth/login","/health-check", "/api/v2/signup", "/api/v2/login"
     );
     private static final List<String> AUTHENTICATE_PREFIX_LIST = List.of(
             "/images/","/uploads/", "/ws"
