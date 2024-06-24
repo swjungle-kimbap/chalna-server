@@ -4,7 +4,6 @@ import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -33,6 +32,8 @@ public class ChatRoom extends BaseTimestampEntity {
     public enum ChatRoomType{
         MATCH,
         FRIEND,
+        LOCAL,
+        CLOSED,  // 채팅방 닫힘 - 채팅 불가
         WAITING  // 채팅방 열린지 5분 지난 후. 친구 수락/거절 대기 상태
     }
 
