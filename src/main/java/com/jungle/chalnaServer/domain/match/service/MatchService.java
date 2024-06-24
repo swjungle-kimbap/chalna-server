@@ -43,13 +43,13 @@ public class MatchService {
         Member member = memberRepository.findById(senderId)
                 .orElseThrow(MemberNotFoundException::new);
 
-        Long receiverId = Long.parseLong(dto.getReceiverId());
+        Member receiver = memberRepository.findByDeviceId(dto.getReceiverDeviceId()).orElseThrow(MemberNotFoundException::new);
+
+        Long receiverId = receiver.getId();
         List<String> interestTag = dto.getInterestTag(); // tag 처리 추후 보완
 
         RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);
 
-
-        Member receiver = memberRepository.findById(receiverId).orElseThrow(MemberNotFoundException::new);
 
         if (relationService.findByOtherId(receiverId, senderId).isBlocked()
                 || relationService.findByOtherId(senderId, receiverId).isBlocked())
