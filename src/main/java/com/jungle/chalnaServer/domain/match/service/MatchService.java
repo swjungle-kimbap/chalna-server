@@ -143,6 +143,7 @@ public class MatchService {
                     RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);
 
                     Map<String, String> map = Map.of(
+                            "notificationId", notification.getId().toString(),
                             "senderId", senderId.toString(),
                             "message", notification.getMessage(),
                             "createAt", notification.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
