@@ -33,9 +33,9 @@ public class LocalChatService {
                 .toList();
     }
 
-    public LocalChatResponse makeLocalChat(LocalChatRequest.ADD dto) {
+    public LocalChatResponse makeLocalChat(LocalChatRequest.ADD dto,final long ownerId) {
         ChatRoom chatRoom = chatRoomRepository.save(new ChatRoom(ChatRoom.ChatRoomType.MATCH, 2));
-        LocalChat localChat = localChatRepository.save(new LocalChat(dto.name(), dto.description(),chatRoom, dto.latitude(), dto.longitude()));
+        LocalChat localChat = localChatRepository.save(new LocalChat(ownerId,dto.name(), dto.description(),chatRoom, dto.latitude(), dto.longitude()));
         geoHashService.set(REDIS_KEY, new Point(dto.longitude(), dto.latitude()), String.valueOf(localChat.getId()));
         return LocalChatResponse.of(localChat);
     }
