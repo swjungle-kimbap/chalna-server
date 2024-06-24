@@ -24,6 +24,8 @@ public class AuthRequest {
 
     }
 
+    public record TEMPSIGNUP(Long kakaoId, String username) {}
+
 
     public record LOGIN(String loginToken,String deviceId,String fcmToken){
 
