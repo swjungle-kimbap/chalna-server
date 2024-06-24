@@ -104,12 +104,16 @@ public class MatchService {
         chatRepository.saveMessage(message);
 
         // sender push 알림 추가
-        Member receiver = memberRepository.findById(matchNotification.getSenderId()).orElseThrow(MemberNotFoundException::new);
-        String fcmToken = receiver.getFcmToken();
+        Member sender = memberRepository.findById(matchNotification.getSenderId()).orElseThrow(MemberNotFoundException::new);
+        String fcmToken = sender.getFcmToken();
+
+        Member receiver = memberRepository.findById(matchNotification.getReceiverId()).orElseThrow(MemberNotFoundException::new);
+
 
         FCMService.sendFCM(fcmToken, FCMData.instanceOfChatFCM(matchNotification.getReceiverId().toString(),
                 "인연과의 대화가 시작됐습니다.",
                 LocalDateTime.now().toString(),
+                receiver.getUsername(),
                 chatRoomId.toString(),
                 ChatMessage.MessageType.CHAT.toString()));
 
