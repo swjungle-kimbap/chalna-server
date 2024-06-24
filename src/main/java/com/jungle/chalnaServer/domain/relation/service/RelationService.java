@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.relation.service;
 
+import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
@@ -27,8 +28,9 @@ public class RelationService {
         return RelationResponse.of(findRelation(new RelationPK(id, otherId)));
     }
 
-    public RelationResponse findAndIncreaseOverlap(final Long id, final Long otherId) {
-        RelationPK pk = new RelationPK(id, otherId);
+    public RelationResponse findAndIncreaseOverlap(final Long id, final String deviceId) {
+        Member member = memberRepository.findByDeviceId(deviceId).orElseThrow(MemberNotFoundException::new);
+        RelationPK pk = new RelationPK(id, member.getId());
 
         Relation relation = findRelation(pk);
         Relation reverse = findRelation(pk.reverse());
