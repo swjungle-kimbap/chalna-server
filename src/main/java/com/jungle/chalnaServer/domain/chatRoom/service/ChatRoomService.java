@@ -50,19 +50,21 @@ public class ChatRoomService {
         List<ChatRoomMember> chatroomMembers = chatRoomMemberRepository.findByMemberId(memberId);
         List<ChatRoomResponse> list = new ArrayList<>();
         for (ChatRoomMember chatroomMember : chatroomMembers) {
-            ChatRoom chatRoom = chatroomMember.getChatRoom();
-            ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId());
-            List<MemberInfo> memberInfos = chatRoom.getMembers().stream()
-                    .map(member -> {
-                        Member memberEntity = memberRepository.findById(member.getMemberId()).orElse(null);
-                        return new MemberInfo(
-                                member.getMemberId(),
-                                memberEntity != null ? memberEntity.getUsername() : null
-                        );
-                    })
-                    .collect(Collectors.toList());
-            ChatRoomResponse apply = new ChatRoomResponse(chatRoom, memberInfos, new ChatMessageResponse(recentMessage));
-            list.add(apply);
+            if (!chatroomMember.getIsRemoved()) {
+                ChatRoom chatRoom = chatroomMember.getChatRoom();
+                ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId());
+                List<MemberInfo> memberInfos = chatRoom.getMembers().stream()
+                        .map(chatRoomMember -> {
+//                        Member memberEntity = memberRepository.findById(member.getMember().getId()).orElse(null);
+                            return new MemberInfo(
+                                    chatRoomMember.getMember().getId(),
+                                    chatRoomMember.getMember() != null ? chatRoomMember.getMember().getUsername() : null
+                            );
+                        })
+                        .collect(Collectors.toList());
+                ChatRoomResponse apply = new ChatRoomResponse(chatRoom, memberInfos, new ChatMessageResponse(recentMessage));
+                list.add(apply);
+            }
         } return list;
     }
 
@@ -83,7 +85,8 @@ public class ChatRoomService {
         chatRoomRepository.save(chatRoom);
 
         for (Long memberId : memberIdList) {
-            ChatRoomMember chatRoomMember = new ChatRoomMember(memberId, chatRoom);
+            Member member = memberRepository.findById(memberId).orElse(null);
+            ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
             chatRoomMemberRepository.save(chatRoomMember);
         }
         scheduleRoomTermination(chatRoom.getId(), 5, TimeUnit.MINUTES);
@@ -91,6 +94,7 @@ public class ChatRoomService {
         return chatRoom.getId();
     }
 
+    // 채팅방 5분 스케줄러
     public void scheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
         scheduler.schedule(() -> {
             log.info("timeout roomId {}", chatRoomId);
@@ -125,5 +129,25 @@ public class ChatRoomService {
 
             });
         }, delay, unit);
+    }
+
+    // 채팅방 나가기(삭제)
+    public Boolean leaveChatRoom(Long memberId, Long chatRoomId) {
+        Optional<ChatRoomMember> chatRoomMemberOptional = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId);
+
+        if (chatRoomMemberOptional.isPresent()) {
+            ChatRoomMember chatRoomMember = chatRoomMemberOptional.get();
+            chatRoomMember.removeMember();
+            chatRoomMemberRepository.save(chatRoomMember);
+
+            // 채팅방 인원 변경
+            chatRoomMember.getChatRoom().updateMemberCount(chatRoomMember.getChatRoom().getMemberCount() - 1);
+            chatRoomRepository.save(chatRoomMember.getChatRoom());
+            return true;
+        } else {
+            // 에러 처리
+            log.info("예외 처리");
+            return false;
+        }
     }
 }
