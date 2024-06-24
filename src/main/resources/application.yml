@@ -1,6 +1,8 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  jackson:
+    time-zone: Asia/Seoul
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
@@ -12,29 +14,31 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-#        show_sql: true
-#        format_sql: true
-
+        jdbc:
+          time_zone: Asia/Seoul
+  #        show_sql: true
+  #        format_sql: true
   data:
     redis:
       host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+      port:  ${REDIS_PORT}
       password:
-
   servlet:
     multipart:
       enabled: true
       max-file-size: 10MB
       max-request-size: 10MB
-
   web:
     resources:
       static-locations: classpath:/static/,classpath:/static/uploads/,file:/opt/files/
-
 file:
   upload-dir: src/main/resources/static/uploads/
-
 jwt:
   access-token-expiration-time: 604800000
   refresh-token-expiration-time: 604800000
-  secret: ${JWT_SECRET}
+  secret:  ${JWT_SECRET}
+
+kakao:
+  client-id: ${CLIENT_ID}
+  client-secret: ${CLIENT_SECRET}
+
