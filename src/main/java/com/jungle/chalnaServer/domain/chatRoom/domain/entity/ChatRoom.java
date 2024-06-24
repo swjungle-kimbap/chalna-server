@@ -45,6 +45,10 @@ public class ChatRoom extends BaseTimestampEntity {
         this.type = newType;
     }
 
+    public void updateMemberCount(Integer newCount) {
+        this.memberCount = newCount;
+    }
+
     public void updateRemovedAt() {
         this.removedAt = LocalDateTime.now();
     }

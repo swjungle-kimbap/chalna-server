@@ -1,5 +1,9 @@
 package com.jungle.chalnaServer.domain.chat.handler;
 
+import com.jungle.chalnaServer.domain.chatRoom.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
+import com.jungle.chalnaServer.domain.member.domain.entity.Member;
+import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.util.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +25,7 @@ import java.util.List;
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class Stomphandler implements ChannelInterceptor {
     private final JwtService jwtUtil;
+    private final MemberService memberService;
 
     // websocket을 통해 들어온 요청이 처리 되기전 실행됨
     @Override
@@ -47,8 +52,10 @@ public class Stomphandler implements ChannelInterceptor {
                         throw new Exception("jwt is expired");
                     }
                     Long id = jwtUtil.getId(jwt);
+                    MemberResponse memberInfo = memberService.getMemberInfo(id);
                     // 사용자 정보 조회
                     accessor.getSessionAttributes().put("memberId", id);
+                    accessor.getSessionAttributes().put("username", memberInfo.getUsername());
                 } catch (Exception e) {
                     log.error("An unexpected error occurred: " + e.getMessage());
 

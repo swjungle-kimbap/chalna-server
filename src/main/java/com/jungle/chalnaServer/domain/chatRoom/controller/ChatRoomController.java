@@ -5,6 +5,7 @@ import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomRequest;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.service.ChatRoomService;
+import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,7 +14,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,4 +59,11 @@ public class ChatRoomController {
 
 
     // 채팅방 나가기
+    @DeleteMapping("/leave/{chatRoomId}")
+    public CommonResponse leaveChatRoom(@PathVariable Long chatRoomId, HttpServletRequest request) {
+        Long memberId = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
+
+        Boolean result = chatRoomService.leaveChatRoom(memberId, chatRoomId);
+        return CommonResponse.ok(result.toString());
+    }
 }
