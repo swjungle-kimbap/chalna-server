@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member,Long>, QuerydslPredicateExecutor<Member> {
 
     Optional<Member> findById(Long id);
-    Optional<Member> findByKakaoId(Integer kakaoId);
+    Optional<Member> findByKakaoId(Long kakaoId);
     Optional<Member> findByLoginToken(String loginToken);
 
 }
