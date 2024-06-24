@@ -14,7 +14,7 @@ public class MatchRequest {
     @Builder
     @AllArgsConstructor
     public static class Send {
-        private String receiverId;
+        private String receiverDeviceId;
         private String message;
         private List<String> interestTag;
     }
