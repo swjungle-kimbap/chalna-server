@@ -2,6 +2,8 @@ package com.jungle.chalnaServer.infra.fcm.dto;
 
 import lombok.Getter;
 import com.google.gson.Gson;
+import org.json.simple.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,7 +52,8 @@ public class FCMData {
         map.put("senderId", this.senderId);
         map.put("message", this.message);
         map.put("createdAt", this.createdAt);
-        map.put("additionalData", gson.toJson(this.additionalData));
+        JSONObject additionalDataJson = new JSONObject(this.additionalData);
+        map.put("additionalData", additionalDataJson.toString());
         return map;
     }
 }
