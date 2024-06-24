@@ -2,6 +2,8 @@ package com.jungle.chalnaServer.infra.fcm.dto;
 
 import lombok.Getter;
 import com.google.gson.Gson;
+import org.json.simple.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,12 +22,13 @@ public class FCMData {
         this.additionalData.put("fcmType", "match");
     }
 
-    private FCMData(String senderId, String message, String createdAt, String chatRoomId, String messageType) {
+    private FCMData(String senderId, String message, String createdAt, String senderName, String chatRoomId, String messageType) {
         this.senderId = senderId;
         this.message = message;
         this.createdAt = createdAt;
         this.additionalData = new HashMap<>();
         this.additionalData.put("fcmType", "chat");
+        this.additionalData.put("senderName", senderName);
         this.additionalData.put("chatRoomId", chatRoomId);
         this.additionalData.put("messageType", messageType);
     }
@@ -37,8 +40,8 @@ public class FCMData {
     }
 
     /*ChatFCMData 생성자*/
-    public static FCMData instanceOfChatFCM(String senderId, String message, String createdAt, String chatRoomId, String messageType) {
-        return new FCMData(senderId, message, createdAt, chatRoomId, messageType);
+    public static FCMData instanceOfChatFCM(String senderId, String message, String createdAt, String senderName, String chatRoomId, String messageType) {
+        return new FCMData(senderId, message, createdAt, senderName, chatRoomId, messageType);
     }
 
 
@@ -49,7 +52,8 @@ public class FCMData {
         map.put("senderId", this.senderId);
         map.put("message", this.message);
         map.put("createdAt", this.createdAt);
-        map.put("additionalData", gson.toJson(this.additionalData));
+        JSONObject additionalDataJson = new JSONObject(this.additionalData);
+        map.put("additionalData", additionalDataJson.toString());
         return map;
     }
 }
