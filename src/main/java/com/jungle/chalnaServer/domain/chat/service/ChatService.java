@@ -24,6 +24,8 @@ import java.util.List;
 public class ChatService {
     @Autowired
     private ChatRepository chatRepository;
+
+    @Autowired
     private ChatRoomMemberRepository chatRoomMemberRepository;
 
     @Autowired
