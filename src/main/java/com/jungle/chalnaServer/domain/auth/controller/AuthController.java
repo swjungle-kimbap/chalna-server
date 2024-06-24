@@ -4,6 +4,7 @@ import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.service.AuthService;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
@@ -42,6 +43,13 @@ public class AuthController {
 
         return CommonResponse.from(HttpStatus.OK,responses);
     }
+
+    @PostMapping("/logout")
+    public CommonResponse<?> logout(@AuthUserId final Long id) {
+        memberService.logout(id);
+        return CommonResponse.ok("로그아웃 성공");
+    }
+
     @GetMapping("/test")
     public String tokenTest(HttpServletRequest request){
         return jwtService.getId(jwtService.resolveToken(request,JwtService.AUTHORIZATION_HEADER)).toString();

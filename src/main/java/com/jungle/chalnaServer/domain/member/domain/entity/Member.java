@@ -71,6 +71,13 @@ public class Member extends BaseTimestampEntity {
         this.fcmToken = fcmToken;
     }
 
+    public void removeInfo() {
+        this.deviceId = null;
+        this.fcmToken = null;
+        this.refreshToken = null;
+
+    }
+
     public void updateRefreshToken(String refreshToken){
         this.refreshToken = refreshToken;
     }
