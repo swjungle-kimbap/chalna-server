@@ -32,13 +32,13 @@ public class AuthService {
     public AuthResponse signup(AuthRequest.SIGNUP dto) {
         // db에서 아이디 중복 여부 확인
         String loginToken;
-        String nickname;
-        Long kakaoId;
+//        String nickname;
+//        Long kakaoId;
         Optional<Member> findMember = memberRepository.findByKakaoId(dto.kakaoId());
         if (findMember.isPresent()) {
             loginToken = findMember.get().getLoginToken();
-            nickname = dto.username();
-            kakaoId = dto.kakaoId();
+//            nickname = dto.username();
+//            kakaoId = dto.kakaoId();
         } else {
             // kakao access token 검증
             boolean isValid = kakaoTokenService.verifyToken(dto.accessToken());
@@ -58,8 +58,8 @@ public class AuthService {
             // kakao user 정보 가져오기
             KakaoUserInfo kakaoInfo = kakaoTokenService.getUserInfo(dto.accessToken());
 
-            nickname = kakaoInfo.getProperties().getNickname();
-            kakaoId = kakaoInfo.getKakaoId();
+            String nickname = kakaoInfo.getProperties().getNickname();
+            Long kakaoId = kakaoInfo.getKakaoId();
 
             loginToken = tokenService.generateToken();
             Member member= Member.builder()
@@ -73,7 +73,7 @@ public class AuthService {
             memberRepository.save(member);
 
         }
-        return AuthResponse.of(loginToken, kakaoId, nickname);
+        return AuthResponse.of(loginToken);
     }
 
     @Transactional
