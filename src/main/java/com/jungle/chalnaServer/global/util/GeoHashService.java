@@ -16,19 +16,18 @@ public class GeoHashService {
 
     public List<POSITION> radius(String key, Point point, Double distance) {
         String geoKey = GEO_LOC_PREFIX + key;
-        geoOperations.add(geoKey, point, "tmp");
-        return geoOperations.radius(geoKey, "tmp", distance).getContent().stream()
-                .filter((r)->!r.getContent().getName().equals("tmp"))
+        geoOperations.add(geoKey, point, "radius_tmp");
+        return geoOperations.radius(geoKey, "radius_tmp", distance).getContent().stream()
+                .filter((r)->!r.getContent().getName().equals("radius_tmp"))
                 .map((r) -> {
                     String name = r.getContent().getName();
                     return new POSITION(name, geoOperations.position(geoKey, name).get(0));
                 }).toList();
     }
-
     public Double distance(String key, Point point, String target) {
         String geoKey = GEO_LOC_PREFIX + key;
-        geoOperations.add(geoKey, point, "tmp");
-        return geoOperations.distance(geoKey, target, "tmp").getValue();
+        geoOperations.add(geoKey, point, "distance_tmp");
+        return geoOperations.distance(geoKey, target, "distancetmp").getValue();
     }
 
     public void set(String key, Point point, String name) {

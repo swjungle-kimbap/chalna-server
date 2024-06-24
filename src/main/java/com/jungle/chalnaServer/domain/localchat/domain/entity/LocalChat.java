@@ -16,6 +16,8 @@ public class LocalChat extends BaseTimestampEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
+    private Long ownerId;
+
     @Column(nullable = false)
     private String name;
 
@@ -29,7 +31,8 @@ public class LocalChat extends BaseTimestampEntity {
 
     private Double longitude;
 
-    public LocalChat(String name,String description,ChatRoom chatRoom,Double latitude, Double longitude) {
+    public LocalChat(Long ownerId,String name,String description,ChatRoom chatRoom,Double latitude, Double longitude) {
+        this.ownerId = ownerId;
         this.name = name;
         this.description = description;
         this.chatRoom = chatRoom;

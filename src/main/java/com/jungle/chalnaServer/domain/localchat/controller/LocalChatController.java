@@ -3,9 +3,9 @@ package com.jungle.chalnaServer.domain.localchat.controller;
 import com.jungle.chalnaServer.domain.localchat.domain.dto.LocalChatRequest;
 import com.jungle.chalnaServer.domain.localchat.domain.dto.LocalChatResponse;
 import com.jungle.chalnaServer.domain.localchat.service.LocalChatService;
+import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +24,19 @@ public class LocalChatController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public  CommonResponse<LocalChatResponse> addLocalChat(@RequestBody LocalChatRequest.ADD dto){
-        return CommonResponse.from(HttpStatus.CREATED, localChatService.makeLocalChat(dto));
+    public  CommonResponse<LocalChatResponse> addLocalChat(@RequestBody LocalChatRequest.ADD dto, @AuthUserId final Long id){
+        return CommonResponse.from(HttpStatus.CREATED, localChatService.makeLocalChat(dto,id));
     }
 
+    @DeleteMapping("/{id}")
+    public CommonResponse<String> deleteLocalChat(@PathVariable final Long id, @AuthUserId final Long ownerId){
+        return CommonResponse.ok(localChatService.removeLocalChat(id, ownerId));
+    }
+
+    @PostMapping("/{id}")
+    public CommonResponse<String> joinLocalChat(@PathVariable final Long id, @AuthUserId final Long joinId){
+        return CommonResponse.ok(localChatService.joinLocalChat(id, joinId));
+    }
 
 
 }
