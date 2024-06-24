@@ -21,6 +21,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 @AllArgsConstructor
+@Transactional
 public class AuthService {
     private final MemberRepository memberRepository;
     private final TokenService tokenService;
@@ -96,6 +97,16 @@ public class AuthService {
                 .orElseThrow(MemberNotFoundException::new);
         return MemberInfo.of(member);
     }
+
+
+    public void logout(final Long id) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(MemberNotFoundException::new);
+
+        member.removeInfo();
+    }
+
+
 
 
 }
