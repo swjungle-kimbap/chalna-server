@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -28,7 +29,7 @@ public class ChatRoom extends BaseTimestampEntity {
     private LocalDateTime removedAt;
 
     @OneToMany(mappedBy = "chatRoom")
-    private Set<ChatRoomMember> members;
+    private Set<ChatRoomMember> members = new HashSet<>();
 
     public enum ChatRoomType{
         MATCH,

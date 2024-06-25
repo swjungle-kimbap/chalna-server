@@ -1,9 +1,8 @@
 package com.jungle.chalnaServer.domain.relation.domain.entity;
 
+import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -19,6 +18,10 @@ public class Relation extends BaseTimestampEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private FriendStatus friendStatus = FriendStatus.NOTHING;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chatroomId")
+    private ChatRoom chatRoom;
 
     @Column(nullable = false)
     private boolean isBlocked = false;
@@ -45,6 +48,10 @@ public class Relation extends BaseTimestampEntity {
 
     public void updateIsBlocked(boolean isBlocked){
         this.isBlocked = isBlocked;
+    }
+
+    public void updateChatRoom(ChatRoom chatRoom){
+        this.chatRoom = chatRoom;
     }
 
 }
