@@ -39,7 +39,7 @@ public class MatchService {
     private final ChatRepository chatRepository;
     private final RelationService relationService;
 
-    public Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId) throws Exception {
+    public Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId){
         Member member = memberRepository.findById(senderId)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -72,7 +72,7 @@ public class MatchService {
         return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
     }
 
-    public Map<String, String> matchAccept(Long notificationId) throws Exception {
+    public Map<String, String> matchAccept(Long notificationId){
         MatchNotification matchNotification = matchNotiRepository.findById(notificationId)
                 .orElseThrow(NotificationNotFoundException::new);
 

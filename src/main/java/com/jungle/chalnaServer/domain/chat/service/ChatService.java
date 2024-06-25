@@ -35,7 +35,7 @@ public class ChatService {
     private WebSocketEventListener webSocketEventListener;
 
     // 채팅 보내기(+push 알림)
-    public void sendMessage(Long memberId, Long roomId, ChatMessageRequest requestMessage, String username) throws Exception {
+    public void sendMessage(Long memberId, Long roomId, ChatMessageRequest requestMessage, String username){
         Boolean status = true;
 
         // push 알림 보내기. 채팅룸에 멤버 정보를 확인해서 다른 멤버가 채팅방에 없는 경우 알림 보내기
