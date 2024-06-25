@@ -1,6 +1,7 @@
 package com.jungle.chalnaServer.global.exception;
 
 import com.jungle.chalnaServer.domain.auth.exception.InvalidKakaoTokenException;
+import com.jungle.chalnaServer.domain.friend.exception.NotFriendException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatNotFoundException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatNotOwnerException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatTooCloseException;
@@ -33,7 +34,8 @@ public enum GlobalErrorCode {
     INVALID_KAKAO_ACCESS_TOKEN(HttpStatus.BAD_REQUEST,"카카오 액세스 토큰이 유효하지 않습니다.",Set.of(InvalidKakaoTokenException.class)),
     LOCALCHAT_TOO_CLOSE(HttpStatus.BAD_REQUEST,"주변에 가까운 장소 채팅이 있습니다.",Set.of(LocalChatTooCloseException.class)),
     LOCALCHAT_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당 장소 채팅을 찾을 수 없습니다.",Set.of(LocalChatNotFoundException.class)),
-    LOCALCHAT_NOT_OWNER(HttpStatus.BAD_REQUEST,"채팅방의 주인만 삭제할 수 있습니다.",Set.of(LocalChatNotOwnerException.class))
+    LOCALCHAT_NOT_OWNER(HttpStatus.BAD_REQUEST,"채팅방의 주인만 삭제할 수 있습니다.",Set.of(LocalChatNotOwnerException.class)),
+    NOT_FRIEND(HttpStatus.BAD_REQUEST,"친구가 아닙니다.",Set.of(NotFriendException.class))
     ;
 
     private final HttpStatusCode status;
