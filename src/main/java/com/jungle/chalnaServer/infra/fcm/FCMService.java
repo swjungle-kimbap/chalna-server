@@ -11,18 +11,21 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class FCMService {
-    public static void sendFCM(String fcmToken, FCMData fcmData) throws Exception{
+    public static void sendFCM(String fcmToken, FCMData fcmData){
+        try {
+            Message.Builder messageBuilder = Message.builder()
+                    .setToken(fcmToken)
+                    .putAllData(fcmData.toMap())
+                    .setAndroidConfig(AndroidConfig.builder()
+                            .setPriority(AndroidConfig.Priority.HIGH)
+                            .build());
 
-        Message.Builder messageBuilder = Message.builder()
-                .setToken(fcmToken)
-                .putAllData(fcmData.toMap())
-                .setAndroidConfig(AndroidConfig.builder()
-                        .setPriority(AndroidConfig.Priority.HIGH)
-                        .build());
+            Message message = messageBuilder.build();
 
-        Message message = messageBuilder.build();
-
-        String response = FirebaseMessaging.getInstance().send(message);
-        System.out.println("Successfully sent message: " + response);
+            String response = FirebaseMessaging.getInstance().send(message);
+            System.out.println("Successfully sent message: " + response);
+        } catch (Exception e) {
+            System.out.println("Failed to send FCM message" + e);
+        }
     }
 }
