@@ -11,6 +11,7 @@ import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
 import com.jungle.chalnaServer.domain.relation.domain.entity.RelationPK;
 import com.jungle.chalnaServer.domain.relation.exception.RelationIdInvalidException;
 import com.jungle.chalnaServer.domain.relation.repository.RelationRepository;
+import com.jungle.chalnaServer.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -91,10 +92,10 @@ public class RelationService {
                 chatRoomRepository.save(chatRoom);
                 return "요청에 성공했습니다.";
             } else {
-                return "이미 친구거나, 요청하지 않은 상대입니다.";
+                throw new CustomException("이미 친구거나, 요청하지 않은 상대입니다.");
             }
         } else {
-            return "채팅방이 존재하지 않습니다.";
+            throw new CustomException("채팅방이 존재하지 않습니다.");
         }
     }
 
@@ -108,7 +109,7 @@ public class RelationService {
             relation.updateFriendStatus(FriendStatus.NOTHING);
             return "요청에 성공했습니다.";
         } else {
-            return "이미 친구거나, 요청하지 않은 상대입니다.";
+            throw new CustomException("이미 친구거나, 요청하지 않은 상대입니다.");
         }
     }
 
@@ -131,10 +132,10 @@ public class RelationService {
                 return "요청에 성공했습니다.";
             }
             else{
-                return "이미 친구거나, 요청한 상태입니다.";
+                throw new CustomException("이미 친구거나, 요청한 상태입니다.");
             }
         }else{
-            return "채팅방이 존재하지 않습니다.";
+            throw new CustomException("채팅방이 존재하지 않습니다.");
         }
     }
 
