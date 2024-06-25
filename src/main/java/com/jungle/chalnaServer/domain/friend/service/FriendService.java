@@ -63,10 +63,10 @@ public class FriendService {
             Member member = memberRepository.findById(pk.getId()).orElseThrow(MemberNotFoundException::new);
             Member otherMember = memberRepository.findById(pk.getOtherId()).orElseThrow(MemberNotFoundException::new);
             chatRoom = new ChatRoom(ChatRoom.ChatRoomType.FRIEND, 2);
+            chatRoomRepository.save(chatRoom);
             chatRoomMemberRepository.save(new ChatRoomMember(member, chatRoom));
             chatRoomMemberRepository.save(new ChatRoomMember(otherMember, chatRoom));
             relation.updateChatRoom(chatRoom);
-            chatRoomRepository.save(chatRoom);
         }
     }
 
