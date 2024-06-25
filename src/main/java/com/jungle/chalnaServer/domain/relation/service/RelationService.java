@@ -106,16 +106,13 @@ public class RelationService {
     }
 
 
-    private Relation findRelation(RelationPK pk) {
+    public Relation findRelation(RelationPK pk) {
         if (pk.getId().equals(pk.getOtherId()))
             throw new RelationIdInvalidException();
         if (!memberRepository.existsById(pk.getOtherId()))
             throw new MemberNotFoundException();
         Optional<Relation> findRelation = relationRepository.findById(pk);
-        if (findRelation.isPresent())
-            return findRelation.get();
-        else
-            return createRelation(pk);
+        return findRelation.orElseGet(() -> createRelation(pk));
     }
 
     private Relation createRelation(RelationPK pk) {
