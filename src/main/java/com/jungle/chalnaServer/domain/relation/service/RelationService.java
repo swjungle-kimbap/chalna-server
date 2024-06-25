@@ -86,6 +86,8 @@ public class RelationService {
                 reverse.updateFriendStatus(FriendStatus.ACCEPTED);
                 // 채팅방 상태 변경
                 chatRoom.updateType(ChatRoom.ChatRoomType.FRIEND);
+                relation.updateChatRoom(chatRoom);
+                reverse.updateChatRoom(chatRoom);
                 chatRoomRepository.save(chatRoom);
                 return "요청에 성공했습니다.";
             } else {
