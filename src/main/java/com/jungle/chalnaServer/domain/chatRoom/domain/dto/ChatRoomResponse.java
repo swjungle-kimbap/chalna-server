@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import lombok.Getter;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +16,7 @@ public class ChatRoomResponse {
     private Integer memberCount;
     private List<MemberInfo> members;
     private ChatMessageResponse recentMessage;
+    private Integer unreadMessageCount;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
@@ -26,14 +28,19 @@ public class ChatRoomResponse {
     private LocalDateTime removedAt;
 
 
-    public ChatRoomResponse(ChatRoom chatRoom, List<MemberInfo> memberInfos, ChatMessageResponse messageResponse) {
+    public ChatRoomResponse(ChatRoom chatRoom, List<MemberInfo> memberInfos, ChatMessageResponse messageResponse, Integer unreadMessageCount) {
         this.id = chatRoom.getId();
         this.type = chatRoom.getType();
         this.memberCount = chatRoom.getMemberCount();
         this.members = memberInfos;
         this.recentMessage = messageResponse;
+        this.unreadMessageCount = unreadMessageCount;
         this.createdAt = chatRoom.getCreatedAt();
         this.updatedAt = chatRoom.getUpdatedAt();
+    }
+
+    public LocalDateTime getRecentMessageCreatedAt() {
+        return recentMessage != null ? recentMessage.getCreatedAt() : null;
     }
 
 //    public static class MemberInfo {

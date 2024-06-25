@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,7 +53,7 @@ public class ChatRoom extends BaseTimestampEntity {
     }
 
     public void updateRemovedAt() {
-        this.removedAt = LocalDateTime.now();
+        this.removedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
 }

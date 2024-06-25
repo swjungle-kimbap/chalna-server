@@ -1,6 +1,7 @@
 package com.jungle.chalnaServer.domain.chatRoom.controller;
 
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
+import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomMessagesResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomRequest;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
@@ -40,13 +41,11 @@ public class ChatRoomController {
 
     // 채팅 메시지 목록 조회
     @GetMapping("/message/{chatRoomId}")
-    public CommonResponse<Map<String, Object>> getChatRoomMessage(@PathVariable Long chatRoomId, @RequestParam LocalDateTime lastLeaveAt, HttpServletRequest request) {
+    public CommonResponse getChatRoomMessage(@PathVariable Long chatRoomId, @RequestParam LocalDateTime lastLeaveAt, HttpServletRequest request) {
         Long memberId = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
 
-        List<ChatMessageResponse> list = chatRoomService.getChatMessages(memberId,chatRoomId, lastLeaveAt);
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("list", list);
-        return CommonResponse.ok(responseData);
+        ChatRoomMessagesResponse response = chatRoomService.getChatMessages(memberId, chatRoomId, lastLeaveAt);
+        return CommonResponse.ok(response);
     }
 
     // 임시 api 채팅 방 만들기

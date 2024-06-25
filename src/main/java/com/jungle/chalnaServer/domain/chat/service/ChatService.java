@@ -17,6 +17,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -60,7 +61,7 @@ public class ChatService {
     // 메시지 보내기 + redis 저장
     public void sendAndSaveMessage(Long chatRoomId, Long senderId, String content, ChatMessage.MessageType type, Boolean status) {
         Long id = chatRepository.makeMessageId();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
         // 메시지 소켓 전달
         ChatMessageResponse responseMessage = ChatMessageResponse.builder()

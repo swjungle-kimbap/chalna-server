@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class ChatRepository {
     public List<ChatMessage> getMessagesAfterUpdateDate(Long memberId, Long chatRoomId, LocalDateTime updateDate) {
         List<ChatMessage> messages = new ArrayList<>();
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
         // Redis List의 길이 구하기
         Long listSize = redisTemplate.opsForList().size(roomKey);
@@ -76,11 +77,25 @@ public class ChatRepository {
             }
         }
         return null;
+    }
 
+    // redis에 변수 만들어서 저장, 읽기 할 때 마다 count하는 방식으로 수정 필요.
+    public Integer countUnreadMessages(Long chatRoomId, Long memberId) {
 
-//        Object rawMeaage = redisTemplate.opsForList().index(ROOM_KEY_PREFIX + chatRoomId, 0);
-//        ChatMessage message = objectMapper.convertValue(rawMeaage, ChatMessage.class);
-//        return message;
+        Integer unreadCount = 0;
+        String roomKey = ROOM_KEY_PREFIX + chatRoomId;
+        Long listSize = redisTemplate.opsForList().size(roomKey);
+
+        if (listSize != null && listSize > 0) {
+            List<Object> rawMessages = redisTemplate.opsForList().range(roomKey, 0, listSize - 1);
+            for (Object rawMessage: rawMessages) {
+                ChatMessage message = objectMapper.convertValue(rawMessage, ChatMessage.class);
+                if (!message.getSenderId().equals(memberId) && !message.getStatus()) {
+                    unreadCount++;
+                }
+            }
+        }
+        return unreadCount;
     }
 
 }
