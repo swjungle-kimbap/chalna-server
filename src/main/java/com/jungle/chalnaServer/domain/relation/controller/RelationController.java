@@ -37,14 +37,14 @@ public class RelationController {
     public CommonResponse<String> friendDelete(@AuthUserId final Long id, @PathVariable final Long otherId){
         return CommonResponse.from("200",null,relationService.friendRemove(id,otherId));
     }
-    @PatchMapping("/request/{otherId}")
-    public CommonResponse<String> friendRequest(@AuthUserId final Long id, @PathVariable final Long otherId){
-        return CommonResponse.from("200",null,relationService.friendRequest(id,otherId));
+    @PatchMapping("/request/{chatRoomId}")
+    public CommonResponse<String> friendRequest(@AuthUserId final Long id, @PathVariable final Long chatRoomId){
+        return CommonResponse.from("200",null,relationService.friendRequest(id,chatRoomId));
     }
 
-    @PatchMapping("/accept/{otherId}")
-    public CommonResponse<String> friendAccept(@AuthUserId final Long id, @PathVariable final Long otherId) {
-        return CommonResponse.from("200", null, relationService.friendAccept(id, otherId));
+    @PatchMapping("/accept/{chatRoomId}")
+    public CommonResponse<String> friendAccept(@AuthUserId final Long id, @PathVariable final Long chatRoomId) {
+        return CommonResponse.from("200", null, relationService.friendAccept(id, chatRoomId));
     }
 
     @PatchMapping("/reject/{otherId}")
