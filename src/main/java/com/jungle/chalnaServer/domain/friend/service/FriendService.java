@@ -2,6 +2,7 @@ package com.jungle.chalnaServer.domain.friend.service;
 
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.friend.domain.dto.FriendReponse;
 import com.jungle.chalnaServer.domain.friend.exception.NotFriendException;
@@ -32,6 +33,7 @@ public class FriendService {
     private final MemberRepository memberRepository;
     private final RelationRepository relationRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final RelationService relationService;
 
 
@@ -61,8 +63,8 @@ public class FriendService {
             Member member = memberRepository.findById(pk.getId()).orElseThrow(MemberNotFoundException::new);
             Member otherMember = memberRepository.findById(pk.getOtherId()).orElseThrow(MemberNotFoundException::new);
             chatRoom = new ChatRoom(ChatRoom.ChatRoomType.FRIEND, 2);
-            chatRoom.getMembers().add(new ChatRoomMember(member, chatRoom));
-            chatRoom.getMembers().add(new ChatRoomMember(otherMember, chatRoom));
+            chatRoomMemberRepository.save(new ChatRoomMember(member, chatRoom));
+            chatRoomMemberRepository.save(new ChatRoomMember(otherMember, chatRoom));
             relation.updateChatRoom(chatRoom);
             chatRoomRepository.save(chatRoom);
         }
