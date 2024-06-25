@@ -13,6 +13,7 @@ import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,8 +42,8 @@ public class WebSocketEventListener {
         sessionChatRoomMap.put(sessionId, chatRoomId);
 
         Long memberId = (Long) headerAccessor.getSessionAttributes().get("memberId");
-        Long messageId = chatRepository.makeMessageId();
-        LocalDateTime now = LocalDateTime.now();
+        Long messageId = 0L;
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
 
         // 이 방에 사용자가 입장했다는 걸 알려주기.
@@ -58,11 +59,11 @@ public class WebSocketEventListener {
 
         messagingTemplate.convertAndSend("/topic/" + chatRoomId, chatMessage);
 
-        ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.USER_ENTER, memberId,
-                Long.parseLong(chatRoomId), "다른 사용자가 입장했습니다.", true,
-                now, now);
-
-        chatRepository.saveMessage(message);
+//        ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.USER_ENTER, memberId,
+//                Long.parseLong(chatRoomId), "다른 사용자가 입장했습니다.", true,
+//                now, now);
+//
+//        chatRepository.saveMessage(message);
 
         System.out.println("session Connected : " + sessionId);
     }
