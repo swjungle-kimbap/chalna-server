@@ -40,7 +40,7 @@ public class MatchService {
     private final ChatRepository chatRepository;
     private final RelationService relationService;
 
-    public Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId){
+    public synchronized Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId){
         Member member = memberRepository.findById(senderId)
                 .orElseThrow(MemberNotFoundException::new);
 
