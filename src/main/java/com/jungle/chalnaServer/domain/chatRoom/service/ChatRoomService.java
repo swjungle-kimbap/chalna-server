@@ -140,11 +140,11 @@ public class ChatRoomService {
 
                 messagingTemplate.convertAndSend("/topic/" + chatRoomId, chatMessage);
 
-                ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.TIMEOUT, 0L,
-                        chatRoomId, content, true,
-                        now, now);
-
-                chatRepository.saveMessage(message);
+//                ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.TIMEOUT, 0L,
+//                        chatRoomId, content, true,
+//                        now, now);
+//
+//                chatRepository.saveMessage(message);
 
             });
         }, delay, unit);

@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,12 +63,12 @@ public class MatchService {
                 .receiverId(receiverId)
                 .message(dto.getMessage())
                 .status(MatchNotificationStatus.SEND)
-                .deleteAt(LocalDateTime.now().plusMinutes(10L))
+                .deleteAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(10L))
                 .build();
 
         matchNotiRepository.save(matchNotification);
 
-        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString(), matchNotification.getId().toString()));
+        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now(ZoneId.of("Asia/Seoul")).toString(), matchNotification.getId().toString()));
 
         return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
     }
@@ -98,8 +99,8 @@ public class MatchService {
                 chatRoomId,
                 matchNotification.getMessage(),
                 true,
-                LocalDateTime.now(),
-                LocalDateTime.now());
+                LocalDateTime.now(ZoneId.of("Asia/Seoul")),
+                LocalDateTime.now(ZoneId.of("Asia/Seoul")));
 
         chatRepository.saveMessage(message);
 
@@ -112,7 +113,7 @@ public class MatchService {
 
         FCMService.sendFCM(fcmToken, FCMData.instanceOfChatFCM(matchNotification.getReceiverId().toString(),
                 "인연과의 대화가 시작됐습니다.",
-                LocalDateTime.now().toString(),
+                LocalDateTime.now(ZoneId.of("Asia/Seoul")).toString(),
                 receiver.getUsername(),
                 chatRoomId.toString(),
                 ChatMessage.MessageType.CHAT.toString()));
@@ -137,7 +138,7 @@ public class MatchService {
         List<MatchNotification> notifications = matchNotiRepository.findByReceiverId(receiverId);
 
         return notifications.stream()
-                .filter(notification -> notification.getDeleteAt() == null || notification.getDeleteAt().isAfter(LocalDateTime.now()))
+                .filter(notification -> notification.getDeleteAt() == null || notification.getDeleteAt().isAfter(LocalDateTime.now(ZoneId.of("Asia/Seoul"))))
                 .map(notification -> {
                     Long senderId = notification.getSenderId();
                     RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);

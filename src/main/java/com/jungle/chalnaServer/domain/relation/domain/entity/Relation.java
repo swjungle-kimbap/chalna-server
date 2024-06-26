@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Getter
@@ -35,7 +36,7 @@ public class Relation extends BaseTimestampEntity {
         this.relationPK = relationPK;
     }
     public void increaseOverlapCount(){
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         if(this.lastOverlapAt == null || now.isAfter(this.lastOverlapAt.plusHours(4))) {
             this.overlapCount += 1;
             this.lastOverlapAt = now;
