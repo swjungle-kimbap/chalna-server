@@ -23,7 +23,7 @@ public class FCMData {
         this.additionalData.put("notificationId", notificationId);
     }
 
-    private FCMData(String senderId, String message, String createdAt, String senderName, String chatRoomId, String messageType) {
+    private FCMData(String senderId, String message, String createdAt, String senderName, String chatRoomId, String chatRoomType) {
         this.senderId = senderId;
         this.message = message;
         this.createdAt = createdAt;
@@ -31,7 +31,7 @@ public class FCMData {
         this.additionalData.put("fcmType", "chat");
         this.additionalData.put("senderName", senderName);
         this.additionalData.put("chatRoomId", chatRoomId);
-        this.additionalData.put("messageType", messageType);
+        this.additionalData.put("chatRoomType", chatRoomType);
     }
 
 
@@ -41,8 +41,8 @@ public class FCMData {
     }
 
     /*ChatFCMData 생성자*/
-    public static FCMData instanceOfChatFCM(String senderId, String message, String createdAt, String senderName, String chatRoomId, String messageType) {
-        return new FCMData(senderId, message, createdAt, senderName, chatRoomId, messageType);
+    public static FCMData instanceOfChatFCM(String senderId, String message, String createdAt, String senderName, String chatRoomId, String chatRoomType) {
+        return new FCMData(senderId, message, createdAt, senderName, chatRoomId, chatRoomType);
     }
 
 
