@@ -19,7 +19,7 @@ public class Relation extends BaseTimestampEntity {
     @Column(nullable = false)
     private FriendStatus friendStatus = FriendStatus.NOTHING;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chatroomId")
     private ChatRoom chatRoom;
 
