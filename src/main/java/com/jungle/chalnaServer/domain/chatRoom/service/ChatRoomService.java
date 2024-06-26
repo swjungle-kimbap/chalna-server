@@ -119,32 +119,35 @@ public class ChatRoomService {
             log.info("timeout roomId {}", chatRoomId);
             Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findById(chatRoomId);
             optionalChatRoom.ifPresent(chatRoom -> {
-                // 채팅방의 상태를 대기 상태로 변경
-                chatRoom.updateType(ChatRoom.ChatRoomType.WAITING);
-                chatRoomRepository.save(chatRoom);
+                if (!chatRoom.getType().equals(ChatRoom.ChatRoomType.FRIEND)) {
+                    // 채팅방의 상태를 대기 상태로 변경
+                    chatRoom.updateType(ChatRoom.ChatRoomType.WAITING);
+                    chatRoomRepository.save(chatRoom);
 
-                // 메시지 보내기
-                Long messageId = chatRepository.makeMessageId();
-                LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-                String content = "5분이 지났습니다.";
+                    // 메시지 보내기
+                    Long messageId = chatRepository.makeMessageId();
+                    LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+                    String content = "5분이 지났습니다.";
 
-                ChatMessageResponse chatMessage = ChatMessageResponse.builder()
-                        .id(messageId)
-                        .content(content)
-                        .senderId(0L)
-                        .type(ChatMessage.MessageType.TIMEOUT)
-                        .status(true)
-                        .createdAt(now)
-                        .build();
+                    ChatMessageResponse chatMessage = ChatMessageResponse.builder()
+                            .id(messageId)
+                            .content(content)
+                            .senderId(0L)
+                            .type(ChatMessage.MessageType.TIMEOUT)
+                            .status(true)
+                            .createdAt(now)
+                            .build();
 
 
-                messagingTemplate.convertAndSend("/topic/" + chatRoomId, chatMessage);
+                    messagingTemplate.convertAndSend("/topic/" + chatRoomId, chatMessage);
 
 //                ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.TIMEOUT, 0L,
 //                        chatRoomId, content, true,
 //                        now, now);
 //
 //                chatRepository.saveMessage(message);
+
+                }
 
             });
         }, delay, unit);
