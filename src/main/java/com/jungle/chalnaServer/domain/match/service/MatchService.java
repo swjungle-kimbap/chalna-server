@@ -56,6 +56,14 @@ public class MatchService {
                 || relationService.findByOtherId(senderId, receiverId).isBlocked())
             return MatchResponse.MatchMessageSend("차단된 유저 입니다.");
 
+        // 중간 발표 테스트용 제한
+        LocalDateTime tenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusMinutes(10L);
+        List<MatchNotification> notifications = matchNotiRepository.findByReceiverIdAndSenderIdAndDeleteAtAfter(receiverId, senderId, tenMinutesAgo);
+
+        if (!notifications.isEmpty()) {
+            return MatchResponse.MatchMessageSend("이미 10분 내에 메시지를 보냈습니다.");
+        }
+
         String fcmToken = receiver.getFcmToken();
 
         MatchNotification matchNotification = MatchNotification.builder()
