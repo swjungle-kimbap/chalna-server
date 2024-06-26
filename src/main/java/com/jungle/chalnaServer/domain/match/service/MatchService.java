@@ -67,7 +67,7 @@ public class MatchService {
 
         matchNotiRepository.save(matchNotification);
 
-        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString()));
+        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now().toString(), matchNotification.getId().toString()));
 
         return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
     }
