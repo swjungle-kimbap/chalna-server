@@ -66,6 +66,7 @@ public class RelationService {
         return "요청에 성공했습니다.";
     }
 
+    @Transactional
     public String friendAccept(final Long id, final Long chatRoomId) {
         Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findById(chatRoomId);
         if (optionalChatRoom.isPresent()) {
@@ -81,7 +82,6 @@ public class RelationService {
             Relation relation = findRelation(pk);
             Relation reverse = findRelation(pk.reverse());
 
-
             if (relation.getFriendStatus() == FriendStatus.PENDING && reverse.getFriendStatus() != FriendStatus.ACCEPTED) {
                 relation.updateFriendStatus(FriendStatus.ACCEPTED);
                 reverse.updateFriendStatus(FriendStatus.ACCEPTED);
@@ -89,7 +89,6 @@ public class RelationService {
                 chatRoom.updateType(ChatRoom.ChatRoomType.FRIEND);
                 relation.updateChatRoom(chatRoom);
                 reverse.updateChatRoom(chatRoom);
-                chatRoomRepository.save(chatRoom);
                 return "요청에 성공했습니다.";
             } else {
                 throw new CustomException("이미 친구거나, 요청하지 않은 상대입니다.");
@@ -127,6 +126,7 @@ public class RelationService {
             Relation relation = findRelation(pk);
             Relation reverse = findRelation(pk.reverse());
 
+            log.info("{} {} {}", id, otherId, pk);
             if(relation.getFriendStatus() != FriendStatus.ACCEPTED && reverse.getFriendStatus() == FriendStatus.NOTHING){
                 reverse.updateFriendStatus(FriendStatus.PENDING);
                 return "요청에 성공했습니다.";
