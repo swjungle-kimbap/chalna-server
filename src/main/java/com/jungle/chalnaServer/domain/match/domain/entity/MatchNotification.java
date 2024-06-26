@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter
 @Entity
@@ -33,7 +34,7 @@ public class MatchNotification extends BaseTimestampEntity {
     
     public void updateStatus(MatchNotificationStatus newStatus) {
         this.status = newStatus;
-        this.deleteAt = LocalDateTime.now();
+        this.deleteAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     public LocalDateTime getCreatedAt() {

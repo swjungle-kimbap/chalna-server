@@ -46,7 +46,7 @@ public class ChatService {
                 for (ChatRoomMember chatRoomMember : members) {
                     if (!chatRoomMember.getMember().getId().equals(memberId)){
                         // push 알림 보내기
-                        FCMData fcmData = FCMData.instanceOfChatFCM(memberId.toString(), requestMessage.getContent(), LocalDateTime.now().toString(), username, roomId.toString(), requestMessage.getType().toString());
+                        FCMData fcmData = FCMData.instanceOfChatFCM(memberId.toString(), requestMessage.getContent(), LocalDateTime.now(ZoneId.of("Asia/Seoul")).toString(), username, roomId.toString(), requestMessage.getType().toString());
                         FCMService.sendFCM(chatRoomMember.getMember().getFcmToken(), fcmData);
                         log.info("send push message");
                     }
