@@ -14,8 +14,13 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,11 +30,16 @@ public class Stomphandler implements ChannelInterceptor {
     private final JwtService jwtUtil;
     private final MemberService memberService;
 
+    private final Map<String, Set<String>> chatRoomSubscriptions = new ConcurrentHashMap<>();
+    private final Map<String, String> sessionChatRoomMap = new ConcurrentHashMap<>();
+
+
     // websocket을 통해 들어온 요청이 처리 되기전 실행됨
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         log.info("Stomphandler preSend!!!!!!!!!!");
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        String sessionId = accessor.getSessionId();
         // 연결 요청시 JWT 검증
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             log.info("Stomphandler connect !!!!!!!!!!!");
@@ -54,8 +64,15 @@ public class Stomphandler implements ChannelInterceptor {
                     // 사용자 정보 조회
                     accessor.getSessionAttributes().put("memberId", id);
                     accessor.getSessionAttributes().put("username", memberInfo.username());
+
+                    String chatRoomId = accessor.getFirstNativeHeader("chatRoomId");
+                    log.info("chatRoomId {}", chatRoomId);
+                    chatRoomSubscriptions.computeIfAbsent(chatRoomId, k -> new CopyOnWriteArraySet<>()).add(sessionId);
+                    sessionChatRoomMap.put(sessionId, chatRoomId);
+                    System.out.println("session Connected11 : " + sessionId);
+
                 } catch (Exception e) {
-                    log.error("An unexpected error occurred: " + e.getMessage());
+                    log.error("An unexpected error occurred1: " + e.getMessage());
 
                     throw new MessageDeliveryException("UNAUTHORIZED");
                 }
@@ -65,8 +82,32 @@ public class Stomphandler implements ChannelInterceptor {
                 log.error("Authorization header is not found");
                 return null;
             }
+        } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+            log.info("disconnect!!!!! {}", accessor.getSessionId());
+
+            String chatRoomId = sessionChatRoomMap.get(sessionId);
+            log.info("chatRoomId {}", chatRoomId);
+            if (chatRoomId != null) {
+                Set<String> sessions = chatRoomSubscriptions.get(chatRoomId);
+                log.info("!!!! {} {}", sessionId, chatRoomId);
+
+                sessionChatRoomMap.remove(sessionId);
+                if (sessions != null) {
+                    sessions.remove(sessionId);
+                    if (sessions.isEmpty()) {
+                        chatRoomSubscriptions.remove(chatRoomId);
+                    }
+                }
+
+                System.out.println("session Disconnected : " + sessionId);
+            }
+
         }
         return message;
+    }
+
+    public Integer getConnectedCount(Long chatRoomId) {
+        return chatRoomSubscriptions.getOrDefault(chatRoomId.toString(), new CopyOnWriteArraySet<>()).size();
     }
 
 }

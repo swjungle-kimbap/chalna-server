@@ -23,8 +23,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Log4j2
 public class WebSocketEventListener {
 
-    private final Map<String, Set<String>> chatRoomSubscriptions = new ConcurrentHashMap<>();
-    private final Map<String, String> sessionChatRoomMap = new ConcurrentHashMap<>();
+//    private final Map<String, Set<String>> chatRoomSubscriptions = new ConcurrentHashMap<>();
+//    private final Map<String, String> sessionChatRoomMap = new ConcurrentHashMap<>();
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -34,12 +34,13 @@ public class WebSocketEventListener {
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectEvent event) {
+        log.info("connectListener");
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 
         String sessionId = headerAccessor.getSessionId();
         String chatRoomId = headerAccessor.getFirstNativeHeader("chatRoomId");
-        chatRoomSubscriptions.computeIfAbsent(chatRoomId, k -> new CopyOnWriteArraySet<>()).add(sessionId);
-        sessionChatRoomMap.put(sessionId, chatRoomId);
+//        chatRoomSubscriptions.computeIfAbsent(chatRoomId, k -> new CopyOnWriteArraySet<>()).add(sessionId);
+//        sessionChatRoomMap.put(sessionId, chatRoomId);
 
         Long memberId = (Long) headerAccessor.getSessionAttributes().get("memberId");
         Long messageId = 0L;
@@ -68,28 +69,28 @@ public class WebSocketEventListener {
         System.out.println("session Connected : " + sessionId);
     }
 
-    @EventListener
-    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+//    @EventListener
+//    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+//        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+//
+//        String sessionId = headerAccessor.getSessionId();
+//        String chatRoomId = sessionChatRoomMap.get(sessionId);
+//        Set<String> sessions = chatRoomSubscriptions.get(chatRoomId);
 
-        String sessionId = headerAccessor.getSessionId();
-        String chatRoomId = sessionChatRoomMap.get(sessionId);
-        Set<String> sessions = chatRoomSubscriptions.get(chatRoomId);
+//        sessionChatRoomMap.remove(sessionId);
+//        if (sessions != null) {
+//            sessions.remove(sessionId);
+//            if (sessions.isEmpty()) {
+//                chatRoomSubscriptions.remove(chatRoomId);
+//            }
+//        }
 
-        sessionChatRoomMap.remove(sessionId);
-        if (sessions != null) {
-            sessions.remove(sessionId);
-            if (sessions.isEmpty()) {
-                chatRoomSubscriptions.remove(chatRoomId);
-            }
-        }
+//        System.out.println("session Disconnected : " + sessionId);
+//
+//    }
 
-        System.out.println("session Disconnected : " + sessionId);
-
-    }
-
-    public Integer getConnectedCount(Long chatRoomId) {
-        return chatRoomSubscriptions.getOrDefault(chatRoomId.toString(), new CopyOnWriteArraySet<>()).size();
-    }
+//    public Integer getConnectedCount(Long chatRoomId) {
+//        return chatRoomSubscriptions.getOrDefault(chatRoomId.toString(), new CopyOnWriteArraySet<>()).size();
+//    }
 
 }
