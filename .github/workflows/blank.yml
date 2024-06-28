@@ -1,0 +1,94 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "dev" branch
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+env:
+  AWS_REGION: ap-northeast-2 #리전
+  S3_BUCKET_NAME: chalna-bucket #버킷 이름
+  CODE_DEPLOY_APPLICATION_NAME: chalna-beginner #CodeDeploy 애플리케이션 이름
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: chalna-group #CodeDeploy 배포 그룹 이름
+
+
+permissions:
+  contents: read
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+
+  # This workflow contains a single job called "build"
+  deploy:
+    name: Deploy
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    environment: production
+
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+      - uses: actions/checkout@v4
+
+
+      - uses: actions/checkout@v4
+      - run: touch ./src/main/resources/application.properties
+      - run: echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
+      - run: cat ./src/main/resources/application.properties
+
+      - name: Run chmod to make gradlew executable
+        run: chmod +x ./gradlew
+
+
+      - name: Set up JDK 1
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
+        with:
+          arguments: clean build -x test
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+  
+      - name: Upload to AWS S3
+        run: |
+          aws deploy push \
+           --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+           --ignore-hidden-files \
+           --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
+           --source .
+
+  
+
+      - name: Deploy to AWS EC2 from S3
+        run: |
+          aws deploy create-deployment \
+          --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+          --deployment-config-name CodeDeployDefault.AllAtOnce \
+          --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+          --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
+
+
+
+
+
