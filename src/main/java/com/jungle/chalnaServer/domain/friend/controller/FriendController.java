@@ -2,7 +2,7 @@ package com.jungle.chalnaServer.domain.friend.controller;
 
 import com.jungle.chalnaServer.domain.friend.domain.dto.FriendReponse;
 import com.jungle.chalnaServer.domain.friend.service.FriendService;
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class FriendController {
     private final FriendService friendService;
 
     @GetMapping
-    public CommonResponse<List<MemberInfo>> getFriends(@AuthUserId final Long id){
+    public CommonResponse<List<MemberResponse>> getFriends(@AuthUserId final Long id){
         return CommonResponse.ok(friendService.findFriends(id));
     }
 

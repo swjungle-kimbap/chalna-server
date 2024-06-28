@@ -1,7 +1,6 @@
 spring:
   config:
-#    import: optional:file:.env[.properties]
-    import: spring.config.import=file:/home/ubuntu/firebase-config.json
+    import: optional:file:.env[.properties]
   jackson:
     time-zone: Asia/Seoul
   datasource:

@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.domain.chat.handler;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.util.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,6 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 
 import java.util.List;
 import java.util.Map;
@@ -60,10 +59,10 @@ public class Stomphandler implements ChannelInterceptor {
                         throw new Exception("jwt is expired");
                     }
                     Long id = jwtUtil.getId(jwt);
-                    MemberInfo memberInfo = memberService.getMemberInfo(id);
+                    MemberResponse memberResponse = memberService.getMemberInfo(id);
                     // 사용자 정보 조회
                     accessor.getSessionAttributes().put("memberId", id);
-                    accessor.getSessionAttributes().put("username", memberInfo.username());
+                    accessor.getSessionAttributes().put("username", memberResponse.username());
 
                     String chatRoomId = accessor.getFirstNativeHeader("chatRoomId");
                     log.info("chatRoomId {}", chatRoomId);

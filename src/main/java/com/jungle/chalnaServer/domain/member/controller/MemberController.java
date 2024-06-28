@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.domain.member.controller;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberRequest;
 import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
@@ -21,10 +21,10 @@ public class MemberController {
     private final JwtService jwtService;
 
     @PatchMapping
-    public CommonResponse<MemberInfo> updateMemberInfo(HttpServletRequest request,
-                                                       @RequestParam(value = "username", required = false) String username,
-                                                       @RequestParam(value = "message" , required = false) String message,
-                                                       @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+    public CommonResponse<MemberResponse> updateMemberInfo(HttpServletRequest request,
+                                                           @RequestParam(value = "username", required = false) String username,
+                                                           @RequestParam(value = "message" , required = false) String message,
+                                                           @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
         Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
         MemberRequest memberDto = MemberRequest.builder()
                 .username(username)
@@ -36,7 +36,7 @@ public class MemberController {
     }
 
     @GetMapping
-    public CommonResponse<MemberInfo> getMemberInfo(HttpServletRequest request) {
+    public CommonResponse<MemberResponse> getMemberInfo(HttpServletRequest request) {
 
         Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
         return CommonResponse.ok(memberService.getMemberInfo(id));

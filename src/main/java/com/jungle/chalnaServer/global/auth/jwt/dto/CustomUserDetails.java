@@ -1,13 +1,13 @@
 package com.jungle.chalnaServer.global.auth.jwt.dto;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-public record CustomUserDetails(MemberInfo memberInfo) implements UserDetails {
+public record CustomUserDetails(MemberResponse memberResponse) implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return new ArrayList<>();
@@ -20,7 +20,7 @@ public record CustomUserDetails(MemberInfo memberInfo) implements UserDetails {
 
     @Override
     public String getUsername() {
-        return memberInfo.id().toString();
+        return memberResponse.id().toString();
     }
 
     @Override
