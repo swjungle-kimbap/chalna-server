@@ -78,8 +78,6 @@ jobs:
            --s3-location s3://${{ env.S3_BUCKET_NAME }}/${{ github.sha }}.zip \
            --source .
 
-  
-
       - name: Deploy to AWS EC2 from S3
         run: |
           aws deploy create-deployment \
