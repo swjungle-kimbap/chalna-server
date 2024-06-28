@@ -37,7 +37,7 @@ jobs:
           path: .
 
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@vmaster
+        uses: appleboy/ssh-action@master
         with:
 #          github_token: ${{secrets.TOKEN}}
           host: ${{ secrets.EC2_HOST }}
