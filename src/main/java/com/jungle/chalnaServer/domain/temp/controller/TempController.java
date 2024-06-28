@@ -41,8 +41,8 @@ public class TempController {
 
     }
 
-    @GetMapping()
+    @GetMapping("/real")
     public String deployTest() {
-        return "자동 배포 성공";
+        return "자동 배포 진짜 성공";
     }
 }
