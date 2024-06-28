@@ -47,7 +47,6 @@ jobs:
           script: |
             cd /home/ubuntu
             rm -rf chalna-server-0.0.1-SNAPSHOT.jar
-#            mv ~/spring-boot-app-*.jar /home/ubuntu/chalna-server-0.0.1-SNAPSHOT.jar
             
             mkdir downloaded_artifacts
             cd downloaded_artifacts
