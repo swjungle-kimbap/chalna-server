@@ -70,11 +70,14 @@ jobs:
           ACTIVE_DEPLOYMENT=$(aws deploy list-deployments \
             --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
             --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
-            --include-only-statuses InProgress)
-
-          if [ ! -z "$ACTIVE_DEPLOYMENT" ]; then
-            DEPLOYMENT_ID=$(echo $ACTIVE_DEPLOYMENT | jq -r '.deployments[0]')
-            aws deploy stop-deployment --deployment-id $DEPLOYMENT_ID
+            --include-only-statuses InProgress \
+            --query "deployments" \
+            --output text)
+        
+          if [ "$ACTIVE_DEPLOYMENT" != "None" ] && [ ! -z "$ACTIVE_DEPLOYMENT" ]; then
+          for deployment in $ACTIVE_DEPLOYMENT; do
+          aws deploy stop-deployment --deployment-id $deployment
+          done
           fi
 
       - name: Deploy to AWS EC2 from S3
