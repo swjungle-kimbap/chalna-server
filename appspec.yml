@@ -1,39 +1,13 @@
-## appspec.yml
-#
-#version: 0.0
-#os: linux
-#
-#files:
-#  - source:  /
-#    destination: /home/ubuntu/app/chalna
-#    overwrite: yes
-#
-#permissions:
-#  - object: /home/ubuntu/app/chalna-server
-#    pattern: "**"
-#    owner: ubuntu
-#    group: ubuntu
-#
-#hooks:
-#  AfterInstall:
-#    - location: scripts/stop.sh
-#      timeout: 60
-#      runas: ubuntu
-#  ApplicationStart:
-#    - location: scripts/start.sh
-#      timeout: 60
-#      runas: ubuntu
-
 version: 0.0
 os: linux
 
 files:
-  - source:  /
-    destination: /home/ubuntu/app/chalna-server
+  - source: build/libs/chalna-server-0.0.1-SNAPSHOT.jar
+    destination: /home/ubuntu/app/chalna-server/
     overwrite: yes
 
 permissions:
-  - object: /
+  - object: /home/ubuntu/app/chalna-server/
     pattern: "**"
     owner: ubuntu
     group: ubuntu
