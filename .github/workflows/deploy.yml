@@ -21,7 +21,7 @@ jobs:
           distribution: 'corretto'
 
       - name: archive chalna beginner
-        run: tar cvfz ./chalna.tar.gz
+        run: tar cvfz ./chalna-beginner.tar.gz
 
       - name: AWS configure credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -31,11 +31,11 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./chalna.tar.gz s3://chalna-bucket/chalna_folder/
+        run: aws s3 cp --region ap-northeast-2 ./chalna-beginner.tar.gz s3://chalna-bucket/chalna_folder/
 
       - name: deploy with AWS codeDeploy
         run: aws deploy create-deployment
-          --application-name chalna
+          --application-name chalna-beginner
           --deployment-config-name CodeDeployDefault.AllAtOnce
           --deployment-group-name chalna-group
           --s3-location bucket=chalna-bucket,bundleType=tgz,key=chalna_folder/chalna.tar.gz
