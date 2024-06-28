@@ -17,8 +17,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: Asia/Seoul
-  #        show_sql: true
-  #        format_sql: true
+
   data:
     redis:
       host: ${REDIS_HOST}
