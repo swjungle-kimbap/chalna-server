@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # 프로젝트 이름 설정
-PROJECT_NAME="app/chalna"
+PROJECT_NAME="app/chalna-server"
 
 # 프로젝트 루트 디렉토리 설정
 PROJECT_ROOT="/home/ubuntu/${PROJECT_NAME}"

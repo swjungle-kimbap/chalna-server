@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PROJECT_NAME="app/chalna"
+PROJECT_NAME="app/chalna-server"
 PROJECT_ROOT="/home/ubuntu/${PROJECT_NAME}"
 JAR_FILE="$PROJECT_ROOT/chalna-server-0.0.1-SNAPSHOT.jar"
 
