@@ -1,7 +1,7 @@
 package com.jungle.chalnaServer.global.auth.jwt;
 
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.global.auth.jwt.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +19,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
         Member member = memberRepository.findById(Long.valueOf(id)).orElseThrow(()->new UsernameNotFoundException("400"));
-        return new CustomUserDetails(MemberInfo.of(member));
+        return new CustomUserDetails(MemberResponse.of(member));
     }
 }

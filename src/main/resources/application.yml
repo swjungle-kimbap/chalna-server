@@ -1,0 +1,43 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  jackson:
+    time-zone: Asia/Seoul
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: Asia/Seoul
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port:  ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  web:
+    resources:
+      static-locations: classpath:/static/,classpath:/static/uploads/,file:/opt/files/
+file:
+  upload-dir: src/main/resources/static/uploads/
+jwt:
+  access-token-expiration-time: 604800000
+  refresh-token-expiration-time: 604800000
+  secret:  ${JWT_SECRET}
+
+kakao:
+  client-id: ${CLIENT_ID}
+  client-secret: ${CLIENT_SECRET}
+

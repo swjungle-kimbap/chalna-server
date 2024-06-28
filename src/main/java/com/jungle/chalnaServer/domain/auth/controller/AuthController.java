@@ -3,7 +3,7 @@ package com.jungle.chalnaServer.domain.auth.controller;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.service.AuthService;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
@@ -36,7 +36,7 @@ public class AuthController {
     public CommonResponse<?> login(@RequestBody AuthRequest.LOGIN dto, HttpServletResponse response) {
 
         Tokens tokens = memberService.login(dto);
-        MemberInfo responses = memberService.getMemberInfo(dto);
+        MemberResponse responses = memberService.getMemberInfo(dto);
 
         response.setHeader(JwtService.AUTHORIZATION_HEADER,tokens.accessToken());
         response.setHeader(JwtService.REFRESH_HEADER,tokens.refreshToken());

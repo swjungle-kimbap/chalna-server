@@ -6,7 +6,7 @@ import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberReposito
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.friend.domain.dto.FriendReponse;
 import com.jungle.chalnaServer.domain.friend.exception.NotFriendException;
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
@@ -37,7 +37,7 @@ public class FriendService {
     private final RelationService relationService;
 
 
-    public List<MemberInfo> findFriends(Long id) {
+    public List<MemberResponse> findFriends(Long id) {
         return getMemberList(getFriendIdList(id));
     }
 
@@ -91,8 +91,8 @@ public class FriendService {
         return friendIds;
     }
 
-    private List<MemberInfo> getMemberList(List<Long> ids) {
-        return memberRepository.findAllById(ids).stream().map(MemberInfo::of).collect(Collectors.toList());
+    private List<MemberResponse> getMemberList(List<Long> ids) {
+        return memberRepository.findAllById(ids).stream().map(MemberResponse::of).collect(Collectors.toList());
     }
 
 }

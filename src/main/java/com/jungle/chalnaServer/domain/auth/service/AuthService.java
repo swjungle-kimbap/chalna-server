@@ -2,7 +2,7 @@ package com.jungle.chalnaServer.domain.auth.service;
 
 import com.jungle.chalnaServer.domain.auth.domain.dto.KakaoUserInfo;
 import com.jungle.chalnaServer.domain.auth.exception.InvalidKakaoTokenException;
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
@@ -92,10 +92,10 @@ public class AuthService {
         return new Tokens(accessToken, refreshToken);
     }
 
-    public MemberInfo getMemberInfo(AuthRequest.LOGIN dto) {
+    public MemberResponse getMemberInfo(AuthRequest.LOGIN dto) {
         Member member = memberRepository.findByLoginToken(dto.loginToken())
                 .orElseThrow(MemberNotFoundException::new);
-        return MemberInfo.of(member);
+        return MemberResponse.of(member);
     }
 
 

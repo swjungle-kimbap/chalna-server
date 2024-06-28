@@ -2,7 +2,6 @@ package com.jungle.chalnaServer.domain.temp.controller;
 
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
 import com.jungle.chalnaServer.domain.temp.service.TempService;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;

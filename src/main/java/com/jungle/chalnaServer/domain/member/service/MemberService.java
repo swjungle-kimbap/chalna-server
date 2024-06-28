@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.domain.member.service;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberRequest;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
@@ -28,7 +28,7 @@ public class MemberService {
         this.uploadDir = uploadDir;
     }
 
-    public MemberInfo updateMemberInfo(Long id, MemberRequest memberDto, MultipartFile image) throws IOException {
+    public MemberResponse updateMemberInfo(Long id, MemberRequest memberDto, MultipartFile image) throws IOException {
 
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
@@ -66,7 +66,7 @@ public class MemberService {
         member = memberRepository.save(member);
         log.info("Updated member: {}", member);
 
-        return MemberInfo.of(member);
+        return MemberResponse.of(member);
     }
 
     // 파일 저장 이름 생성
@@ -92,7 +92,7 @@ public class MemberService {
 
 
     /* 사용자 정보를 조회하는 메서드 */
-    public MemberInfo getMemberInfo(Long id) {
+    public MemberResponse getMemberInfo(Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -100,7 +100,7 @@ public class MemberService {
 
         /* 추후 토큰을 검사해서 해당 user의 사용자의 정보만 조회하도록 수정 */
 
-        return MemberInfo.of(member);
+        return MemberResponse.of(member);
 
     }
 }

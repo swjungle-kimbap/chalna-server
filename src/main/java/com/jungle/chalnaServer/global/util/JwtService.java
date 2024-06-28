@@ -1,6 +1,5 @@
 package com.jungle.chalnaServer.global.util;
 
-import com.jungle.chalnaServer.domain.member.domain.dto.MemberInfo;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
