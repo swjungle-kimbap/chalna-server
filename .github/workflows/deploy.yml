@@ -25,7 +25,7 @@ jobs:
         run: ./gradlew build -x test  # 필요에 따라 테스트를 포함하도록 변경
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: spring-boot-app
           path: build/libs/*.jar
@@ -39,7 +39,7 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.4
         with:
-          github_token: ${{secrets.TOKEN}}
+#          github_token: ${{secrets.TOKEN}}
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
@@ -47,6 +47,7 @@ jobs:
           script: |
             cd /home/ubuntu
             rm -rf chalna-server-0.0.1-SNAPSHOT.jar
+#            mv ~/spring-boot-app-*.jar /home/ubuntu/chalna-server-0.0.1-SNAPSHOT.jar
             
             mkdir downloaded_artifacts
             cd downloaded_artifacts
