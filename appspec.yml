@@ -1,15 +1,39 @@
-# appspec.yml
+## appspec.yml
+#
+#version: 0.0
+#os: linux
+#
+#files:
+#  - source:  /
+#    destination: /home/ubuntu/app/chalna
+#    overwrite: yes
+#
+#permissions:
+#  - object: /home/ubuntu/app/chalna-server
+#    pattern: "**"
+#    owner: ubuntu
+#    group: ubuntu
+#
+#hooks:
+#  AfterInstall:
+#    - location: scripts/stop.sh
+#      timeout: 60
+#      runas: ubuntu
+#  ApplicationStart:
+#    - location: scripts/start.sh
+#      timeout: 60
+#      runas: ubuntu
 
 version: 0.0
 os: linux
 
 files:
-  - source:  /
-    destination: /home/ubuntu/app
+  - source: build/libs/chalna-server-0.0.1-SNAPSHOT.jar # JAR 파일의 실제 경로
+    destination: /home/ubuntu/app/chalna-server/ # 복사될 위치 (파일 이름은 자동으로 유지됨)
     overwrite: yes
 
 permissions:
-  - object: /
+  - object: /home/ubuntu/app/chalna-server
     pattern: "**"
     owner: ubuntu
     group: ubuntu
