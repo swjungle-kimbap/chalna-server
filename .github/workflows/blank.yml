@@ -78,6 +78,18 @@ jobs:
            --s3-location s3://${{ env.S3_BUCKET_NAME }}/${{ github.sha }}.zip \
            --source .
 
+      - name: Stop existing deployment if any
+        run: |
+          ACTIVE_DEPLOYMENT=$(aws deploy list-deployments \
+            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+            --include-only-statuses InProgress)
+
+          if [ ! -z "$ACTIVE_DEPLOYMENT" ]; then
+            DEPLOYMENT_ID=$(echo $ACTIVE_DEPLOYMENT | jq -r '.deployments[0]')
+            aws deploy stop-deployment --deployment-id $DEPLOYMENT_ID
+          fi
+
       - name: Deploy to AWS EC2 from S3
         run: |
           aws deploy create-deployment \
