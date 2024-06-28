@@ -32,7 +32,7 @@ public class Member extends BaseTimestampEntity {
     @Column(length = 256)
     private String profileImageUrl = "/images/default_image.png";;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private Long kakaoId;
 
     private String deviceId;
