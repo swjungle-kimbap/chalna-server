@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 
 files:
-  - source: build/libs/chalna-server-0.0.1-SNAPSHOT.jar
+  - source: chalna-server-0.0.1-SNAPSHOT.zip
     destination: /home/ubuntu/app/chalna-server/
     overwrite: yes
 
