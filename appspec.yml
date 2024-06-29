@@ -2,12 +2,13 @@ version: 0.0
 os: linux
 
 files:
-  - source: chalna-server-0.0.1-SNAPSHOT.zip
-    destination: /home/ubuntu/app/chalna-server/
+  - source: /
+    destination: /home/ubuntu
+
     overwrite: yes
 
 permissions:
-  - object: /home/ubuntu/app/chalna-server/
+  - object: /
     pattern: "**"
     owner: ubuntu
     group: ubuntu
@@ -15,9 +16,10 @@ permissions:
 hooks:
   AfterInstall:
     - location: scripts/stop.sh
-      timeout: 120
+      timeout: 60
       runas: root
   ApplicationStart:
     - location: scripts/start.sh
-      timeout: 120
+      timeout: 60
       runas: root
+
