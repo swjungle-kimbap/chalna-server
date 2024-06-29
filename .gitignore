@@ -41,7 +41,7 @@ out/
 
 .env*
 
-
+application.properties*
 
 serviceAccountKey.json
 /src/generated/
