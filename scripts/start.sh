@@ -12,11 +12,11 @@ DEPLOY_LOG="$PROJECT_ROOT/deploy.log"
 # 현재 시간
 TIME_NOW=$(date +%c)
 
-# 프로젝트 디렉토리 생성 (이미 존재하는 경우 무시)
-mkdir -p $PROJECT_ROOT
-
-# 빌드 디렉토리 생성 (이미 존재하는 경우 무시)
-mkdir -p $BUILD_DIR
+## 프로젝트 디렉토리 생성 (이미 존재하는 경우 무시)
+#mkdir -p $PROJECT_ROOT
+#
+## 빌드 디렉토리 생성 (이미 존재하는 경우 무시)
+#mkdir -p $BUILD_DIR
 
 # 프로젝트 빌드 (예: Gradle 사용)
 #cd $PROJECT_ROOT
