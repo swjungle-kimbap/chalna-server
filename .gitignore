@@ -18,7 +18,7 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-src/main/resources/application.yml
+src/main/resources/application.properties
 
 .idea
 *.iws
@@ -41,7 +41,7 @@ out/
 
 .env*
 
-
+application.properties*
 
 serviceAccountKey.json
 /src/generated/

@@ -21,20 +21,21 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  build:
     name: Deploy
     runs-on: ubuntu-latest
     environment: production
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@v3
+#      - run: touch ./src/main/resources/application.properties
+#      - run: echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
+#      - run: cat ./src/main/resources/application.properties
       - name: Create application.properties
         run: |
-          touch ./src/main/resources/application.properties
-          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
-          cat ./src/main/resources/application.properties
+         echo "${{ secrets.APPLICATION }}" > application.properties
+         cat ./src/main/resources/application.properties
 
       - name: Run chmod to make gradlew executable
         run: chmod +x ./gradlew
@@ -42,13 +43,13 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
           java-version: '17'
+          distribution: 'temurin'
 
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v1
         with:
-          arguments: clean build -x test
+          arguments: build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -56,29 +57,34 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+      - name: Make dir
+        run: mkdir cicd
+      - name: Copy jar
+        run: cp ./build/libs/*.jar ./cicd
+      - name: Copy appspec
+        run: cp ./appspec.yml ./cicd
+      - name: Make zip
+        run: zip -r -qq -j ./deploy.zip ./cicd
+      - run: ls -al
 
       - name: Upload to AWS S3
-        run: |
-          aws deploy push \
-           --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-           --ignore-hidden-files \
-           --s3-location s3://${{ env.S3_BUCKET_NAME }}/${{ github.sha }}.zip \
-           --source .
+        run: aws s3 cp --region ${{secrets.AWS_REGION }} ./deploy.zip s3://ci-cd-test-123/ci-cd/
 
-      - name: Stop existing deployment if any
-        run: |
-          ACTIVE_DEPLOYMENT=$(aws deploy list-deployments \
-            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
-            --include-only-statuses InProgress \
-            --query "deployments" \
-            --output text)
-        
-          if [ "$ACTIVE_DEPLOYMENT" != "None" ] && [ ! -z "$ACTIVE_DEPLOYMENT" ]; then
-          for deployment in $ACTIVE_DEPLOYMENT; do
-          aws deploy stop-deployment --deployment-id $deployment
-          done
-          fi
+
+#      - name: Stop existing deployment if any
+#        run: |
+#          ACTIVE_DEPLOYMENT=$(aws deploy list-deployments \
+#            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+#            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+#            --include-only-statuses InProgress \
+#            --query "deployments" \
+#            --output text)
+#
+#          if [ "$ACTIVE_DEPLOYMENT" != "None" ] && [ ! -z "$ACTIVE_DEPLOYMENT" ]; then
+#          for deployment in $ACTIVE_DEPLOYMENT; do
+#          aws deploy stop-deployment --deployment-id $deployment
+#          done
+#          fi
 
       - name: Deploy to AWS EC2 from S3
         run: |
