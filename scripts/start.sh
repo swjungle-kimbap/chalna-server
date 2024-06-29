@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 
-# 프로젝트 이름 설정
-PROJECT_NAME="app/chalna-serrver"
-
 # 프로젝트 루트 디렉토리 설정
-PROJECT_ROOT="/home/ubuntu/${PROJECT_NAME}"
-BUILD_DIR="$PROJECT_ROOT/build/libs"
-JAR_FILE="$BUILD_DIR/chalna-server-0.0.1-SNAPSHOT.jar"
+PROJECT_ROOT="/home/ubuntu"
+JAR_FILE="$PROJECT_ROOT/chalna-server-0.0.1-SNAPSHOT.jar"
 
 # 로그 파일 설정
 APP_LOG="$PROJECT_ROOT/application.log"

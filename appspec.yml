@@ -3,11 +3,11 @@ os: linux
 
 files:
   - source: /
-    destination: /home/ubuntu/app/chalna-server/
+    destination: /home/ubuntu
     overwrite: yes
 
 permissions:
-  - object: /home/ubuntu/app/chalna-server/
+  - object: /
     pattern: "**"
     owner: ubuntu
     group: ubuntu
@@ -15,9 +15,10 @@ permissions:
 hooks:
   AfterInstall:
     - location: scripts/stop.sh
-      timeout: 120
+      timeout: 60
       runas: root
   ApplicationStart:
     - location: scripts/start.sh
-      timeout: 120
+      timeout: 60
       runas: root
+
