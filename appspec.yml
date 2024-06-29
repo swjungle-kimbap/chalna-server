@@ -3,8 +3,12 @@ os: linux
 
 files:
   - source: /
+<<<<<<< Updated upstream
     destination: /home/ubuntu/cicd
 
+=======
+    destination: /home/ubuntu
+>>>>>>> Stashed changes
     overwrite: yes
 
 permissions:
@@ -14,8 +18,19 @@ permissions:
     group: ubuntu
 
 hooks:
+<<<<<<< Updated upstream
   ApplicationStart:
     - location: deploy.sh
       timeout: 60
       runas: ubuntu
+=======
+  AfterInstall:
+    - location: scripts/stop.sh
+      timeout: 60
+      runas: root
+  ApplicationStart:
+    - location: scripts/start.sh
+      timeout: 60
+      runas: root
+>>>>>>> Stashed changes
 
