@@ -3,7 +3,7 @@ os: linux
 
 files:
   - source: /
-    destination: /home/ubuntu
+    destination: /home/ubuntu/cicd
 
     overwrite: yes
 
@@ -14,12 +14,8 @@ permissions:
     group: ubuntu
 
 hooks:
-  AfterInstall:
-    - location: scripts/stop.sh
-      timeout: 60
-      runas: root
   ApplicationStart:
-    - location: scripts/start.sh
+    - location: deploy.sh
       timeout: 60
-      runas: root
+      runas: ubuntu
 
