@@ -19,12 +19,15 @@ mkdir -p $PROJECT_ROOT
 mkdir -p $BUILD_DIR
 
 # 프로젝트 빌드 (예: Gradle 사용)
-cd $PROJECT_ROOT
-./gradlew build
+#cd $PROJECT_ROOT
+#./gradlew build
 
 # 빌드된 파일 복사 (이미 빌드된 파일이 해당 경로에 존재한다고 가정)
-echo "$TIME_NOW > $JAR_FILE 파일 복사" >> $DEPLOY_LOG
-cp $BUILD_DIR/chalna-server-0.0.1-SNAPSHOT.jar $PROJECT_ROOT/
+#echo "$TIME_NOW > $JAR_FILE 파일 복사" >> $DEPLOY_LOG
+#cp $BUILD_DIR/chalna-server-0.0.1-SNAPSHOT.jar $PROJECT_ROOT/
+
+# 환경 변수 설정 (선택 사항)
+export JAVA_OPTS="-Xms512m -Xmx1024m"
 
 # jar 파일 실행
 echo "$TIME_NOW > $JAR_FILE 파일 실행" >> $DEPLOY_LOG
