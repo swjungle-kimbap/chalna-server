@@ -23,9 +23,9 @@ public class LocalChatController {
 //    }
     @GetMapping
     public CommonResponse<List<LocalChatResponse>> findLocalChat(
-            @RequestParam Double latitude,
-            @RequestParam Double longitude,
-            @RequestParam Double distance) {
+            @RequestParam("latitude") Double latitude,
+            @RequestParam("longitude") Double longitude,
+            @RequestParam("distance") Double distance) {
 
         LocalChatRequest.RADIUS dto = new LocalChatRequest.RADIUS(latitude, longitude, distance);
         return CommonResponse.ok(localChatService.findNearLocalChat(dto));
