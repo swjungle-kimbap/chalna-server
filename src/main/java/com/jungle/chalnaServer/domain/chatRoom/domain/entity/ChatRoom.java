@@ -1,6 +1,7 @@
 package com.jungle.chalnaServer.domain.chatRoom.domain.entity;
 
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
+import com.jungle.chalnaServer.domain.File.domain.entity.File;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -30,6 +32,11 @@ public class ChatRoom extends BaseTimestampEntity {
 
     @OneToMany(mappedBy = "chatRoom")
     private Set<ChatRoomMember> members = new HashSet<>();
+
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<File> files;
+
+
 
     public enum ChatRoomType{
         MATCH,
