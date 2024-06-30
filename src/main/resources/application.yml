@@ -44,3 +44,15 @@ kakao:
 
 firebase:
   service-account-key: ${FIREBASE_SERVICE_ACCOUNT_KEY}
+
+cloud:
+  aws:
+    credentials:
+      accessKey: ${CLOUD_S3_ACCESSKEY}
+      secretKey: ${CLOUD_S3_SECRETKEY}
+    s3:
+      bucket: ${CLOUD_AWS_REGION}
+    region:
+      static: ${CLOUD_BUCKET_NAME}
+    stack:
+      auto: false
