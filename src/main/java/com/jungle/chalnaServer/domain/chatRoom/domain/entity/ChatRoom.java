@@ -31,12 +31,10 @@ public class ChatRoom extends BaseTimestampEntity {
     private LocalDateTime removedAt;
 
     @OneToMany(mappedBy = "chatRoom")
-    private Set<ChatRoomMember> members = new HashSet<>();
+    private Set<ChatRoomMember> members  = new HashSet<>();
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<File> files;
-
-
 
     public enum ChatRoomType{
         MATCH,

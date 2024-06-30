@@ -36,11 +36,11 @@ public class File {
     private Long fileSize;
 
     @ManyToOne
-    @Column(nullable = false)
+    @JoinColumn(name = "uploaded_by", nullable = false)
     private Member uploadedBy;
 
     @ManyToOne
-    @Column(nullable = false)
+    @JoinColumn(name = "chat_room_id",nullable = false)
     private ChatRoom chatRoom;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
