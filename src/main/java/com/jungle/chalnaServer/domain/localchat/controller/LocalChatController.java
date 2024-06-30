@@ -17,8 +17,17 @@ import java.util.List;
 public class LocalChatController {
     private final LocalChatService localChatService;
 
+//    @GetMapping
+//    public CommonResponse<List<LocalChatResponse>> findLocalChat(@RequestBody LocalChatRequest.RADIUS dto){
+//        return CommonResponse.ok(localChatService.findNearLocalChat(dto));
+//    }
     @GetMapping
-    public CommonResponse<List<LocalChatResponse>> findLocalChat(@RequestBody LocalChatRequest.RADIUS dto){
+    public CommonResponse<List<LocalChatResponse>> findLocalChat(
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam Double distance) {
+
+        LocalChatRequest.RADIUS dto = new LocalChatRequest.RADIUS(latitude, longitude, distance);
         return CommonResponse.ok(localChatService.findNearLocalChat(dto));
     }
 
