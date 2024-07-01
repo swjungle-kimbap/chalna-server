@@ -9,4 +9,10 @@ public class FileResponse {
             return  new INFO(fileInfo.getId(),fileInfo.getUploadedBy().getId(),fileInfo.getOriginalFileName(),fileInfo.getFileSize());
         }
     }
+
+    public record UPLOAD(String url) {
+        public static UPLOAD of(String url) {
+            return new UPLOAD(url);
+        }
+    }
 }
