@@ -19,7 +19,7 @@ public class FileUploadController {
     private final S3Service s3Service;
 
     @PostMapping("/upload")
-    public CommonResponse<FileUploadResponse.URL> uploadFile(@AuthUserId final Long id, @RequestParam("file") MultipartFile file, @RequestParam("chatRoomId") Long chatRoomId{
+    public CommonResponse<FileUploadResponse.URL> uploadFile(@AuthUserId final Long id, @RequestParam("file") MultipartFile file, @RequestParam("chatRoomId") Long chatRoomId){
         return CommonResponse.ok(s3Service.uploadFile(id,file,chatRoomId));
     }
 }
