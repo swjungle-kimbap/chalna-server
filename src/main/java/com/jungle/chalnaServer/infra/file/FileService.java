@@ -1,13 +1,16 @@
 package com.jungle.chalnaServer.infra.file;
 
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.infra.file.domain.dto.FileRequest;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
 import com.jungle.chalnaServer.infra.file.domain.entity.FileInfo;
 import com.jungle.chalnaServer.infra.file.exception.FailToUploadS3Exception;
@@ -21,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.Date;
 import java.util.UUID;
 
 import static com.google.common.io.Files.getFileExtension;
@@ -40,30 +45,43 @@ public class FileService {
     private static final long MAX_UPLOAD_SIZE = 10_000_000L; // 10MB
 
     @Transactional
-    public FileResponse.INFO uploadFile(final long id, MultipartFile files) {
+    public FileResponse.UPLOAD getPreSignedUrl(final long id, FileRequest.UPLOAD fileDto) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
-        validateUpload(files.getSize());
+        validateUpload(fileDto.fileSize());
 
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(files.getSize());
-        metadata.setContentType(files.getContentType());
+        // 파일명 uuid로 변환 (s3 파일명 생성)
+        String s3FileName = UUID.randomUUID().toString() + "_" + fileDto.fileName();
 
-        // 파일명 uuid로 변환
-        String fileName = createFileName(files.getOriginalFilename());
+        // 프리사인드 url 생성
+        Date expiration = new Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60; // 1시간
+        expiration.setTime(expTimeMillis);
 
-        // 파일을 s3에 업로드
-        try {
-            amazonS3.putObject(new PutObjectRequest(bucketName, fileName, files.getInputStream(), metadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
-        } catch (IOException e) {
-            throw new FailToUploadS3Exception();
-        }
+        GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, s3FileName)
+                .withMethod(HttpMethod.PUT)
+                .withExpiration(expiration);
+        generatePresignedUrlRequest.addRequestParameter("Content-Type", fileDto.contentType());
 
-        String fileUrl = amazonS3.getUrl(bucketName, fileName).toString();
+        URL presignedUrl = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
 
-        return FileResponse.INFO.of(saveFileMetadata(files, member, fileName, fileUrl));
+        // s3 파일 url 저장 ( 쿼리 파라미터 제거)
+        String fileUrl = String.format("https://%s.s3.%s.amazonaws.com/%s",bucketName,amazonS3.getRegionName(),s3FileName);
+
+        // 파일 정보 저장
+        FileInfo fileInfo = FileInfo.builder()
+                .originalFileName(fileDto.fileName())
+                .s3FileName(s3FileName)
+                .fileUrl(fileUrl)
+                .fileSize(fileDto.fileSize())
+                .uploadedBy(member)
+                .build();
+
+        fileInfoRepository.save(fileInfo);
+
+        return FileResponse.UPLOAD.of(presignedUrl.toString());
 
     }
 
@@ -74,20 +92,5 @@ public class FileService {
         }
     }
 
-    private FileInfo saveFileMetadata(MultipartFile file, Member member, String fileName, String fileUrl) {
 
-        FileInfo fileInfo = FileInfo.builder()
-                .originalFileName(file.getOriginalFilename())
-                .s3FileName(fileName)
-                .fileUrl(fileUrl)
-                .fileSize(file.getSize())
-                .uploadedBy(member)
-                .build();
-
-        return fileInfoRepository.save(fileInfo);
-    }
-
-    private String createFileName(String fileName) {
-        return UUID.randomUUID().toString().concat(".").concat(getFileExtension(fileName));
-    }
 }

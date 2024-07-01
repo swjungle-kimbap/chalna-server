@@ -23,7 +23,7 @@ public class FileInfo extends BaseTimestampEntity {
     private String originalFileName;
     @Column(nullable = false)
     private String s3FileName;
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String fileUrl;
     @Column(nullable = false)
     private Long fileSize;
