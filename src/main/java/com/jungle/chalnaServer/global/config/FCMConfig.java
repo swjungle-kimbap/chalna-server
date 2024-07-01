@@ -1,11 +1,15 @@
 package com.jungle.chalnaServer.global.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.nio.charset.StandardCharsets;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -15,19 +19,26 @@ import com.google.firebase.messaging.FirebaseMessaging;
 @Configuration
 public class FCMConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(FCMConfig.class);
+
+    @Value("${firebase.service-account-key}")
+    private String serviceAccountKey;
+
     @Bean
     public FirebaseApp initializeFirebase() throws IOException {
-        InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream("serviceAccountKey.json");
-
-        if (serviceAccount == null) {
-            throw new IOException("File not found: serviceAccountKey.json");
+        if (serviceAccountKey == null || serviceAccountKey.trim().isEmpty()) {
+            logger.error("Google application credentials are not provided");
+            throw new IOException("Google application credentials are not provided");
         }
 
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .build();
+        logger.info("Initializing Firebase with provided service account key from application.yml");
 
-        return FirebaseApp.initializeApp(options);
+        try (InputStream serviceAccount = new ByteArrayInputStream(serviceAccountKey.getBytes(StandardCharsets.UTF_8))) {
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .build();
+            return FirebaseApp.initializeApp(options);
+        }
     }
 
     @Bean
