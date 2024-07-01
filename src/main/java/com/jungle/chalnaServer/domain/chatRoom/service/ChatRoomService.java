@@ -139,7 +139,7 @@ public class ChatRoomService {
                             .build();
 
 
-                    messagingTemplate.convertAndSend("/topic/" + chatRoomId, chatMessage);
+                    messagingTemplate.convertAndSend("/api/sub/" + chatRoomId, chatMessage);
 
 //                ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.TIMEOUT, 0L,
 //                        chatRoomId, content, true,
