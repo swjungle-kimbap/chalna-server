@@ -1,5 +1,7 @@
 package com.jungle.chalnaServer.domain.member.domain.entity;
 
+import com.jungle.chalnaServer.domain.File.domain.entity.File;
+import com.jungle.chalnaServer.domain.File.domain.entity.UserQuota;
 import com.jungle.chalnaServer.domain.settings.domain.entity.MemberSetting;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
@@ -10,7 +12,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Entity
@@ -47,6 +51,13 @@ public class Member extends BaseTimestampEntity {
 
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private MemberSetting memberSetting;
+
+    @OneToMany(mappedBy = "uploadedBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<File> files;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserQuota> quotas =  new HashSet<>();
+
 
     @PrePersist
     public void prePersist() {
