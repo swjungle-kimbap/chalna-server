@@ -58,7 +58,7 @@ public class WebSocketEventListener {
                 .build();
 
 
-        messagingTemplate.convertAndSend("/topic/" + chatRoomId, chatMessage);
+        messagingTemplate.convertAndSend("/api/sub/" + chatRoomId, chatMessage);
 
 //        ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.USER_ENTER, memberId,
 //                Long.parseLong(chatRoomId), "다른 사용자가 입장했습니다.", true,

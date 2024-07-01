@@ -75,7 +75,7 @@ public class ChatService {
                 .status(status)
                 .build();
 
-        messagingTemplate.convertAndSend("/topic/" + chatRoomId, responseMessage);
+        messagingTemplate.convertAndSend("/api/sub/" + chatRoomId, responseMessage);
 
         // Redis에 메시지 저장
         ChatMessage message = new ChatMessage(id, type, senderId,
