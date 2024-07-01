@@ -81,7 +81,7 @@ public class FileService {
 
         fileInfoRepository.save(fileInfo);
 
-        return FileResponse.UPLOAD.of(presignedUrl.toString());
+        return FileResponse.UPLOAD.of( fileInfo.getId(), presignedUrl.toString());
 
     }
 

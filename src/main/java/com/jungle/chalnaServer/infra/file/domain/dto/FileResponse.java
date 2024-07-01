@@ -10,9 +10,9 @@ public class FileResponse {
         }
     }
 
-    public record UPLOAD(String url) {
-        public static UPLOAD of(String url) {
-            return new UPLOAD(url);
+    public record UPLOAD(Long fileId, String presignedUrl) {
+        public static UPLOAD of(Long fileId, String presignedUrl) {
+            return new UPLOAD(fileId,presignedUrl);
         }
     }
 }
