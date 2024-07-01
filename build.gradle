@@ -62,3 +62,13 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// bootRun 작업에 환경 변수 추가
+bootRun {
+    environment 'GOOGLE_APPLICATION_CREDENTIALS', '../service-account-file-chalna.json'
+}
+
+// run 작업에 환경 변수 추가
+tasks.withType(JavaExec) {
+    environment 'GOOGLE_APPLICATION_CREDENTIALS', '../service-account-file-chalna.json'
+}
