@@ -19,7 +19,8 @@ public class ChatMessage {
     private Long senderId;
     private Long chatRoomId;
     private String content;
-    private Boolean status; // 읽음 여부(True: 안읽음, False: 읽음)
+//    private Boolean status; // 읽음 여부(True: 안읽음, False: 읽음)
+    private Integer unreadCount;
 
 //    @JsonSerialize(using = LocalDateTimeSerializer.class)
 //    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
@@ -33,13 +34,13 @@ public class ChatMessage {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    public ChatMessage(Long id, MessageType type, Long senderId, Long chatRoomId, String content, Boolean status,LocalDateTime createdAt, LocalDateTime updatedAt){
+    public ChatMessage(Long id, MessageType type, Long senderId, Long chatRoomId, String content, Integer unreadCount,LocalDateTime createdAt, LocalDateTime updatedAt){
         this.id = id;
         this.type = type;
         this.senderId = senderId;
         this.chatRoomId = chatRoomId;
         this.content = content;
-        this.status = status;
+        this.unreadCount = unreadCount;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }

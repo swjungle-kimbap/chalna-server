@@ -53,7 +53,7 @@ public class WebSocketEventListener {
                 .content("다른 사용자가 입장했습니다.")
                 .senderId(memberId)
                 .type(ChatMessage.MessageType.USER_ENTER)
-                .status(true)
+                .unreadCount(0)
                 .createdAt(now)
                 .build();
 

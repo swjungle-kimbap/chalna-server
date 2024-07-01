@@ -106,7 +106,7 @@ public class MatchService {
                 matchNotification.getSenderId(),
                 chatRoomId,
                 matchNotification.getMessage(),
-                true,
+                1,
                 LocalDateTime.now(ZoneId.of("Asia/Seoul")),
                 LocalDateTime.now(ZoneId.of("Asia/Seoul")));
 
