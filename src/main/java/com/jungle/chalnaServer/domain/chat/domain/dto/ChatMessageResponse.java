@@ -18,17 +18,18 @@ public class ChatMessageResponse {
     ChatMessage.MessageType type;
     String content;
     Long senderId;
-    Boolean status;
+    Integer unreadCount;
+//    Boolean status;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime createdAt;
 
-    public ChatMessageResponse(Long id, ChatMessage.MessageType type, String content, Long senderId, Boolean status,LocalDateTime createdAt) {
+    public ChatMessageResponse(Long id, ChatMessage.MessageType type, String content, Long senderId, Integer unreadCount,LocalDateTime createdAt) {
         this.id = id;
         this.type = type;
         this.content = content;
         this.senderId = senderId;
-        this.status = status;
+        this.unreadCount = unreadCount;
         this.createdAt = createdAt;
     }
 
@@ -37,7 +38,7 @@ public class ChatMessageResponse {
         this.type = chatMessage.getType();
         this.content = chatMessage.getContent();
         this.senderId = chatMessage.getSenderId();
-        this.status = chatMessage.getStatus();
+        this.unreadCount = chatMessage.getUnreadCount();
         this.createdAt = chatMessage.getCreatedAt();
     }
 }

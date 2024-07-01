@@ -5,8 +5,10 @@ import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.util.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
@@ -16,10 +18,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,9 +28,8 @@ public class Stomphandler implements ChannelInterceptor {
     private final JwtService jwtUtil;
     private final MemberService memberService;
 
-    private final Map<String, Set<String>> chatRoomSubscriptions = new ConcurrentHashMap<>();
-    private final Map<String, String> sessionChatRoomMap = new ConcurrentHashMap<>();
-
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
 
     // websocket을 통해 들어온 요청이 처리 되기전 실행됨
     @Override
@@ -61,13 +59,16 @@ public class Stomphandler implements ChannelInterceptor {
                     Long id = jwtUtil.getId(jwt);
                     MemberResponse memberResponse = memberService.getMemberInfo(id);
                     // 사용자 정보 조회
+                    String chatRoomId = accessor.getFirstNativeHeader("chatRoomId");
+
                     accessor.getSessionAttributes().put("memberId", id);
                     accessor.getSessionAttributes().put("username", memberResponse.username());
+                    accessor.getSessionAttributes().put("chatRoomId", chatRoomId);
 
-                    String chatRoomId = accessor.getFirstNativeHeader("chatRoomId");
                     log.info("chatRoomId {}", chatRoomId);
-                    chatRoomSubscriptions.computeIfAbsent(chatRoomId, k -> new CopyOnWriteArraySet<>()).add(sessionId);
-                    sessionChatRoomMap.put(sessionId, chatRoomId);
+                    // 채팅방에 들어온 사용자 제거
+                    addUserToRoom(chatRoomId, id.toString());
+
                     System.out.println("session Connected11 : " + sessionId);
 
                 } catch (Exception e) {
@@ -84,19 +85,11 @@ public class Stomphandler implements ChannelInterceptor {
         } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
             log.info("disconnect!!!!! {}", accessor.getSessionId());
 
-            String chatRoomId = sessionChatRoomMap.get(sessionId);
+//            String chatRoomId = sessionChatRoomMap.get(sessionId);
+            String chatRoomId = (String) accessor.getSessionAttributes().get("chatRoomId");
             log.info("chatRoomId {}", chatRoomId);
             if (chatRoomId != null) {
-                Set<String> sessions = chatRoomSubscriptions.get(chatRoomId);
-                log.info("!!!! {} {}", sessionId, chatRoomId);
-
-                sessionChatRoomMap.remove(sessionId);
-                if (sessions != null) {
-                    sessions.remove(sessionId);
-                    if (sessions.isEmpty()) {
-                        chatRoomSubscriptions.remove(chatRoomId);
-                    }
-                }
+                removeUserFromRoom(chatRoomId, accessor.getSessionAttributes().get("memberId").toString());
 
                 System.out.println("session Disconnected : " + sessionId);
             }
@@ -105,8 +98,20 @@ public class Stomphandler implements ChannelInterceptor {
         return message;
     }
 
-    public Integer getConnectedCount(Long chatRoomId) {
-        return chatRoomSubscriptions.getOrDefault(chatRoomId.toString(), new CopyOnWriteArraySet<>()).size();
+    public void addUserToRoom(String chatRoomId, String memberId) {
+        redisTemplate.opsForSet().remove("room:" + chatRoomId + ":offline", memberId);
+    }
+
+    public void removeUserFromRoom(String chatRoomId, String memberId) {
+        redisTemplate.opsForSet().add("room:" + chatRoomId + ":offline", memberId);
+    }
+
+    public Integer getOfflineUserCount(String chatRoomId) {
+        return redisTemplate.opsForSet().size("room:" + chatRoomId + ":offline").intValue();
+    }
+
+    public Set<String> getOfflineUsers(String chatRoomId) {
+        return redisTemplate.opsForSet().members("room:" + chatRoomId + ":offline");
     }
 
 }

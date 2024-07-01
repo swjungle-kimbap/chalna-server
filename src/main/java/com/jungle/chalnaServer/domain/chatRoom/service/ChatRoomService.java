@@ -2,6 +2,7 @@ package com.jungle.chalnaServer.domain.chatRoom.service;
 
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
+import com.jungle.chalnaServer.domain.chat.handler.Stomphandler;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomMessagesResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomResponse;
@@ -47,9 +48,11 @@ public class ChatRoomService {
     private SimpMessagingTemplate messagingTemplate;
 
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    @Autowired
+    private Stomphandler stomphandler;
 
     // 채팅방 목록 요청
-    public List<ChatRoomResponse> getChatRoomList(Long memberId) {
+    public List<ChatRoomResponse> getChatRoomList(Long memberId, LocalDateTime lastLeaveAt) {
         List<ChatRoomMember> chatroomMembers = chatRoomMemberRepository.findByMemberId(memberId);
         List<ChatRoomResponse> list = new ArrayList<>();
 
@@ -68,7 +71,7 @@ public class ChatRoomService {
                             );
                         })
                         .collect(Collectors.toList());
-                Integer unreadMesssageCount = chatRepository.countUnreadMessages(chatRoom.getId(), memberId);
+                Integer unreadMesssageCount = chatRepository.countUnreadMessages(chatRoom.getId(), memberId, lastLeaveAt);
                 ChatMessageResponse messageResponse = recentMessage != null ? new ChatMessageResponse(recentMessage) : null;
                 ChatRoomResponse apply = new ChatRoomResponse(chatRoom, memberInfos, messageResponse, unreadMesssageCount);
                 list.add(apply);
@@ -107,6 +110,9 @@ public class ChatRoomService {
             Member member = memberRepository.findById(memberId).orElse(null);
             ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
             chatRoomMemberRepository.save(chatRoomMember);
+
+            // 멤버들을 소켓을 열고 있지 않은 멤버 목록에 추가
+            stomphandler.removeUserFromRoom(chatRoom.getId().toString(), memberId.toString());
         }
         scheduleRoomTermination(chatRoom.getId(), 5, TimeUnit.MINUTES);
 
@@ -134,18 +140,12 @@ public class ChatRoomService {
                             .content(content)
                             .senderId(0L)
                             .type(ChatMessage.MessageType.TIMEOUT)
-                            .status(true)
+                            .unreadCount(0)
                             .createdAt(now)
                             .build();
 
 
                     messagingTemplate.convertAndSend("/api/sub/" + chatRoomId, chatMessage);
-
-//                ChatMessage message = new ChatMessage(messageId, ChatMessage.MessageType.TIMEOUT, 0L,
-//                        chatRoomId, content, true,
-//                        now, now);
-//
-//                chatRepository.saveMessage(message);
 
                 }
 
@@ -165,6 +165,9 @@ public class ChatRoomService {
             // 채팅방 인원 변경
             chatRoomMember.getChatRoom().updateMemberCount(chatRoomMember.getChatRoom().getMemberCount() - 1);
             chatRoomRepository.save(chatRoomMember.getChatRoom());
+
+            // session에서 삭제
+            stomphandler.addUserToRoom(chatRoomId.toString(), memberId.toString());
             return true;
         } else {
             // 에러 처리

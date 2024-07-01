@@ -30,10 +30,10 @@ public class ChatRoomController {
 
     // 채팅방 목록 조회
     @GetMapping
-    public CommonResponse<Map<String, Object>> getChatRoomList(HttpServletRequest request) {
+    public CommonResponse<Map<String, Object>> getChatRoomList(HttpServletRequest request, @RequestParam LocalDateTime lastLeaveAt) {
         Long memberId = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
 
-        List<ChatRoomResponse> list = chatRoomService.getChatRoomList(memberId);
+        List<ChatRoomResponse> list = chatRoomService.getChatRoomList(memberId, lastLeaveAt);
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("list", list);
         return CommonResponse.ok(responseData);

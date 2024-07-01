@@ -33,7 +33,7 @@ public class ChatRepository {
         return redisTemplate.opsForValue().increment(MESSAGE_ID_KEY, 1);
     }
 
-    public List<ChatMessage> getMessagesAfterUpdateDate(Long memberId, Long chatRoomId, LocalDateTime updateDate) {
+    public List<ChatMessage> getMessagesAfterUpdateDate(Long memberId, Long chatRoomId, LocalDateTime lastLeaveAt) {
         List<ChatMessage> messages = new ArrayList<>();
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
@@ -43,18 +43,19 @@ public class ChatRepository {
         if( listSize != null && listSize > 0 ) {
             List<Object> rawMessages = redisTemplate.opsForList().range(roomKey, 0, listSize-1);
 
-            for (int i = 0; i < rawMessages.size(); i++) {
+            for(int i = rawMessages.size()-1; i >= 0; i--) {
                 Object rawMessage = rawMessages.get(i);
                 ChatMessage message = objectMapper.convertValue(rawMessage, ChatMessage.class);
-
-                if (message.getUpdatedAt() != null && message.getUpdatedAt().isAfter(updateDate)) {
+                if (message.getUpdatedAt() != null && message.getUpdatedAt().isAfter(lastLeaveAt) && message.getUnreadCount() > 0) {
                     if (!message.getSenderId().equals(memberId)) {
-                        message.setStatus(true);
+                        message.setUnreadCount(message.getUnreadCount() - 1);
                         message.setUpdatedAt(now);
                         redisTemplate.opsForList().set(roomKey, i, objectMapper.convertValue(message, Object.class));
                     }
 
                     messages.add(message);
+                }else{
+                    break;
                 }
             }
         }
@@ -80,7 +81,7 @@ public class ChatRepository {
     }
 
     // redis에 변수 만들어서 저장, 읽기 할 때 마다 count하는 방식으로 수정 필요.
-    public Integer countUnreadMessages(Long chatRoomId, Long memberId) {
+    public Integer countUnreadMessages(Long chatRoomId, Long memberId, LocalDateTime lastLeaveAt) {
 
         Integer unreadCount = 0;
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
@@ -88,10 +89,14 @@ public class ChatRepository {
 
         if (listSize != null && listSize > 0) {
             List<Object> rawMessages = redisTemplate.opsForList().range(roomKey, 0, listSize - 1);
-            for (Object rawMessage: rawMessages) {
+
+            for (int i = rawMessages.size() - 1; i >= 0; i--) {
+                Object rawMessage = rawMessages.get(i);
                 ChatMessage message = objectMapper.convertValue(rawMessage, ChatMessage.class);
-                if (!message.getSenderId().equals(memberId) && !message.getStatus()) {
+                if (message.getCreatedAt() != null && message.getCreatedAt().isAfter(lastLeaveAt)) {
                     unreadCount++;
+                } else {
+                    break;
                 }
             }
         }
