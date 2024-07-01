@@ -1,75 +1,75 @@
-#name: CI
-## Controls when the workflow will run
-#on:
-#  # Triggers the workflow on push or pull request events but only for the "dev" branch
-#  push:
-#    branches: [ "dev" ]
-#  pull_request:
-#    branches: [ "dev" ]
-#  # Allows you to run this workflow manually from the Actions tab
-#  workflow_dispatch:
-#env:
-#  AWS_REGION: ap-northeast-2 #리전
-#  S3_BUCKET_NAME: chalna-bucket #버킷 이름
-#  CODE_DEPLOY_APPLICATION_NAME: chalna-beginner #CodeDeploy 애플리케이션 이름
-#  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: chalna-group #CodeDeploy 배포 그룹 이름
-#permissions:
-#  contents: read
-#jobs:
-#  deploy:
-#    name: Deploy
-#    runs-on: ubuntu-latest
-#    environment: production
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#      - name: Create application.properties
-#        run: |
-#          touch ./src/main/resources/application.properties
-#          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
-#          cat ./src/main/resources/application.properties
-#      - name: Run chmod to make gradlew executable
-#        run: chmod +x ./gradlew
-#      - name: Set up JDK
-#        uses: actions/setup-java@v3
-#        with:
-#          distribution: 'temurin'
-#          java-version: '17'
-#      - name: Build with Gradle
-#        uses: gradle/gradle-build-action@v1
-#        with:
-#          arguments: clean build -x test
-#      - name: Configure AWS credentials
-#        uses: aws-actions/configure-aws-credentials@v1
-#        with:
-#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-#          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-#          aws-region: ${{ env.AWS_REGION }}
-#      - name: Upload to AWS S3
-#        run: |
-#          aws deploy push \
-#           --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-#           --ignore-hidden-files \
-#           --s3-location s3://${{ env.S3_BUCKET_NAME }}/${{ github.sha }}.zip \
-#           --source .
-#      - name: Stop existing deployment if any
-#        run: |
-#          ACTIVE_DEPLOYMENT=$(aws deploy list-deployments \
-#            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-#            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
-#            --include-only-statuses InProgress \
-#            --query "deployments" \
-#            --output text)
-#
-#          if [ "$ACTIVE_DEPLOYMENT" != "None" ] && [ ! -z "$ACTIVE_DEPLOYMENT" ]; then
-#          for deployment in $ACTIVE_DEPLOYMENT; do
-#          aws deploy stop-deployment --deployment-id $deployment
-#          done
-#          fi
-#      - name: Deploy to AWS EC2 from S3
-#        run: |
-#          aws deploy create-deployment \
-#          --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-#          --deployment-config-name CodeDeployDefault.AllAtOnce \
-#          --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
-#          --s3-location bucket=${{ env.S3_BUCKET_NAME }},key=${{ github.sha }}.zip,bundleType=zip
+name: CI
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "dev" branch
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+env:
+  AWS_REGION: ap-northeast-2 #리전
+  S3_BUCKET_NAME: chalna-bucket #버킷 이름
+  CODE_DEPLOY_APPLICATION_NAME: chalna-beginner #CodeDeploy 애플리케이션 이름
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: chalna-group #CodeDeploy 배포 그룹 이름
+permissions:
+  contents: read
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create application.properties
+        run: |
+          touch ./src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
+          cat ./src/main/resources/application.properties
+      - name: Run chmod to make gradlew executable
+        run: chmod +x ./gradlew
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v1
+        with:
+          arguments: clean build -x test
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Upload to AWS S3
+        run: |
+          aws deploy push \
+           --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+           --ignore-hidden-files \
+           --s3-location s3://${{ env.S3_BUCKET_NAME }}/${{ github.sha }}.zip \
+           --source .
+      - name: Stop existing deployment if any
+        run: |
+          ACTIVE_DEPLOYMENT=$(aws deploy list-deployments \
+            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+            --include-only-statuses InProgress \
+            --query "deployments" \
+            --output text)
+
+          if [ "$ACTIVE_DEPLOYMENT" != "None" ] && [ ! -z "$ACTIVE_DEPLOYMENT" ]; then
+          for deployment in $ACTIVE_DEPLOYMENT; do
+          aws deploy stop-deployment --deployment-id $deployment
+          done
+          fi
+      - name: Deploy to AWS EC2 from S3
+        run: |
+          aws deploy create-deployment \
+          --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+          --deployment-config-name CodeDeployDefault.AllAtOnce \
+          --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+          --s3-location bucket=${{ env.S3_BUCKET_NAME }},key=${{ github.sha }}.zip,bundleType=zip

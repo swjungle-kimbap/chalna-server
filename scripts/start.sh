@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 # 프로젝트 루트 디렉토리 설정
 PROJECT_ROOT="/home/ubuntu"
 JAR_FILE="$PROJECT_ROOT/chalna-server-0.0.1-SNAPSHOT.jar"
