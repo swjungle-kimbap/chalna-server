@@ -1,2 +1,4 @@
-package com.jungle.chalnaServer.domain.chatRoom.exception;public class NotFoundChatRoomException {
+package com.jungle.chalnaServer.domain.chatRoom.exception;
+
+public class NotFoundChatRoomException extends RuntimeException{
 }

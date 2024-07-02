@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.global.exception;
 
+import com.jungle.chalnaServer.domain.chatRoom.exception.NotFoundChatRoomException;
 import com.jungle.chalnaServer.infra.file.exception.FailToUploadS3Exception;
 import com.jungle.chalnaServer.infra.file.exception.MaxFileSizeException;
 import com.jungle.chalnaServer.domain.auth.exception.InvalidKakaoTokenException;
@@ -43,7 +44,8 @@ public enum GlobalErrorCode {
     MAX_FILE_UPLOAD(HttpStatus.BAD_REQUEST,"전송 파일 크기는 2.5MB를 넘을 수 없습니다.", Set.of(MaxFileSizeException.class)),
     FAIL_TO_UPLOAD_S3(HttpStatus.BAD_REQUEST,"S3 업로드를 실패했습니다.",Set.of(FailToUploadS3Exception.class)),
     NOT_FOUND_FILE_INFO(HttpStatus.BAD_REQUEST,"해당 파일을 찾을 수 없습니다.", Set.of(NotFoundFileInfoException.class)),
-    NOT_FOUND_S3_OBJECT(HttpStatus.BAD_REQUEST,"해당 파일의 만료기간이 지났습니다.",Set.of(NotFoundS3ObjectException.class));
+    NOT_FOUND_S3_OBJECT(HttpStatus.BAD_REQUEST,"해당 파일의 만료기간이 지났습니다.",Set.of(NotFoundS3ObjectException.class)),
+    NOT_FOUND_CHATROOM(HttpStatus.BAD_REQUEST,"해당 채팅방이 없습니다.",Set.of(NotFoundChatRoomException.class));
 
 
     private final HttpStatusCode status;
