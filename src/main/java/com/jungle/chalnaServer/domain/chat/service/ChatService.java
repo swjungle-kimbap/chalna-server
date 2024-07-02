@@ -56,7 +56,7 @@ public class ChatService {
             for (String id : members) {
                 log.info("memberId {}", id);
                 Member member = memberRepository.findById(Long.parseLong(id)).orElse(null);
-                FCMData fcmData = FCMData.instanceOfChatFCM(memberId.toString(), requestMessage.getContent(), LocalDateTime.now(ZoneId.of("Asia/Seoul")).toString(), username, roomId.toString(), chatRoom.get().getType().toString());
+                FCMData fcmData = FCMData.instanceOfChatFCM(memberId.toString(), requestMessage.getContent(), username, roomId.toString(), chatRoom.get().getType().toString(), requestMessage.getType().toString());
                 FCMService.sendFCM(member.getFcmToken(), fcmData);
                 log.info("send push message");
             }
