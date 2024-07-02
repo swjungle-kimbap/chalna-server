@@ -14,8 +14,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+#        format_sql: true
       jdbc:
         time_zone: Asia/Seoul
+#    show-sql: true
 
   data:
     redis:
