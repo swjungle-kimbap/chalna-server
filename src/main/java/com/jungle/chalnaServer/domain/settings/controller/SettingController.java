@@ -3,6 +3,7 @@ package com.jungle.chalnaServer.domain.settings.controller;
 
 import com.jungle.chalnaServer.domain.settings.domain.dto.SettingResponse;
 import com.jungle.chalnaServer.domain.settings.service.SettingService;
+import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,12 +20,9 @@ public class SettingController {
     private final JwtService jwtService;
 
     /* 앱 설정 */
-    @PutMapping
-    public CommonResponse<SettingResponse> updateSettings(HttpServletRequest request, @RequestBody SettingRequest dto) {
-
-        Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
+    @PatchMapping
+    public CommonResponse<SettingResponse> updateSettings(@AuthUserId final Long id, @RequestBody SettingRequest dto) {
         SettingResponse response = settingService.updateSettings(id, dto);
-
         return CommonResponse.ok(response);
 
     }

@@ -23,7 +23,7 @@ public class SettingResponse {
     private Boolean isChatAlarm;
     private Boolean alarmSound;
     private Boolean alarmVibration;
-    private Boolean bluetooth;
+    private Boolean isDisturb;
 
     public static SettingResponse of(MemberSetting memberSetting, boolean includeTags) {
         return SettingResponse.builder()
@@ -35,7 +35,7 @@ public class SettingResponse {
                 .interestTag(includeTags ? memberSetting.getInterestTags() : null)
                 .alarmSound(memberSetting.getAlarmSound())
                 .alarmVibration(memberSetting.getAlarmVibration())
-                .bluetooth(memberSetting.getBluetooth())
+                .isDisturb(memberSetting.getIsDisturb())
                 .build();
     }
 
