@@ -42,3 +42,6 @@ out/
 
 serviceAccountKey.json
 /src/generated/
+
+.github/workflows/blank.yml
+scripts/**
