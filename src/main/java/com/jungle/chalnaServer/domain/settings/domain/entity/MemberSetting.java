@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -25,10 +26,10 @@ public class MemberSetting extends BaseTimestampEntity {
     @Id
     private Long id;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
-    private Member member;
+//    @OneToOne(fetch = FetchType.LAZY)
+//    @MapsId
+//    @JoinColumn(name = "id")
+//    private Member member;
 
     @Column(nullable = false)
     private Boolean isAlarm = true;
@@ -44,7 +45,8 @@ public class MemberSetting extends BaseTimestampEntity {
 
     @ElementCollection
     @Column(nullable = false)
-    private List<String> interestKeyword;
+    @Builder.Default
+    private List<String> interestKeyword = new ArrayList<>();
 
     @Column(nullable = false)
     private Boolean alarmSound = true;
@@ -104,9 +106,7 @@ public class MemberSetting extends BaseTimestampEntity {
     }
 
     public void clearInterestKeyword() {
-        if (this.interestKeyword != null) {
             this.interestKeyword.clear();
-        }
     }
 
 }

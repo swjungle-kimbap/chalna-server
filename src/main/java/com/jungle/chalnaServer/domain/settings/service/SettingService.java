@@ -39,8 +39,10 @@ public class SettingService {
     }
 
     public SettingResponse getSettings(final Long id, boolean includeKeyword) {
+        log.info("엥??");
         MemberSetting memberSetting = memberSettingRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
+        log.info("엥??");
 
         return SettingResponse.of(memberSetting, includeKeyword);
     }
@@ -55,8 +57,10 @@ public class SettingService {
     }
 
     public SettingResponse.KEYWORDLIST  getKeywords(final Long id) {
+        log.info("엥");
         MemberSetting memberSetting = memberSettingRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
+        log.info("엥");
 
         return SettingResponse.toKeywordList(memberSetting);
     }
