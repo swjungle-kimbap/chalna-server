@@ -76,7 +76,7 @@ public class MatchService {
 
         matchNotiRepository.save(matchNotification);
 
-        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now(ZoneId.of("Asia/Seoul")).toString(), matchNotification.getId().toString()));
+        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), matchNotification.getId().toString()));
 
         return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
     }
@@ -121,10 +121,10 @@ public class MatchService {
 
         FCMService.sendFCM(fcmToken, FCMData.instanceOfChatFCM(matchNotification.getReceiverId().toString(),
                 "인연과의 대화가 시작됐습니다.",
-                LocalDateTime.now(ZoneId.of("Asia/Seoul")).toString(),
                 receiver.getUsername(),
                 chatRoomId.toString(),
-                ChatMessage.MessageType.CHAT.toString()));
+                ChatMessage.MessageType.CHAT.toString(),
+                "ALARM"));
 
         return MatchResponse.MatchAccept(Long.toString(chatRoomId));
     }
