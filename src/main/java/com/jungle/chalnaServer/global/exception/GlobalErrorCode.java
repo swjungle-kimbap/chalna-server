@@ -14,6 +14,7 @@ import com.jungle.chalnaServer.domain.relation.exception.RelationIdInvalidExcept
 import com.jungle.chalnaServer.domain.settings.exception.TagsNotFoundException;
 import com.jungle.chalnaServer.global.auth.jwt.exception.InvalidJwtTokenException;
 import com.jungle.chalnaServer.infra.fcm.exception.FCMTokenNotFoundException;
+import com.jungle.chalnaServer.infra.file.exception.NotFoundFileInfoException;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -39,7 +40,8 @@ public enum GlobalErrorCode {
     LOCALCHAT_NOT_OWNER(HttpStatus.BAD_REQUEST,"채팅방의 주인만 삭제할 수 있습니다.",Set.of(LocalChatNotOwnerException.class)),
     NOT_FRIEND(HttpStatus.BAD_REQUEST,"친구가 아닙니다.",Set.of(NotFriendException.class)),
     MAX_FILE_UPLOAD(HttpStatus.BAD_REQUEST,"전송 파일 크기는 2.5MB를 넘을 수 없습니다.", Set.of(MaxFileSizeException.class)),
-    FAIL_TO_UPLOAD_S3(HttpStatus.BAD_REQUEST,"S3 업로드를 실패했습니다.",Set.of(FailToUploadS3Exception.class));
+    FAIL_TO_UPLOAD_S3(HttpStatus.BAD_REQUEST,"S3 업로드를 실패했습니다.",Set.of(FailToUploadS3Exception.class)),
+    NOT_FOUND_FILE_INFO(HttpStatus.BAD_REQUEST,"해당 파일을 찾을 수 없습니다.", Set.of(NotFoundFileInfoException.class));
 
 
     private final HttpStatusCode status;
