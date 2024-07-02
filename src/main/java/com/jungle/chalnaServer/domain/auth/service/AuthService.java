@@ -8,6 +8,8 @@ import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.domain.settings.domain.entity.MemberSetting;
+import com.jungle.chalnaServer.domain.settings.repository.MemberSettingRepository;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import com.jungle.chalnaServer.global.util.JwtService;
 import com.jungle.chalnaServer.global.util.TokenService;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -27,6 +30,7 @@ public class AuthService {
     private final TokenService tokenService;
     private final JwtService jwtService;
     private final KakaoTokenService kakaoTokenService;
+    private final MemberSettingRepository memberSettingRepository;
 
 
     public AuthResponse signup(AuthRequest.SIGNUP dto) {
@@ -70,7 +74,18 @@ public class AuthService {
                     .build();
             log.info("member={}",member);
 
+            MemberSetting memberSetting = MemberSetting.builder()
+                    .isAlarm(true)
+                    .isFriendAlarm(false)
+                    .isChatAlarm(true)
+                    .isTagAlarm(false)
+                    .alarmSound(true)
+                    .alarmVibration(true)
+                    .isDisturb(false)
+                    .build();
+
             memberRepository.save(member);
+            memberSettingRepository.save(memberSetting);
 
         }
         return AuthResponse.of(loginToken);
