@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.settings.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jungle.chalnaServer.domain.settings.domain.dto.SettingRequest;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
@@ -8,7 +9,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -40,7 +44,7 @@ public class MemberSetting extends BaseTimestampEntity {
 
     @ElementCollection
     @Column(nullable = false)
-    private List<String> interestTags;
+    private List<String> interestKeyword;
 
     @Column(nullable = false)
     private Boolean alarmSound = true;
@@ -50,6 +54,14 @@ public class MemberSetting extends BaseTimestampEntity {
 
     @Column(nullable = false)
     private Boolean isDisturb = false;
+
+    @Column(nullable = true)
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "hh:mm", timezone = "Asia/Seoul")
+    private LocalTime doNotDisturbStart;
+
+    @Column(nullable = true)
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "hh:mm", timezone = "Asia/Seoul")
+    private LocalTime doNotDisturbEnd;
 
 
     /* isAlarm이 false인 경우, true인 경우 */
@@ -71,23 +83,29 @@ public class MemberSetting extends BaseTimestampEntity {
         dto.getAlarmSound().ifPresent(value -> this.alarmSound = value);
         dto.getAlarmVibration().ifPresent(value -> this.alarmVibration = value);
         dto.getIsDisturb().ifPresent(value -> this.isDisturb = value);
+
     }
 
-    public void addInterestTag(String tag) {
-        if (this.interestTags != null && !this.interestTags.contains(tag)) {
-            this.interestTags.add(tag);
+    public void updateDoNotDisturb(LocalTime start, LocalTime end) {
+        this.doNotDisturbStart = start;
+        this.doNotDisturbEnd = end;
+    }
+
+    public void addInterestKeyword(String tag) {
+        if (this.interestKeyword != null && !this.interestKeyword.contains(tag)) {
+            this.interestKeyword.add(tag);
         }
     }
 
-    public void removeInterestTag(String tag) {
-        if (this.interestTags != null) {
-            this.interestTags.remove(tag);
+    public void removeInterestKeyword(String tag) {
+        if (this.interestKeyword != null) {
+            this.interestKeyword.remove(tag);
         }
     }
 
-    public void clearInterestTags() {
-        if (this.interestTags != null) {
-            this.interestTags.clear();
+    public void clearInterestKeyword() {
+        if (this.interestKeyword != null) {
+            this.interestKeyword.clear();
         }
     }
 
