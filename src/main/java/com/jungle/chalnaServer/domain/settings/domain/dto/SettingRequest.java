@@ -14,13 +14,13 @@ import java.util.Optional;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SettingRequest {
 
-    private Optional<Boolean> isAlarm;
-    private Optional<Boolean>  isFriendAlarm;
-    private Optional<Boolean>  isTagAlarm;
-    private Optional<Boolean>  isChatAlarm;
-    private Optional<Boolean>  alarmSound;
-    private Optional<Boolean>  alarmVibration;
-    private Optional<Boolean>  isDisturb;
+    private Optional<Boolean> isAlarm = Optional.empty();
+    private Optional<Boolean>  isFriendAlarm = Optional.empty();
+    private Optional<Boolean>  isTagAlarm = Optional.empty();
+    private Optional<Boolean>  isChatAlarm = Optional.empty();
+    private Optional<Boolean>  alarmSound = Optional.empty();
+    private Optional<Boolean>  alarmVibration = Optional.empty();
+    private Optional<Boolean>  isDisturb = Optional.empty();
 
     public record TAGLIST(List<String> interestTags) {}
 
