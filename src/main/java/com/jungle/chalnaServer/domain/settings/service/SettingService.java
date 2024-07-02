@@ -38,64 +38,73 @@ public class SettingService {
         return SettingResponse.of(memberSetting, false); // interestTag를 포함하지 않는 응답
     }
 
-    public SettingResponse getSettings(final Long id, boolean includeTags) {
+    public SettingResponse getSettings(final Long id, boolean includeKeyword) {
         MemberSetting memberSetting = memberSettingRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
-        return SettingResponse.of(memberSetting, includeTags);
+        return SettingResponse.of(memberSetting, includeKeyword);
     }
 
-    public SettingResponse.TAGLIST getTags(final Long id) {
+    @Transactional
+    public void setDoNotDisturb(final Long id, SettingRequest.DONOTDISTURB dto) {
         MemberSetting memberSetting = memberSettingRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
-        return SettingResponse.toTagList(memberSetting);
+        memberSetting.updateDoNotDisturb(dto.doNotDisturbStart(),dto.doNotDisturbEnd());
+        memberSettingRepository.save(memberSetting);
     }
 
-    public SettingResponse.TAGLIST createTags(final Long id, SettingRequest.TAG dto) {
+    public SettingResponse.KEYWORDLIST  getKeywords(final Long id) {
+        MemberSetting memberSetting = memberSettingRepository.findById(id)
+                .orElseThrow(MemberNotFoundException::new);
+
+        return SettingResponse.toKeywordList(memberSetting);
+    }
+
+    public SettingResponse.KEYWORDLIST  createKeyword(final Long id, SettingRequest.KEYWORD dto) {
 
         MemberSetting memberSetting = memberSettingRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
-        memberSetting.addInterestTag(dto.interestTag());
+        memberSetting.addInterestKeyword(dto.interestKeyword());
 
         memberSetting = memberSettingRepository.save(memberSetting);
 
-        return SettingResponse.toTagList(memberSetting);
+        return SettingResponse.toKeywordList(memberSetting);
 
     }
 
-    public SettingResponse.TAGLIST deleteTags(final Long id) {
+    public SettingResponse. KEYWORDLIST  deleteKeyword(final Long id) {
 
         MemberSetting memberSetting = memberSettingRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
         /* 삭제할 태그가 없을 경우 에러 처리 */
-        if (memberSetting.getInterestTags().isEmpty()) {
+        if (memberSetting.getInterestKeyword().isEmpty()) {
             throw new TagsNotFoundException();
         }
 
-        memberSetting.clearInterestTags();
+        memberSetting.clearInterestKeyword();
         memberSetting = memberSettingRepository.save(memberSetting);
 
-        return SettingResponse.toTagList(memberSetting);
+        return SettingResponse.toKeywordList(memberSetting);
     }
 
-    public SettingResponse.TAGLIST removeInterestTag(final Long id, final String tag) {
+    public SettingResponse.KEYWORDLIST removeInterestKeyword(final Long id, final String keyword) {
 
         MemberSetting memberSetting = memberSettingRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
         /* 삭제할 태그가 없을 경우 에러 처리 */
-        if (!memberSetting.getInterestTags().contains(tag)) {
-            log.error("태그가 존재하지 않습니다: {}", tag);
+        if (!memberSetting.getInterestKeyword().contains(keyword)) {
+            log.error("태그가 존재하지 않습니다: {}", keyword);
             throw new TagsNotFoundException();
         }
 
-        memberSetting.removeInterestTag(tag);
+        memberSetting.removeInterestKeyword(keyword);
         memberSetting = memberSettingRepository.save(memberSetting);
 
-        return SettingResponse.toTagList(memberSetting);
+        return SettingResponse.toKeywordList(memberSetting);
 
     }
 }

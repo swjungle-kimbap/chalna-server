@@ -63,7 +63,7 @@ public class Member extends BaseTimestampEntity {
                     .isFriendAlarm(false)
                     .isChatAlarm(true)
                     .isTagAlarm(false)
-                    .interestTags(List.of())
+                    .interestKeyword(List.of())
                     .alarmSound(true)
                     .alarmVibration(true)
                     .isDisturb(false)
