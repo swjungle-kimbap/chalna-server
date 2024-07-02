@@ -7,6 +7,10 @@ import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chatRoom.exception.NotFoundChatRoomException;
+import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
@@ -37,6 +41,7 @@ public class FileService {
     private final AmazonS3 amazonS3;
     private final MemberRepository memberRepository;
     private final FileInfoRepository fileInfoRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
@@ -44,9 +49,12 @@ public class FileService {
     private static final long MAX_UPLOAD_SIZE = 10_000_000L; // 10MB
 
     @Transactional
-    public FileResponse.UPLOAD getUploadPreSignedUrl(final long id, FileRequest.UPLOAD fileDto) {
+    public FileResponse.UPLOAD getUploadPreSignedUrl(final long id, FileRequest.UPLOAD fileDto, Long chatId) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
+
+        ChatRoom chatRoom = chatRoomRepository.findById(chatId)
+                .orElseThrow(NotFoundChatRoomException::new);
 
         validateUpload(fileDto.fileSize());
 
@@ -61,7 +69,7 @@ public class FileService {
         URL presignedUrl = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
 
         // s3 파일 url 저장 ( 쿼리 파라미터 제거)
-        String fileUrl = String.format("https://%s.s3.%s.amazonaws.com/%s",bucketName,amazonS3.getRegionName(),s3FileName);
+        String fileUrl = String.format("https://%s.s3.%s.amazonaws.com/%s/%s",bucketName,amazonS3.getRegionName(),s3FileName, chatId);
 
         // 파일 정보 저장
         FileInfo fileInfo = FileInfo.builder()
@@ -69,6 +77,7 @@ public class FileService {
                 .s3FileName(s3FileName)
                 .fileUrl(fileUrl)
                 .fileSize(fileDto.fileSize())
+                .chatRoomId(chatId)
                 .uploadedBy(member)
                 .build();
 

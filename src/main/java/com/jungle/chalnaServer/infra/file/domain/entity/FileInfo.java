@@ -30,6 +30,8 @@ public class FileInfo extends BaseTimestampEntity {
     private String fileUrl;
     @Column(nullable = false)
     private Long fileSize;
+    @Column(nullable = false)
+    private Long chatRoomId;
 //    @Column(nullable = false)
 //    private Boolean isDeleted = false;
 
