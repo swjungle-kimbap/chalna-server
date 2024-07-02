@@ -66,7 +66,7 @@ public class Member extends BaseTimestampEntity {
                     .interestTags(List.of())
                     .alarmSound(true)
                     .alarmVibration(true)
-                    .bluetooth(true)
+                    .isDisturb(false)
                     .build();
         }
     }

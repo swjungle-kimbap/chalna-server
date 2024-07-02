@@ -49,28 +49,28 @@ public class MemberSetting extends BaseTimestampEntity {
     private Boolean alarmVibration = true;
 
     @Column(nullable = false)
-    private Boolean bluetooth = true;
+    private Boolean isDisturb = false;
 
 
     /* isAlarm이 false인 경우, true인 경우 */
     public void update(SettingRequest dto) {
-        if (!dto.getIsAlarm()) {
-            this.isAlarm = false;
-            this.isFriendAlarm = false;
-            this.isChatAlarm = false;
-            this.isTagAlarm = false;
-            this.alarmSound = false;
-            this.alarmVibration = false;
-            this.bluetooth = dto.getBluetooth();
-        } else {
-            this.isAlarm = dto.getIsAlarm();
-            this.isFriendAlarm = dto.getIsFriendAlarm();
-            this.isChatAlarm = dto.getIsChatAlarm();
-            this.isTagAlarm = dto.getIsTagAlarm();
-            this.alarmSound = dto.getAlarmSound();
-            this.alarmVibration = dto.getAlarmVibration();
-            this.bluetooth = dto.getBluetooth();
-        }
+        dto.getIsAlarm().ifPresent(value -> {
+            this.isAlarm = value;
+            if (!value) {
+                this.isAlarm = false;
+                this.isFriendAlarm = false;
+                this.isChatAlarm = false;
+                this.isTagAlarm = false;
+                this.alarmSound = false;
+                this.alarmVibration = false;
+            }
+        });
+        dto.getIsFriendAlarm().ifPresent(value -> this.isFriendAlarm = value);
+        dto.getIsChatAlarm().ifPresent(value -> this.isChatAlarm = value);
+        dto.getIsTagAlarm().ifPresent(value -> this.isTagAlarm = value);
+        dto.getAlarmSound().ifPresent(value -> this.alarmSound = value);
+        dto.getAlarmVibration().ifPresent(value -> this.alarmVibration = value);
+        dto.getIsDisturb().ifPresent(value -> this.isDisturb = value);
     }
 
     public void addInterestTag(String tag) {
