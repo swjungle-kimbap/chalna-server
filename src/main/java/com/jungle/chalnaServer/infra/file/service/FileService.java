@@ -1,35 +1,33 @@
-package com.jungle.chalnaServer.infra.file;
+package com.jungle.chalnaServer.infra.file.service;
 
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileRequest;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
 import com.jungle.chalnaServer.infra.file.domain.entity.FileInfo;
-import com.jungle.chalnaServer.infra.file.exception.FailToUploadS3Exception;
 import com.jungle.chalnaServer.infra.file.exception.MaxFileSizeException;
 import com.jungle.chalnaServer.infra.file.exception.NotFoundFileInfoException;
+import com.jungle.chalnaServer.infra.file.exception.NotFoundS3ObjectException;
 import com.jungle.chalnaServer.infra.file.repository.FileInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+
 import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
 
-import static com.google.common.io.Files.getFileExtension;
 
 @Service
 @RequiredArgsConstructor
@@ -98,7 +96,6 @@ public class FileService {
         return expiration;
     }
 
-
     /* 파일 다운로드 로직 */
     @Transactional
     public FileResponse.DOWNLOAD getDownloadPreSignedUrl(final Long fileId) {
@@ -106,12 +103,48 @@ public class FileService {
         FileInfo fileInfo = fileInfoRepository.findById(fileId)
                 .orElseThrow(NotFoundFileInfoException::new);
 
+        // S3 객체 존재 확인
+        try {
+            S3Object s3Object = amazonS3.getObject(bucketName, fileInfo.getS3FileName());
+        } catch (Exception e) {
+            throw new NotFoundS3ObjectException();
+        }
+
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, fileInfo.getS3FileName())
                 .withMethod(HttpMethod.GET)
                 .withExpiration(createPreSignedUrlExpiration());
 
         URL presignedUrl = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
         return FileResponse.DOWNLOAD.of(presignedUrl.toString());
+    }
+
+    /* 파일 삭제 로직 */
+    @Transactional
+    public void deleteFile(final Long fileId) {
+        FileInfo fileInfo = fileInfoRepository.findById(fileId)
+                .orElseThrow(NotFoundFileInfoException::new);
+
+        // 삭제를 원하는 객체의 경로
+        String key = fileInfo.getFileUrl();
+
+
+        // S3 객체 존재 확인 및 삭제
+        try {
+            S3Object s3Object = amazonS3.getObject(bucketName, fileInfo.getS3FileName());
+            if (s3Object != null) {
+                amazonS3.deleteObject(new DeleteObjectRequest(bucketName, key));
+            }
+        } catch (AmazonS3Exception e) {
+            if (e.getStatusCode() != 404) {
+                throw e; // 다른 오류가 발생한 경우 예외
+            }
+        }
+
+        // db 메타데이터 삭제 (삭제 여부 true)
+//        fileInfo.softDelete();
+//        fileInfoRepository.save(fileInfo);
+        fileInfoRepository.delete(fileInfo);
+
     }
 
 }

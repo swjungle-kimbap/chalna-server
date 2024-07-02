@@ -7,12 +7,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
 
 @Getter
 @Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+//@SQLRestriction("is_deleted = true")
 public class FileInfo extends BaseTimestampEntity {
 
     @Id
@@ -27,9 +30,15 @@ public class FileInfo extends BaseTimestampEntity {
     private String fileUrl;
     @Column(nullable = false)
     private Long fileSize;
+//    @Column(nullable = false)
+//    private Boolean isDeleted = false;
 
     @ManyToOne
     @JoinColumn(name = "uploaded_by", nullable = false)
     private Member uploadedBy;
+
+//    public void softDelete() {
+//        this.isDeleted = true;
+//    }
 
 }
