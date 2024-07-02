@@ -17,9 +17,14 @@ public class FileController {
     private final FileService fileService;
 
     @PostMapping("/upload")
-    public CommonResponse<FileResponse.UPLOAD> getPreSignedUrl(@AuthUserId final Long id,
+    public CommonResponse<FileResponse.UPLOAD> getUploadPreSignedUrl(@AuthUserId final Long id,
                                                         @RequestBody FileRequest.UPLOAD fileDto
                                                         ) {
-        return CommonResponse.ok(fileService.getPreSignedUrl(id, fileDto));
+        return CommonResponse.ok(fileService.getUploadPreSignedUrl(id, fileDto));
+    }
+
+    @GetMapping("/download/{fileId}")
+    public CommonResponse<FileResponse.DOWNLOAD> getDownloadPreSignedUrl(@PathVariable(value = "fileId") final Long fileId) {
+        return CommonResponse.ok(fileService.getDownloadPreSignedUrl(fileId));
     }
 }

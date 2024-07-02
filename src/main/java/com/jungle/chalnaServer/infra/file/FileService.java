@@ -15,6 +15,7 @@ import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
 import com.jungle.chalnaServer.infra.file.domain.entity.FileInfo;
 import com.jungle.chalnaServer.infra.file.exception.FailToUploadS3Exception;
 import com.jungle.chalnaServer.infra.file.exception.MaxFileSizeException;
+import com.jungle.chalnaServer.infra.file.exception.NotFoundFileInfoException;
 import com.jungle.chalnaServer.infra.file.repository.FileInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,7 @@ public class FileService {
     private static final long MAX_UPLOAD_SIZE = 10_000_000L; // 10MB
 
     @Transactional
-    public FileResponse.UPLOAD getPreSignedUrl(final long id, FileRequest.UPLOAD fileDto) {
+    public FileResponse.UPLOAD getUploadPreSignedUrl(final long id, FileRequest.UPLOAD fileDto) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -54,15 +55,9 @@ public class FileService {
         // 파일명 uuid로 변환 (s3 파일명 생성)
         String s3FileName = UUID.randomUUID().toString() + "_" + fileDto.fileName();
 
-        // 프리사인드 url 생성
-        Date expiration = new Date();
-        long expTimeMillis = expiration.getTime();
-        expTimeMillis += 1000 * 60 * 60; // 1시간
-        expiration.setTime(expTimeMillis);
-
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, s3FileName)
                 .withMethod(HttpMethod.PUT)
-                .withExpiration(expiration);
+                .withExpiration( createPreSignedUrlExpiration());
         generatePresignedUrlRequest.addRequestParameter("Content-Type", fileDto.contentType());
 
         URL presignedUrl = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
@@ -81,7 +76,7 @@ public class FileService {
 
         fileInfoRepository.save(fileInfo);
 
-        return FileResponse.UPLOAD.of(presignedUrl.toString());
+        return FileResponse.UPLOAD.of( fileInfo.getId(), presignedUrl.toString());
 
     }
 
@@ -92,5 +87,31 @@ public class FileService {
         }
     }
 
+    /* 프리사인드 url 생성 로직 */
+
+    /* 프리사인드 url 유효기간 생성 로직 */
+    private Date createPreSignedUrlExpiration() {
+        Date expiration = new Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60; // 1시간
+        expiration.setTime(expTimeMillis);
+        return expiration;
+    }
+
+
+    /* 파일 다운로드 로직 */
+    @Transactional
+    public FileResponse.DOWNLOAD getDownloadPreSignedUrl(final Long fileId) {
+
+        FileInfo fileInfo = fileInfoRepository.findById(fileId)
+                .orElseThrow(NotFoundFileInfoException::new);
+
+        GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, fileInfo.getS3FileName())
+                .withMethod(HttpMethod.GET)
+                .withExpiration(createPreSignedUrlExpiration());
+
+        URL presignedUrl = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
+        return FileResponse.DOWNLOAD.of(presignedUrl.toString());
+    }
 
 }
