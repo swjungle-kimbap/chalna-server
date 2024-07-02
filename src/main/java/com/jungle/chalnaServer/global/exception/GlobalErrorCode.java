@@ -1,10 +1,8 @@
 package com.jungle.chalnaServer.global.exception;
 
-import com.jungle.chalnaServer.domain.File.exception.FailToUploadS3Exception;
-import com.jungle.chalnaServer.domain.File.exception.MaxFileSizeException;
-import com.jungle.chalnaServer.domain.File.exception.MaxUploadCountException;
+import com.jungle.chalnaServer.infra.file.exception.FailToUploadS3Exception;
+import com.jungle.chalnaServer.infra.file.exception.MaxFileSizeException;
 import com.jungle.chalnaServer.domain.auth.exception.InvalidKakaoTokenException;
-import com.jungle.chalnaServer.domain.chatRoom.exception.NotFoundChatRoomException;
 import com.jungle.chalnaServer.domain.friend.exception.NotFriendException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatNotFoundException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatNotOwnerException;
@@ -13,8 +11,8 @@ import com.jungle.chalnaServer.domain.match.exception.NotificationNotFoundExcept
 import com.jungle.chalnaServer.domain.member.exception.FileStorageException;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.relation.exception.RelationIdInvalidException;
-import com.jungle.chalnaServer.global.auth.jwt.exception.InvalidJwtTokenException;
 import com.jungle.chalnaServer.domain.settings.exception.TagsNotFoundException;
+import com.jungle.chalnaServer.global.auth.jwt.exception.InvalidJwtTokenException;
 import com.jungle.chalnaServer.infra.fcm.exception.FCMTokenNotFoundException;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -41,9 +39,7 @@ public enum GlobalErrorCode {
     LOCALCHAT_NOT_OWNER(HttpStatus.BAD_REQUEST,"채팅방의 주인만 삭제할 수 있습니다.",Set.of(LocalChatNotOwnerException.class)),
     NOT_FRIEND(HttpStatus.BAD_REQUEST,"친구가 아닙니다.",Set.of(NotFriendException.class)),
     MAX_FILE_UPLOAD(HttpStatus.BAD_REQUEST,"전송 파일 크기는 2.5MB를 넘을 수 없습니다.", Set.of(MaxFileSizeException.class)),
-    MAX_UPLOAD_COUNT(HttpStatus.BAD_REQUEST,"월 파일 업로드 수를 초과했습니다.",Set.of(MaxUploadCountException.class)),
-    FAIL_TO_UPLOAD_S3(HttpStatus.BAD_REQUEST,"S3 업로드를 실패했습니다.",Set.of(FailToUploadS3Exception.class)),
-    NOT_FOUND_CHATROOM(HttpStatus.BAD_REQUEST,"해당 채팅방을 찾을 수 없습니다.",Set.of(NotFoundChatRoomException.class));
+    FAIL_TO_UPLOAD_S3(HttpStatus.BAD_REQUEST,"S3 업로드를 실패했습니다.",Set.of(FailToUploadS3Exception.class));
 
 
     private final HttpStatusCode status;
