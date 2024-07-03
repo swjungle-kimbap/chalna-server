@@ -51,6 +51,7 @@ public class FCMData {
         Map<String, String> map = new HashMap<>();
         map.put("senderId", this.senderId);
         map.put("message", this.message);
+        map.put("fcmType", this.fcmType);
         JSONObject additionalDataJson = new JSONObject(this.additionalData);
         map.put("additionalData", additionalDataJson.toString());
         return map;
