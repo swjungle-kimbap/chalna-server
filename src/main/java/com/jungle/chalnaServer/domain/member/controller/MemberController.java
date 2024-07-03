@@ -3,6 +3,7 @@ package com.jungle.chalnaServer.domain.member.controller;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberRequest;
 import com.jungle.chalnaServer.domain.member.service.MemberService;
+import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,19 +21,18 @@ public class MemberController {
     private final MemberService memberService;
     private final JwtService jwtService;
 
-    @PatchMapping
-    public CommonResponse<MemberResponse> updateMemberInfo(HttpServletRequest request,
-                                                           @RequestParam(value = "username", required = false) String username,
-                                                           @RequestParam(value = "message" , required = false) String message,
-                                                           @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
-        Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
-        MemberRequest memberDto = MemberRequest.builder()
-                .username(username)
-                .message(message)
-                .image(image)
-                .build();
+    @PatchMapping("/profile")
+    public CommonResponse<MemberResponse> updateMemberProfile(@AuthUserId final Long id,
+                                                           @RequestBody MemberRequest.PROFILE memberDto) {
 
-        return CommonResponse.ok(memberService.updateMemberInfo(id, memberDto, image));
+
+        return CommonResponse.ok(memberService.updateMemberProfile(id, memberDto));
+    }
+
+    @PatchMapping("/profileImage")
+    public CommonResponse<MemberResponse.UPLOAD> updateMemberInfo(@AuthUserId final Long id, @RequestBody MemberRequest.UPLOAD memberdto) {
+
+        return CommonResponse.ok(memberService.updateMemberInfo(id,memberdto));
     }
 
     @GetMapping

@@ -46,30 +46,29 @@ public class Member extends BaseTimestampEntity {
 
     private String loginToken;
 
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private MemberSetting memberSetting;
+//    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    private MemberSetting memberSetting;
 
     @OneToMany(mappedBy = "uploadedBy", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FileInfo> fileInfoList;
 
 
-
-    @PrePersist
-    public void prePersist() {
-        if (this.memberSetting == null) {
-            this.memberSetting = MemberSetting.builder()
-                    .member(this)
-                    .isAlarm(true)
-                    .isFriendAlarm(false)
-                    .isChatAlarm(true)
-                    .isTagAlarm(false)
-                    .interestTags(List.of())
-                    .alarmSound(true)
-                    .alarmVibration(true)
-                    .bluetooth(true)
-                    .build();
-        }
-    }
+//    @PrePersist
+//    public void prePersist() {
+//        if (this.memberSetting == null) {
+//            this.memberSetting = MemberSetting.builder()
+//                    .member(this)
+//                    .isAlarm(true)
+//                    .isFriendAlarm(false)
+//                    .isChatAlarm(true)
+//                    .isTagAlarm(false)
+//                    .interestKeyword(List.of())
+//                    .alarmSound(true)
+//                    .alarmVibration(true)
+//                    .isDisturb(false)
+//                    .build();
+//        }
+//    }
 
     public void updateInfo(String loginToken,String deviceId,String fcmToken) {
         this.loginToken = loginToken;

@@ -57,10 +57,10 @@ public class ChatService {
                     FCMData fcmData = FCMData.instanceOfChatFCM(
                             memberId.toString(),
                             req.content(),
-                            now.toString(),
                             chatRoomMember.getUserName(),
                             roomId.toString(),
-                            chatRoom.getType().toString());
+                            chatRoom.getType().toString(),
+                            req.type().toString());
                     FCMService.sendFCM(member.getFcmToken(), fcmData);
                 }
             }

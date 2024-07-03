@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.settings.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jungle.chalnaServer.domain.settings.domain.dto.SettingRequest;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
@@ -8,7 +9,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -21,10 +26,10 @@ public class MemberSetting extends BaseTimestampEntity {
     @Id
     private Long id;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
-    private Member member;
+//    @OneToOne(fetch = FetchType.LAZY)
+//    @MapsId
+//    @JoinColumn(name = "id")
+//    private Member member;
 
     @Column(nullable = false)
     private Boolean isAlarm = true;
@@ -40,7 +45,8 @@ public class MemberSetting extends BaseTimestampEntity {
 
     @ElementCollection
     @Column(nullable = false)
-    private List<String> interestTags;
+    @Builder.Default
+    private List<String> interestKeyword = new ArrayList<>();
 
     @Column(nullable = false)
     private Boolean alarmSound = true;
@@ -49,46 +55,58 @@ public class MemberSetting extends BaseTimestampEntity {
     private Boolean alarmVibration = true;
 
     @Column(nullable = false)
-    private Boolean bluetooth = true;
+    private Boolean isDisturb = false;
+
+    @Column(nullable = true)
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "hh:mm", timezone = "Asia/Seoul")
+    private LocalTime doNotDisturbStart;
+
+    @Column(nullable = true)
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "hh:mm", timezone = "Asia/Seoul")
+    private LocalTime doNotDisturbEnd;
 
 
     /* isAlarm이 false인 경우, true인 경우 */
     public void update(SettingRequest dto) {
-        if (!dto.getIsAlarm()) {
-            this.isAlarm = false;
-            this.isFriendAlarm = false;
-            this.isChatAlarm = false;
-            this.isTagAlarm = false;
-            this.alarmSound = false;
-            this.alarmVibration = false;
-            this.bluetooth = dto.getBluetooth();
-        } else {
-            this.isAlarm = dto.getIsAlarm();
-            this.isFriendAlarm = dto.getIsFriendAlarm();
-            this.isChatAlarm = dto.getIsChatAlarm();
-            this.isTagAlarm = dto.getIsTagAlarm();
-            this.alarmSound = dto.getAlarmSound();
-            this.alarmVibration = dto.getAlarmVibration();
-            this.bluetooth = dto.getBluetooth();
+        dto.getIsAlarm().ifPresent(value -> {
+            this.isAlarm = value;
+            if (!value) {
+                this.isAlarm = false;
+                this.isFriendAlarm = false;
+                this.isChatAlarm = false;
+                this.isTagAlarm = false;
+                this.alarmSound = false;
+                this.alarmVibration = false;
+            }
+        });
+        dto.getIsFriendAlarm().ifPresent(value -> this.isFriendAlarm = value);
+        dto.getIsChatAlarm().ifPresent(value -> this.isChatAlarm = value);
+        dto.getIsTagAlarm().ifPresent(value -> this.isTagAlarm = value);
+        dto.getAlarmSound().ifPresent(value -> this.alarmSound = value);
+        dto.getAlarmVibration().ifPresent(value -> this.alarmVibration = value);
+        dto.getIsDisturb().ifPresent(value -> this.isDisturb = value);
+
+    }
+
+    public void updateDoNotDisturb(LocalTime start, LocalTime end) {
+        this.doNotDisturbStart = start;
+        this.doNotDisturbEnd = end;
+    }
+
+    public void addInterestKeyword(String tag) {
+        if (this.interestKeyword != null && !this.interestKeyword.contains(tag)) {
+            this.interestKeyword.add(tag);
         }
     }
 
-    public void addInterestTag(String tag) {
-        if (this.interestTags != null && !this.interestTags.contains(tag)) {
-            this.interestTags.add(tag);
+    public void removeInterestKeyword(String tag) {
+        if (this.interestKeyword != null) {
+            this.interestKeyword.remove(tag);
         }
     }
 
-    public void removeInterestTag(String tag) {
-        if (this.interestTags != null) {
-            this.interestTags.remove(tag);
-        }
-    }
-
-    public void clearInterestTags() {
-        if (this.interestTags != null) {
-            this.interestTags.clear();
-        }
+    public void clearInterestKeyword() {
+            this.interestKeyword.clear();
     }
 
 }

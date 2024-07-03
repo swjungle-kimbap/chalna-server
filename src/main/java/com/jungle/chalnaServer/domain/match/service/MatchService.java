@@ -44,39 +44,43 @@ public class MatchService {
         Member member = memberRepository.findById(senderId)
                 .orElseThrow(MemberNotFoundException::new);
 
-        Member receiver = memberRepository.findByDeviceId(dto.getReceiverDeviceId()).orElseThrow(MemberNotFoundException::new);
+        List<String> deviceIdList = dto.getDeviceIdList();
 
-        Long receiverId = receiver.getId();
-        List<String> interestTag = dto.getInterestTag(); // tag 처리 추후 보완
+        for (String deviceId: deviceIdList) {
+            //deviceIdList에서 하나씩 찾아서 바꿔주기
+            Member receiver = memberRepository.findByDeviceId(deviceId).orElseThrow(MemberNotFoundException::new);
 
-        RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);
+            Long receiverId = receiver.getId();
+
+            RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);
 
 
-        if (relationService.findByOtherId(receiverId, senderId).isBlocked()
-                || relationService.findByOtherId(senderId, receiverId).isBlocked())
-            return MatchResponse.MatchMessageSend("차단된 유저 입니다.");
+            if (relationService.findByOtherId(receiverId, senderId).isBlocked()
+                    || relationService.findByOtherId(senderId, receiverId).isBlocked())
+                return MatchResponse.MatchMessageSend("차단된 유저 입니다.");
 
-        // 중간 발표 테스트용 제한
-        LocalDateTime tenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusMinutes(10L);
-        List<MatchNotification> notifications = matchNotiRepository.findByReceiverIdAndSenderIdAndDeleteAtAfter(receiverId, senderId, tenMinutesAgo);
+            // 중간 발표 테스트용 제한
+            LocalDateTime tenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusMinutes(10L);
+            List<MatchNotification> notifications = matchNotiRepository.findByReceiverIdAndSenderIdAndDeleteAtAfter(receiverId, senderId, tenMinutesAgo);
 
-        if (!notifications.isEmpty()) {
-            return MatchResponse.MatchMessageSend("이미 10분 내에 메시지를 보냈습니다.");
+            if (!notifications.isEmpty()) {
+                return MatchResponse.MatchMessageSend("이미 10분 내에 메시지를 보냈습니다.");
+            }
+
+            String fcmToken = receiver.getFcmToken();
+
+            MatchNotification matchNotification = MatchNotification.builder()
+                    .senderId(senderId)
+                    .receiverId(receiverId)
+                    .message(dto.getMessage())
+                    .status(MatchNotificationStatus.SEND)
+                    .deleteAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(10L))
+                    .build();
+
+            matchNotiRepository.save(matchNotification);
+
+            FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), matchNotification.getId().toString()));
         }
-
-        String fcmToken = receiver.getFcmToken();
-
-        MatchNotification matchNotification = MatchNotification.builder()
-                .senderId(senderId)
-                .receiverId(receiverId)
-                .message(dto.getMessage())
-                .status(MatchNotificationStatus.SEND)
-                .deleteAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(10L))
-                .build();
-
-        matchNotiRepository.save(matchNotification);
-
-        FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), LocalDateTime.now(ZoneId.of("Asia/Seoul")).toString(), matchNotification.getId().toString()));
 
         return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
     }
@@ -121,10 +125,10 @@ public class MatchService {
 
         FCMService.sendFCM(fcmToken, FCMData.instanceOfChatFCM(matchNotification.getReceiverId().toString(),
                 "인연과의 대화가 시작됐습니다.",
-                LocalDateTime.now(ZoneId.of("Asia/Seoul")).toString(),
                 receiver.getUsername(),
                 chatRoomId.toString(),
-                ChatMessage.MessageType.CHAT.toString()));
+                ChatMessage.MessageType.CHAT.toString(),
+                "ALARM"));
 
         return MatchResponse.MatchAccept(Long.toString(chatRoomId));
     }

@@ -3,6 +3,7 @@ package com.jungle.chalnaServer.domain.settings.controller;
 
 import com.jungle.chalnaServer.domain.settings.domain.dto.SettingResponse;
 import com.jungle.chalnaServer.domain.settings.service.SettingService;
+import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,12 +20,9 @@ public class SettingController {
     private final JwtService jwtService;
 
     /* 앱 설정 */
-    @PutMapping
-    public CommonResponse<SettingResponse> updateSettings(HttpServletRequest request, @RequestBody SettingRequest dto) {
-
-        Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
+    @PatchMapping
+    public CommonResponse<SettingResponse> updateSettings(@AuthUserId final Long id, @RequestBody SettingRequest dto) {
         SettingResponse response = settingService.updateSettings(id, dto);
-
         return CommonResponse.ok(response);
 
     }
@@ -39,41 +37,48 @@ public class SettingController {
         return CommonResponse.ok(response);
     }
 
+    /* 방해 금지 모드 */
+    @PatchMapping("/disturb")
+    public CommonResponse<?> setDoNotDisturb(@AuthUserId final Long id, @RequestBody SettingRequest.DONOTDISTURB dto) {
+        settingService.setDoNotDisturb(id,dto);
+        return CommonResponse.ok("방해금지 모드 설정이 완료됐습니다.");
+    }
+
     /* 전체 태그 목록 조회 */
-    @GetMapping("/tag")
-    public CommonResponse<SettingResponse.TAGLIST> getTags(HttpServletRequest request) {
+    @GetMapping("/keyword")
+    public CommonResponse<SettingResponse.KEYWORDLIST> getTags(HttpServletRequest request) {
 
         Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
-        SettingResponse.TAGLIST response = settingService.getTags(id);
+        SettingResponse.KEYWORDLIST response = settingService.getKeywords(id);
 
         return CommonResponse.ok(response);
     }
 
     /* 선호 태그 추가 */
-    @PostMapping("/tag")
-    public CommonResponse<SettingResponse.TAGLIST> createTags(HttpServletRequest request, @RequestBody SettingRequest.TAG dto) {
+    @PostMapping("/keyword")
+    public CommonResponse<SettingResponse.KEYWORDLIST> createTags(HttpServletRequest request, @RequestBody SettingRequest.KEYWORD dto) {
 
         Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
-        SettingResponse.TAGLIST response = settingService.createTags(id, dto);
+        SettingResponse.KEYWORDLIST response = settingService.createKeyword(id, dto);
 
         return CommonResponse.ok(response);
     }
 
     /* 전체 선호 태그 삭제 */
-    @DeleteMapping("/tag")
-    public CommonResponse<SettingResponse.TAGLIST> deleteTags(HttpServletRequest request) {
+    @DeleteMapping("/keyword")
+    public CommonResponse<SettingResponse.KEYWORDLIST> deleteTags(HttpServletRequest request) {
 
         Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
-        SettingResponse.TAGLIST response = settingService.deleteTags(id);
+        SettingResponse.KEYWORDLIST response = settingService.deleteKeyword(id);
 
         return CommonResponse.ok(response);
     }
 
     /* 선택 선호 태그 삭제 */
-    @DeleteMapping("/tag/{tag}")
-    public CommonResponse<SettingResponse.TAGLIST> removeInterestTag(HttpServletRequest request, @PathVariable("tag") String tag) {
+    @DeleteMapping("/keyword/{keyword}")
+    public CommonResponse<SettingResponse.KEYWORDLIST> removeInterestTag(HttpServletRequest request, @PathVariable("keyword") String keyword) {
         Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
-        SettingResponse.TAGLIST response = settingService.removeInterestTag(id, tag);
+        SettingResponse.KEYWORDLIST response = settingService.removeInterestKeyword(id, keyword);
 
         return CommonResponse.ok(response);
     }
