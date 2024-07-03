@@ -16,11 +16,9 @@ public class chatController {
     @Autowired
     private ChatService chatService;
 
-    @MessageMapping("/chat/{roomId}/sendMessage")
-    public void sendMessage(@DestinationVariable String roomId, @Payload ChatMessageRequest requestMessage, SimpMessageHeaderAccessor headerAccessor) throws Exception {
+    @MessageMapping("/{roomId}")
+    public void sendMessage(@DestinationVariable String roomId, @Payload ChatMessageRequest.SEND requestMessage, SimpMessageHeaderAccessor headerAccessor) {
         Long memberId = (Long) headerAccessor.getSessionAttributes().get("memberId");
-        String username = headerAccessor.getSessionAttributes().get("username").toString();
-//        String sessionId = headerAccessor.getSessionId();
-        chatService.sendMessage(memberId, Long.parseLong(roomId), requestMessage, username);
+        chatService.sendMessage(memberId, Long.parseLong(roomId), requestMessage);
     }
 }

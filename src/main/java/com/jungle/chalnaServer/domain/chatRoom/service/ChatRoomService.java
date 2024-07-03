@@ -2,22 +2,23 @@ package com.jungle.chalnaServer.domain.chatRoom.service;
 
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
-import com.jungle.chalnaServer.domain.chat.handler.Stomphandler;
+import com.jungle.chalnaServer.domain.chat.handler.StompHandler;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
-import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomMessagesResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.MemberInfo;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomMemberNotFoundException;
+import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomNotFoundException;
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
+import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.global.util.RandomUserNameService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,153 +27,145 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
 
-    private static final Logger log = LoggerFactory.getLogger(ChatRoomService.class);
     private final ChatRoomMemberRepository chatRoomMemberRepository;
-
     private final MemberRepository memberRepository;
-
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final RandomUserNameService randomUserNameService;
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final StompHandler stomphandler;
 
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    @Autowired
-    private Stomphandler stomphandler;
+
 
     // 채팅방 목록 요청
-    public List<ChatRoomResponse> getChatRoomList(Long memberId, LocalDateTime lastLeaveAt) {
+    public List<ChatRoomResponse.CHATROOM> getChatRoomList(Long memberId) {
         List<ChatRoomMember> chatroomMembers = chatRoomMemberRepository.findByMemberId(memberId);
-        List<ChatRoomResponse> list = new ArrayList<>();
+        return chatroomMembers.stream()
+                .map(chatRoomMember -> {
+                    ChatRoom chatRoom = chatRoomMember.getChatRoom();
+                    ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId());
 
-        for (ChatRoomMember chatroomMember : chatroomMembers) {
-            if (!chatroomMember.getIsRemoved()) {
-                ChatRoom chatRoom = chatroomMember.getChatRoom();
-                ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId());
-
-                List<MemberInfo> memberInfos = chatRoom.getMembers().stream()
-                        .sorted(Comparator.comparingLong(member -> member.getMember().getId()))
-                        .map(chatRoomMember -> {
-//                        Member memberEntity = memberRepository.findById(member.getMember().getId()).orElse(null);
-                            return new MemberInfo(
-                                    chatRoomMember.getMember().getId(),
-                                    chatRoomMember.getMember() != null ? chatRoomMember.getMember().getUsername() : null
-                            );
-                        })
-                        .collect(Collectors.toList());
-                Integer unreadMesssageCount = chatRepository.countUnreadMessages(chatRoom.getId(), memberId, lastLeaveAt);
-                ChatMessageResponse messageResponse = recentMessage != null ? new ChatMessageResponse(recentMessage) : null;
-                ChatRoomResponse apply = new ChatRoomResponse(chatRoom, memberInfos, messageResponse, unreadMesssageCount);
-                list.add(apply);
-            }
-        }
-
-        list.sort(Comparator.comparing(ChatRoomResponse::getRecentMessageCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())));
-        return list;
+                    Integer unreadMessageCount = chatRepository.getUnreadCount(chatRoom.getId(), chatRoomMember.getLastLeaveAt());
+                    List<MemberInfo> memberInfos = getChatRoomMembers(chatRoom);
+                    ChatMessageResponse.MESSAGE recentMessageRes = recentMessage != null ? ChatMessageResponse.MESSAGE.of(recentMessage) : null;
+                    return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount);
+                })
+                .sorted(Comparator.comparing((c)->
+                        c.getRecentMessage() == null ? null : c.getRecentMessage().createdAt()
+                        , Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
     }
 
     // 채팅방 메시지 요청
-    public ChatRoomMessagesResponse getChatMessages(Long memberId, Long chatRoomId, LocalDateTime lastLeaveAt) {
-        Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findById(chatRoomId);
-        if (optionalChatRoom.isPresent()) {
-            ChatRoom chatRoom = optionalChatRoom.get();
-            List<ChatMessageResponse> list = chatRepository.getMessagesAfterUpdateDate(memberId, chatRoomId, lastLeaveAt).stream()
-                    .map(message -> {
-                        ChatMessageResponse chatMessageResponse = new ChatMessageResponse(message);
-                        return chatMessageResponse;
-                    })
-                    .collect(Collectors.toList());
+    @Transactional
+    public ChatRoomResponse.MESSAGES getChatMessages(Long memberId, Long chatRoomId) {
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+        LocalDateTime lastLeaveAt = chatRoomMember.getLastLeaveAt();
+        chatRoomMember.updateLastLeaveAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+        List<ChatMessageResponse.MESSAGE> messages = chatRepository.getMessagesAfterUpdateDate(memberId, chatRoomId, lastLeaveAt).stream()
+                .map(ChatMessageResponse.MESSAGE::of)
+                .toList();
 
-            return new ChatRoomMessagesResponse(chatRoom, list);
-        }else {
-            return null;
-        }
+        return new ChatRoomResponse.MESSAGES(chatRoomMember.getChatRoom(), getChatRoomMembers(chatRoomMember.getChatRoom()), messages);
     }
-
     // 채팅방 만들기
     @Transactional
     public Long makeChatRoom(ChatRoom.ChatRoomType type, Integer memberCount, List<Long> memberIdList) {
+        log.info("chatroom created");
         ChatRoom chatRoom = new ChatRoom(type, memberCount);
         chatRoomRepository.save(chatRoom);
 
+        log.info("chatroom member join start");
         for (Long memberId : memberIdList) {
             Member member = memberRepository.findById(memberId).orElse(null);
+            if (member == null) {
+                continue;
+            }
+            log.info("chatroom member {} joined", member.getId());
             ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
+            chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
             chatRoomMemberRepository.save(chatRoomMember);
 
-            // 멤버들을 소켓을 열고 있지 않은 멤버 목록에 추가
-            stomphandler.removeUserFromRoom(chatRoom.getId().toString(), memberId.toString());
+            stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
         }
-        scheduleRoomTermination(chatRoom.getId(), 5, TimeUnit.MINUTES);
+        scheduleRoomTermination(chatRoom, 5, TimeUnit.MINUTES);
 
         return chatRoom.getId();
     }
 
     // 채팅방 5분 스케줄러
-    public void scheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
+    @Transactional
+    public void scheduleRoomTermination(ChatRoom chatRoom, long delay, TimeUnit unit) {
         scheduler.schedule(() -> {
-            log.info("timeout roomId {}", chatRoomId);
-            Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findById(chatRoomId);
-            optionalChatRoom.ifPresent(chatRoom -> {
-                if (!chatRoom.getType().equals(ChatRoom.ChatRoomType.FRIEND)) {
-                    // 채팅방의 상태를 대기 상태로 변경
-                    chatRoom.updateType(ChatRoom.ChatRoomType.WAITING);
-                    chatRoomRepository.save(chatRoom);
-
-                    // 메시지 보내기
-                    Long messageId = chatRepository.makeMessageId();
-                    LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-                    String content = "5분이 지났습니다.";
-
-                    ChatMessageResponse chatMessage = ChatMessageResponse.builder()
-                            .id(messageId)
-                            .content(content)
-                            .senderId(0L)
-                            .type(ChatMessage.MessageType.TIMEOUT)
-                            .unreadCount(0)
-                            .createdAt(now)
-                            .build();
-
-
-                    messagingTemplate.convertAndSend("/api/sub/" + chatRoomId, chatMessage);
-
-                }
-
-            });
+            log.info("timeout roomId {}", chatRoom.getId());
+            if (chatRoom.getType().equals(ChatRoom.ChatRoomType.MATCH)) {
+                // 채팅방의 상태를 대기 상태로 변경
+                chatRoom.updateType(ChatRoom.ChatRoomType.WAITING);
+                // 메시지 보내기
+                Long messageId = chatRepository.getMessageId();
+                LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+                ChatMessageResponse.MESSAGE res = new ChatMessageResponse.MESSAGE(
+                        messageId
+                        , ChatMessage.MessageType.TIMEOUT
+                        , "5분이 지났습니다.\n대화를 이어가려면 친구요청을 보내보세요."
+                        , 0L
+                        , 0
+                        , now
+                );
+                messagingTemplate.convertAndSend("/api/sub/" + chatRoom.getId(), res);
+            }
         }, delay, unit);
     }
 
     // 채팅방 나가기(삭제)
-    public Boolean leaveChatRoom(Long memberId, Long chatRoomId) {
-        Optional<ChatRoomMember> chatRoomMemberOptional = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId);
+    @Transactional
+    public void leaveChatRoom(Long chatRoomId, Long memberId) {
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findById(chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+        // 채팅방 인원 변경
+        chatRoomMember.getChatRoom().updateMemberCount(chatRoomMember.getChatRoom().getMemberCount() - 1);
+        // session에서 삭제
+        stomphandler.setMemberOnline(chatRoomId, memberId);
+        // entity 삭제
+        chatRoomMemberRepository.delete(chatRoomMember);
+    }
 
-        if (chatRoomMemberOptional.isPresent()) {
-            ChatRoomMember chatRoomMember = chatRoomMemberOptional.get();
-            chatRoomMember.removeMember();
-            chatRoomMemberRepository.save(chatRoomMember);
-
-            // 채팅방 인원 변경
-            chatRoomMember.getChatRoom().updateMemberCount(chatRoomMember.getChatRoom().getMemberCount() - 1);
-            chatRoomRepository.save(chatRoomMember.getChatRoom());
-
-            // session에서 삭제
-            stomphandler.addUserToRoom(chatRoomId.toString(), memberId.toString());
-            return true;
-        } else {
-            // 에러 처리
-            log.info("예외 처리");
-            return false;
+    @Transactional
+    public void joinChatRoom(Long chatRoomId, Long memberId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
+        Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+        // 채팅방에 있는지 확인
+        for (ChatRoomMember chatRoomMember : chatRoom.getMembers()) {
+            // 채팅방에 이미 있으면 pass
+            if (chatRoomMember.getMember().getId().equals(member.getId()))
+                return;
         }
+        ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
+        chatRoomMemberRepository.save(chatRoomMember);
+
+        chatRoom.updateMemberCount(chatRoom.getMemberCount() + 1);
+        stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
+    }
+
+    private List<MemberInfo> getChatRoomMembers(ChatRoom chatRoom) {
+        List<MemberInfo> list = new ArrayList<>();
+        for (ChatRoomMember member : chatRoom.getMembers()) {
+            if (chatRoom.getType() == ChatRoom.ChatRoomType.FRIEND) {
+                list.add(MemberInfo.of(member.getMember()));
+            } else {
+                list.add(new MemberInfo(member.getMember().getId(), member.getDisplayName()));
+            }
+        }
+        return list;
     }
 }
