@@ -59,7 +59,7 @@ public class FileService {
         validateUpload(fileDto.fileSize());
 
         // 파일명 uuid로 변환 (s3 파일명 생성)
-        String s3FileName = UUID.randomUUID().toString() + "_" + fileDto.fileName();
+        String s3FileName =  "chat/" + UUID.randomUUID().toString() + "_" + fileDto.fileName();
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, s3FileName)
                 .withMethod(HttpMethod.PUT)

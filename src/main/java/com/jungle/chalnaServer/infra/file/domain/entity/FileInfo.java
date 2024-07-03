@@ -30,12 +30,12 @@ public class FileInfo extends BaseTimestampEntity {
     private String fileUrl;
     @Column(nullable = false)
     private Long fileSize;
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Long chatRoomId;
 //    @Column(nullable = false)
 //    private Boolean isDeleted = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by", nullable = false)
     private Member uploadedBy;
 

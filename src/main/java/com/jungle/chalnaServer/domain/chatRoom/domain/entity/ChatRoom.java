@@ -28,7 +28,7 @@ public class ChatRoom extends BaseTimestampEntity {
 
     private LocalDateTime removedAt;
 
-    @OneToMany(mappedBy = "chatRoom")
+    @OneToMany(mappedBy = "chatRoom" , cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     private Set<ChatRoomMember> members  = new HashSet<>();
 
     public enum ChatRoomType{
