@@ -73,6 +73,7 @@ public class AuthService {
                     .build();
             log.info("member={}",member);
 
+            member = memberRepository.save(member);
             MemberSetting memberSetting = MemberSetting.builder()
                     .id(member.getId())
                     .isAlarm(true)
@@ -84,7 +85,6 @@ public class AuthService {
                     .isDisturb(false)
                     .build();
 
-            memberRepository.save(member);
             memberSettingRepository.save(memberSetting);
 
         }
