@@ -2,78 +2,68 @@ package com.jungle.chalnaServer.domain.chat.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 @Repository
-@Log4j2
+@Slf4j
+@RequiredArgsConstructor
 public class ChatRepository {
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ListOperations<String, Object> listOperations;
+    private final ValueOperations<String, Object> valueOperations;
 
     private static final String ROOM_KEY_PREFIX = "chat:room:";
     private static final String MESSAGE_ID_KEY = "chat:message:id:";
 
-    public void saveMessage(ChatMessage chatMessage) {
-        redisTemplate.opsForList().rightPush(ROOM_KEY_PREFIX + chatMessage.getChatRoomId(), chatMessage);
+    public void save(ChatMessage chatMessage) {
+        listOperations.rightPush(ROOM_KEY_PREFIX + chatMessage.getChatRoomId(), chatMessage);
     }
 
-    public Long makeMessageId() {
-        return redisTemplate.opsForValue().increment(MESSAGE_ID_KEY, 1);
+    public Long getMessageId() {
+        return valueOperations.increment(MESSAGE_ID_KEY, 1);
     }
 
     public List<ChatMessage> getMessagesAfterUpdateDate(Long memberId, Long chatRoomId, LocalDateTime lastLeaveAt) {
-        List<ChatMessage> messages = new ArrayList<>();
+        List<ChatMessage> messages = new LinkedList<>();
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-
         // Redis List의 길이 구하기
-        Long listSize = redisTemplate.opsForList().size(roomKey);
-        if( listSize != null && listSize > 0 ) {
-            List<Object> rawMessages = redisTemplate.opsForList().range(roomKey, 0, listSize-1);
+        Long len = listOperations.size(roomKey);
+        List<Object> rawMessages = listOperations.range(roomKey, 0, len - 1);
 
-            for(int i = rawMessages.size()-1; i >= 0; i--) {
-                Object rawMessage = rawMessages.get(i);
-                ChatMessage message = objectMapper.convertValue(rawMessage, ChatMessage.class);
-                if (message.getUpdatedAt() != null && message.getUpdatedAt().isAfter(lastLeaveAt) && message.getUnreadCount() > 0) {
-                    if (!message.getSenderId().equals(memberId)) {
-                        message.setUnreadCount(message.getUnreadCount() - 1);
-                        message.setUpdatedAt(now);
-                        redisTemplate.opsForList().set(roomKey, i, objectMapper.convertValue(message, Object.class));
-                    }
-
-                    messages.add(message);
-                }else{
-                    break;
+        for (int i = rawMessages.size() - 1; i >= 0; i--) {
+            ChatMessage message = objectMapper.convertValue(rawMessages.get(i), ChatMessage.class);
+            if (message.getCreatedAt().isAfter(lastLeaveAt)) {
+                if (!message.getSenderId().equals(memberId)) {
+                    message.read();
+                    listOperations.set(roomKey, i, message);
                 }
+                messages.add(0, message);
+            } else {
+                break;
             }
         }
+
         return messages;
     }
 
 
     public ChatMessage getLatestMessage(Long chatRoomId) {
-        long listSize = redisTemplate.opsForList().size(ROOM_KEY_PREFIX + chatRoomId);
+        String roomKey = ROOM_KEY_PREFIX + chatRoomId;
+        long len = listOperations.size(roomKey);
 
-        if (listSize == 0) {
-            return null;
-        }
-
-        for (long i = listSize - 1; i >= 0; i--) {
-            Object rawMessage = redisTemplate.opsForList().index(ROOM_KEY_PREFIX + chatRoomId, i);
-            ChatMessage message = objectMapper.convertValue(rawMessage, ChatMessage.class);
-            if (message.getType() == ChatMessage.MessageType.CHAT || message.getType() == ChatMessage.MessageType.FRIEND_REQUEST) {
+        for (long i = len - 1; i >= 0; i--) {
+            ChatMessage message = objectMapper.convertValue(listOperations.index(roomKey, i), ChatMessage.class);
+            if (isChat(message)) {
                 return message;
             }
         }
@@ -81,26 +71,31 @@ public class ChatRepository {
     }
 
     // redis에 변수 만들어서 저장, 읽기 할 때 마다 count하는 방식으로 수정 필요.
-    public Integer countUnreadMessages(Long chatRoomId, Long memberId, LocalDateTime lastLeaveAt) {
+    public int getUnreadCount(Long chatRoomId, LocalDateTime lastLeaveAt) {
 
-        Integer unreadCount = 0;
+        int unreadCount = 0;
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
-        Long listSize = redisTemplate.opsForList().size(roomKey);
+        Long len = listOperations.size(roomKey);
 
-        if (listSize != null && listSize > 0) {
-            List<Object> rawMessages = redisTemplate.opsForList().range(roomKey, 0, listSize - 1);
+        List<Object> rawMessages = listOperations.range(roomKey, 0, len - 1);
 
-            for (int i = rawMessages.size() - 1; i >= 0; i--) {
-                Object rawMessage = rawMessages.get(i);
-                ChatMessage message = objectMapper.convertValue(rawMessage, ChatMessage.class);
-                if (message.getCreatedAt() != null && message.getCreatedAt().isAfter(lastLeaveAt)) {
+        for (int i = rawMessages.size() - 1; i >= 0; i--) {
+            ChatMessage message = objectMapper.convertValue(rawMessages.get(i), ChatMessage.class);
+            if (message.getCreatedAt().isAfter(lastLeaveAt)) {
+                if (isChat(message))
                     unreadCount++;
-                } else {
-                    break;
-                }
+            } else {
+                break;
             }
         }
         return unreadCount;
+    }
+
+    public boolean isChat(ChatMessage message) {
+        ChatMessage.MessageType type = message.getType();
+        return type == ChatMessage.MessageType.CHAT
+                || type == ChatMessage.MessageType.FRIEND_REQUEST
+                || type == ChatMessage.MessageType.FILE;
     }
 
 }

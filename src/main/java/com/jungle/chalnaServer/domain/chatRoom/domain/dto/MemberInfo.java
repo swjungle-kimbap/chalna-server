@@ -1,32 +1,20 @@
 package com.jungle.chalnaServer.domain.chatRoom.domain.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.jungle.chalnaServer.domain.member.domain.entity.Member;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-//@JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
-@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public  class MemberInfo {
     private Long memberId;
     private String username;
 
 
-//    @JsonProperty("memberId") // JSON 필드명 지정
-    public Long getMemberId() {
-        return memberId;
-    }
-
-//    @JsonProperty("username") // JSON 필드명 지정
-    public String getUsername() {
-        return username;
-    }
-    public MemberInfo(Long memberId, String username) {
-        this.memberId = memberId;
-        this.username = username;
+    public static MemberInfo of(Member member) {
+        return new MemberInfo(member.getId(),member.getUsername());
     }
 
 }

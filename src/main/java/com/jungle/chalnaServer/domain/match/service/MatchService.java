@@ -99,7 +99,7 @@ public class MatchService {
         Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, 2, memberIdList);
 
         // Redis 저장
-        Long chatId = chatRepository.makeMessageId();
+        Long chatId = chatRepository.getMessageId();
 
         ChatMessage message = new ChatMessage(chatId,
                 ChatMessage.MessageType.CHAT,
@@ -110,7 +110,7 @@ public class MatchService {
                 LocalDateTime.now(ZoneId.of("Asia/Seoul")),
                 LocalDateTime.now(ZoneId.of("Asia/Seoul")));
 
-        chatRepository.saveMessage(message);
+        chatRepository.save(message);
 
         // sender push 알림 추가
         Member sender = memberRepository.findById(matchNotification.getSenderId()).orElseThrow(MemberNotFoundException::new);

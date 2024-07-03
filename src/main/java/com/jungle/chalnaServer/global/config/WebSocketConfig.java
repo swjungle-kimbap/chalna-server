@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.global.config;
 
-import com.jungle.chalnaServer.domain.chat.handler.Stomphandler;
+import com.jungle.chalnaServer.domain.chat.handler.StompHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -14,7 +14,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final Stomphandler stomphandler;
+    private final StompHandler stomphandler;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) { // stomp end point 등록
