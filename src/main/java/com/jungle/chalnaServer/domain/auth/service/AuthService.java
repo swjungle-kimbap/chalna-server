@@ -1,12 +1,12 @@
 package com.jungle.chalnaServer.domain.auth.service;
 
+import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
+import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.auth.domain.dto.KakaoUserInfo;
 import com.jungle.chalnaServer.domain.auth.exception.InvalidKakaoTokenException;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
-import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
-import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
-import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
+import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.settings.domain.entity.MemberSetting;
 import com.jungle.chalnaServer.domain.settings.repository.MemberSettingRepository;
@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -75,6 +74,7 @@ public class AuthService {
             log.info("member={}",member);
 
             MemberSetting memberSetting = MemberSetting.builder()
+                    .id(member.getId())
                     .isAlarm(true)
                     .isFriendAlarm(false)
                     .isChatAlarm(true)
