@@ -4,6 +4,6 @@ import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 
 
 public class ChatMessageRequest {
-    public record SEND(ChatMessage.MessageType type, String content) {
+    public record SEND(ChatMessage.MessageType type, Object content) {
     }
 }

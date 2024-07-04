@@ -105,13 +105,13 @@ public class ChatRoomService {
     }
 
     // 채팅방 5분 스케줄러
-    @Transactional
     public void scheduleRoomTermination(ChatRoom chatRoom, long delay, TimeUnit unit) {
         scheduler.schedule(() -> {
             log.info("timeout roomId {}", chatRoom.getId());
             if (chatRoom.getType().equals(ChatRoom.ChatRoomType.MATCH)) {
                 // 채팅방의 상태를 대기 상태로 변경
                 chatRoom.updateType(ChatRoom.ChatRoomType.WAITING);
+                chatRoomRepository.save(chatRoom);
                 // 메시지 보내기
                 Long messageId = chatRepository.getMessageId();
                 LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));

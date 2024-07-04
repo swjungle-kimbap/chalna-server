@@ -18,7 +18,7 @@ public class ChatMessage {
     private MessageType type;
     private Long senderId;
     private Long chatRoomId;
-    private String content;
+    private Object content;
     private Integer unreadCount;
 
 
