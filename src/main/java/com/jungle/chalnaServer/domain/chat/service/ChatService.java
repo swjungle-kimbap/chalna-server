@@ -13,6 +13,10 @@ import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
+import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
+import com.jungle.chalnaServer.infra.file.domain.entity.FileInfo;
+import com.jungle.chalnaServer.infra.file.repository.FileInfoRepository;
+import com.jungle.chalnaServer.infra.file.service.FileService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,7 +25,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+
 
 @Service
 @Log4j2
@@ -37,6 +45,8 @@ public class ChatService {
     private final MemberRepository memberRepository;
 
     private final ChatRoomRepository chatRoomRepository;
+    private final FileService fileService;
+    private final FileInfoRepository fileInfoRepository;
 
     @Transactional
     // 채팅 보내기(+push 알림)
@@ -52,11 +62,11 @@ public class ChatService {
             Set<ChatRoomMember> members = chatRoom.getMembers();
             for (ChatRoomMember chatRoomMember : members) {
                 Member member = chatRoomMember.getMember();
-                if(offlineMembers.contains(member.getId())) {
+                if(offlineMembers.contains(member.getId()) && !member.getId().equals(memberId)) {
                     log.info("fcm send to {}",member.getId());
                     FCMData fcmData = FCMData.instanceOfChatFCM(
                             memberId.toString(),
-                            req.content(),
+                            req.content().toString(),
                             chatRoomMember.getUserName(),
                             roomId.toString(),
                             chatRoom.getType().toString(),
@@ -66,11 +76,15 @@ public class ChatService {
             }
         }
 
-        sendAndSaveMessage(roomId, memberId, req.content(), req.type(),now);
+        if (req.type().equals(ChatMessage.MessageType.FILE)) {
+            sendFile(memberId, roomId, req);
+        } else {
+            sendAndSaveMessage(roomId, memberId, req.content(), req.type(),now);
+        }
     }
 
     // 메시지 보내기 + redis 저장
-    public void sendAndSaveMessage(Long chatRoomId, Long senderId, String content, ChatMessage.MessageType type,LocalDateTime now) {
+    public void sendAndSaveMessage(Long chatRoomId, Long senderId, Object content, ChatMessage.MessageType type,LocalDateTime now) {
         Long id = chatRepository.getMessageId();
         Integer unreadCount = stomphandler.getOfflineMemberCount(chatRoomId.toString());
         ChatMessage message = new ChatMessage(id, type, senderId,
@@ -82,6 +96,30 @@ public class ChatService {
         messagingTemplate.convertAndSend("/api/sub/" + chatRoomId, responseMessage);
         chatRepository.save(message);
 
+    }
+
+    private void sendFile(Long memberId, Long roomId, ChatMessageRequest.SEND req) {
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        Map<String, Object> contentMap = (Map<String, Object>) req.content();
+        Integer fileId = (Integer) contentMap.get("fileId");
+        String fileUrl = (String) contentMap.get("fileUrl");
+
+        // fileId로 preSignedUrl가져와서 보내기
+        FileResponse.DOWNLOAD fileResponse = fileService.getDownloadPreSignedUrl(Long.valueOf(fileId));
+
+        Map<String, Object> sendContent = new HashMap<>();
+        sendContent.put("fileId", fileId);
+        sendContent.put("preSignedUrl", fileResponse.presignedUrl());
+        sendAndSaveMessage(roomId, memberId, sendContent, req.type(),now);
+
+        // fileUrl DB에 저장하기
+        log.info("fileUrl {}", fileUrl);
+        Optional<FileInfo> OptionalFileInfo = fileInfoRepository.findById(Long.valueOf(fileId));
+        if(OptionalFileInfo.isPresent()) {
+            FileInfo fileInfo = OptionalFileInfo.get();
+            fileInfo.updateOriginalFileUrl(fileUrl);
+            fileInfoRepository.save(fileInfo);
+        }
     }
 
 
