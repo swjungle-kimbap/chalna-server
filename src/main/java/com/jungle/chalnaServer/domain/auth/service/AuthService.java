@@ -3,7 +3,9 @@ package com.jungle.chalnaServer.domain.auth.service;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.auth.domain.dto.KakaoUserInfo;
+import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
 import com.jungle.chalnaServer.domain.auth.exception.InvalidKakaoTokenException;
+import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
@@ -25,11 +27,13 @@ import java.util.Optional;
 @AllArgsConstructor
 @Transactional
 public class AuthService {
-    private final MemberRepository memberRepository;
     private final TokenService tokenService;
     private final JwtService jwtService;
     private final KakaoTokenService kakaoTokenService;
+
+    private final MemberRepository memberRepository;
     private final MemberSettingRepository memberSettingRepository;
+    private final AuthInfoRepository authInfoRepository;
 
 
     public AuthResponse signup(AuthRequest.SIGNUP dto) {
@@ -97,12 +101,14 @@ public class AuthService {
         Member member = memberRepository.findByLoginToken(dto.loginToken())
                 .orElseThrow(MemberNotFoundException::new);
 
-        member.updateInfo(dto.loginToken(),dto.deviceId(),dto.fcmToken());
 
         String accessToken = jwtService.createAccessToken(member);
         String refreshToken = jwtService.createRefreshToken(member);
 
+        member.updateInfo(dto.loginToken(),dto.deviceId(),dto.fcmToken());
         member.updateRefreshToken(refreshToken);
+
+        authInfoRepository.save(AuthInfo.of(member));
 
         return new Tokens(accessToken, refreshToken);
     }
@@ -117,7 +123,7 @@ public class AuthService {
     public void logout(final Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
-
+        authInfoRepository.delete(member.getId());
         member.removeInfo();
     }
 
