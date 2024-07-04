@@ -32,6 +32,9 @@ public class FileInfo extends BaseTimestampEntity {
     private Long fileSize;
     @Column(nullable = true)
     private Long chatRoomId;
+    @Column(nullable = true)
+    private String originalFileUrl;
+
 //    @Column(nullable = false)
 //    private Boolean isDeleted = false;
 
@@ -39,6 +42,9 @@ public class FileInfo extends BaseTimestampEntity {
     @JoinColumn(name = "uploaded_by", nullable = false)
     private Member uploadedBy;
 
+    public void updateOriginalFileUrl(String originalFileUrl) {
+        this.originalFileUrl = originalFileUrl;
+    }
 //    public void softDelete() {
 //        this.isDeleted = true;
 //    }
