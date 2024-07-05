@@ -14,13 +14,14 @@ public class FCMData {
     private final String fcmType;
     private final Map<String, String> additionalData; //message 별로 추가 필요한 데이터 넣어주기
 
-    private FCMData(String senderId, String message, String notificationId, String receiverId) {
+    private FCMData(String senderId, String message, String notificationId, Integer overlapCount,String receiverId) {
         this.senderId = senderId;
         this.message = message;
         this.fcmType = "match";
         this.additionalData = new HashMap<>();
         this.additionalData.put("notificationId", notificationId);
         this.additionalData.put("receiverId", receiverId);
+        this.additionalData.put("overlapCount", overlapCount.toString());
     }
 
     private FCMData(String senderId, String message, String senderName, String chatRoomId, String chatRoomType, String messageType) {
@@ -36,8 +37,8 @@ public class FCMData {
 
 
     /*인연 FCMData 생성자*/
-    public static FCMData instanceOfMatchFCM(String senderId, String message, String notificationId, String receiverId) {
-        return new FCMData(senderId, message, notificationId, receiverId);
+    public static FCMData instanceOfMatchFCM(String senderId, String message, String notificationId,Integer overlapCount, String receiverId) {
+        return new FCMData(senderId, message, notificationId,overlapCount,receiverId);
     }
 
     /*ChatFCMData 생성자*/

@@ -3,9 +3,7 @@ package com.jungle.chalnaServer.domain.temp.service;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
-import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
-import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import com.jungle.chalnaServer.global.util.JwtService;
 import com.jungle.chalnaServer.global.util.TokenService;
 import lombok.AllArgsConstructor;
@@ -46,20 +44,5 @@ public class TempService {
         }
 
         return AuthResponse.of(loginToken);
-    }
-
-    @Transactional
-    public Tokens tempLogin(AuthRequest.LOGIN dto) {
-        Member member = memberRepository.findByLoginToken(dto.loginToken())
-                .orElseThrow(MemberNotFoundException::new);
-
-        member.updateInfo(dto.loginToken(),dto.deviceId(),dto.fcmToken());
-
-        String accessToken = jwtService.createAccessToken(member);
-        String refreshToken = jwtService.createRefreshToken(member);
-
-        member.updateRefreshToken(refreshToken);
-
-        return new Tokens(accessToken, refreshToken);
     }
 }

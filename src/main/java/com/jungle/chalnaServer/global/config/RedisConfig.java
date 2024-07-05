@@ -73,6 +73,11 @@ public class RedisConfig {
     public SetOperations<String,Object> setOperations(RedisTemplate<String, Object> redisTemplate) {
         return redisTemplate.opsForSet();
     }
+    @Bean
+    public HashOperations<String,String,Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForHash();
+    }
+
 
     @Bean
     public GeoOperations<String,String> geoOperations(RedisTemplate<String,String> redisTemplate){

@@ -1,5 +1,7 @@
 package com.jungle.chalnaServer.domain.chat.service;
 
+import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
+import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageRequest;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
@@ -10,7 +12,6 @@ import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomNotFoundException;
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
-import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
@@ -36,17 +37,16 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final ChatRepository chatRepository;
-
+    private final StompHandler stomphandler;
     private final SimpMessagingTemplate messagingTemplate;
 
-    private final StompHandler stomphandler;
-
-    private final MemberRepository memberRepository;
-
-    private final ChatRoomRepository chatRoomRepository;
     private final FileService fileService;
+    private final FCMService fcmService;
+
+    private final ChatRepository chatRepository;
+    private final ChatRoomRepository chatRoomRepository;
     private final FileInfoRepository fileInfoRepository;
+    private final AuthInfoRepository authInfoRepository;
 
     @Transactional
     // 채팅 보내기(+push 알림)
@@ -60,10 +60,13 @@ public class ChatService {
             log.info("offline count {}", stomphandler.getOfflineMemberCount(roomId.toString()));
             Set<Long> offlineMembers = stomphandler.getOfflineMembers(roomId); // 오프라인 유저 정보
             Set<ChatRoomMember> members = chatRoom.getMembers();
+
             for (ChatRoomMember chatRoomMember : members) {
                 Member member = chatRoomMember.getMember();
-                if(offlineMembers.contains(member.getId()) && !member.getId().equals(memberId)) {
-                    log.info("fcm send to {}",member.getId());
+                Long recieverId = member.getId();
+                if(offlineMembers.contains(recieverId) && !recieverId.equals(memberId)) {
+                    log.info("fcm send to {}",recieverId);
+                    AuthInfo authInfo = authInfoRepository.findById(recieverId);
                     FCMData fcmData = FCMData.instanceOfChatFCM(
                             memberId.toString(),
                             req.content().toString(),
@@ -71,7 +74,7 @@ public class ChatService {
                             roomId.toString(),
                             chatRoom.getType().toString(),
                             req.type().toString());
-                    FCMService.sendFCM(member.getFcmToken(), fcmData);
+                    fcmService.sendFCM(authInfo.fcmToken(), fcmData);
                 }
             }
         }
