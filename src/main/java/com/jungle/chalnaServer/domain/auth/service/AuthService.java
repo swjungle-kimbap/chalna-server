@@ -13,6 +13,7 @@ import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.settings.domain.entity.MemberSetting;
 import com.jungle.chalnaServer.domain.settings.repository.MemberSettingRepository;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
+import com.jungle.chalnaServer.global.common.repository.DeviceInfoRepository;
 import com.jungle.chalnaServer.global.util.JwtService;
 import com.jungle.chalnaServer.global.util.TokenService;
 import lombok.AllArgsConstructor;
@@ -34,18 +35,15 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final MemberSettingRepository memberSettingRepository;
     private final AuthInfoRepository authInfoRepository;
+    private final DeviceInfoRepository deviceInfoRepository;
 
 
     public AuthResponse signup(AuthRequest.SIGNUP dto) {
         // db에서 아이디 중복 여부 확인
         String loginToken;
-//        String nickname;
-//        Long kakaoId;
         Optional<Member> findMember = memberRepository.findByKakaoId(dto.kakaoId());
         if (findMember.isPresent()) {
             loginToken = findMember.get().getLoginToken();
-//            nickname = dto.username();
-//            kakaoId = dto.kakaoId();
         } else {
             // kakao access token 검증
             boolean isValid = kakaoTokenService.verifyToken(dto.accessToken());
@@ -101,14 +99,16 @@ public class AuthService {
         Member member = memberRepository.findByLoginToken(dto.loginToken())
                 .orElseThrow(MemberNotFoundException::new);
 
+        String accessToken = jwtService.createAccessToken(member.getId(),dto.deviceId());
+        String refreshToken = jwtService.createRefreshToken(member.getId(),dto.deviceId());
 
-        String accessToken = jwtService.createAccessToken(member);
-        String refreshToken = jwtService.createRefreshToken(member);
+        // 인증 정보 저장
+        AuthInfo authInfo = new AuthInfo(member.getId(),dto.deviceId(), dto.fcmToken(), refreshToken);
+        authInfoRepository.save(authInfo);
 
-        member.updateInfo(dto.loginToken(),dto.deviceId(),dto.fcmToken());
-        member.updateRefreshToken(refreshToken);
-
-        authInfoRepository.save(AuthInfo.of(member));
+        // 기기 정보 저장
+        member.updateDeviceId(dto.deviceId());
+        deviceInfoRepository.save(dto.deviceId(),member.getId());
 
         return new Tokens(accessToken, refreshToken);
     }
@@ -124,7 +124,7 @@ public class AuthService {
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
         authInfoRepository.delete(member.getId());
-        member.removeInfo();
+        deviceInfoRepository.delete(member.getDeviceId());
     }
 
 

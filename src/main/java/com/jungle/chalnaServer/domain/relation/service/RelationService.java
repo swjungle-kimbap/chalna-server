@@ -2,7 +2,6 @@ package com.jungle.chalnaServer.domain.relation.service;
 
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
-import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
@@ -11,6 +10,7 @@ import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
 import com.jungle.chalnaServer.domain.relation.domain.entity.RelationPK;
 import com.jungle.chalnaServer.domain.relation.exception.RelationIdInvalidException;
 import com.jungle.chalnaServer.domain.relation.repository.RelationRepository;
+import com.jungle.chalnaServer.global.common.repository.DeviceInfoRepository;
 import com.jungle.chalnaServer.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,14 +27,19 @@ public class RelationService {
     private final RelationRepository relationRepository;
     private final MemberRepository memberRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final DeviceInfoRepository deviceInfoRepository;
+
 
     public RelationResponse findByOtherId(final Long id, final Long otherId) {
         return RelationResponse.of(findRelation(new RelationPK(id, otherId)));
     }
 
     public RelationResponse findAndIncreaseOverlap(final Long id, final String deviceId) {
-        Member member = memberRepository.findByDeviceId(deviceId).orElseThrow(MemberNotFoundException::new);
-        RelationPK pk = new RelationPK(id, member.getId());
+        Long otherId = deviceInfoRepository.findById(deviceId);
+        if(otherId == null){
+            throw new MemberNotFoundException();
+        }
+        RelationPK pk = new RelationPK(id,otherId);
 
         Relation relation = findRelation(pk);
         Relation reverse = findRelation(pk.reverse());

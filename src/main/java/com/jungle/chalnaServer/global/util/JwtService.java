@@ -1,7 +1,7 @@
 package com.jungle.chalnaServer.global.util;
 
-import com.jungle.chalnaServer.domain.member.domain.entity.Member;
-import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
+import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
+import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
 import io.jsonwebtoken.Claims;
@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -44,6 +43,7 @@ public class JwtService {
 
     private Key key;
 
+    private final AuthInfoRepository authInfoRepository;
     private final MemberRepository memberRepository;
 
     @PostConstruct
@@ -56,31 +56,30 @@ public class JwtService {
         if(!isValidateToken(refreshToken)) {
             return null;
         }
-        Member member = memberRepository.findById(getId(refreshToken)).orElseThrow(MemberNotFoundException::new);
-        if (!member.getRefreshToken().equals(refreshToken) || isExpired(refreshToken)) {
+        AuthInfo authInfo = authInfoRepository.findById(getId(refreshToken));
+        if(authInfo == null || !authInfo.refreshToken().equals(refreshToken) || isExpired(refreshToken))
             return null;
-        }
 
-        String newAccessToken = createAccessToken(member);
-        String newRefreshToken = createRefreshToken(member);
+        String newAccessToken = createAccessToken(authInfo.id(), authInfo.deviceId());
+        String newRefreshToken = createRefreshToken(authInfo.id(), authInfo.deviceId());
 
-        member.updateRefreshToken(newRefreshToken);
 
         return new Tokens(newAccessToken, newRefreshToken);
     }
-    public String createAccessToken(Member member){
-        return createToken(member,accessTokenExpirationTime);
+    public String createAccessToken(Long id,String deviceId){
+        return createToken(id,deviceId,accessTokenExpirationTime);
     }
 
-    public String createRefreshToken(Member member){
-        return createToken(member, refreshTokenExpirationTime);
+    public String createRefreshToken(Long id,String deviceId){
+        return createToken(id,deviceId, refreshTokenExpirationTime);
     }
 
-    public String createToken(Member member,long expirationTime){
+    public String createToken(Long id,String deviceId,long expirationTime){
         long now = new Date(System.currentTimeMillis()).getTime();
 
         Claims claims = Jwts.claims();
-        claims.put("id",member.getId());
+        claims.put("id",id);
+        claims.put("deviceId",deviceId);
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date(now))
@@ -98,8 +97,17 @@ public class JwtService {
         if(token == null || token.trim().isEmpty())
             return false;
         Long id = getId(token);
-        Optional<Member> findMember = memberRepository.findById(id);
-        return findMember.isPresent();
+        String deviceId = getDeviceId(token);
+        AuthInfo authInfo = authInfoRepository.findById(id);
+        return authInfo != null && authInfo.deviceId().equals(deviceId);
+    }
+    public String getDeviceId(String token){
+        try {
+            return getClaims(token).get("deviceId").toString();
+        }
+        catch (Exception e){
+            return "";
+        }
     }
     public Long getId(String token){
         try {

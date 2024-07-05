@@ -4,14 +4,16 @@ import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FCMService {
-    public static void sendFCM(String fcmToken, FCMData fcmData){
+    public void sendFCM(String fcmToken, FCMData fcmData){
         try {
             Message.Builder messageBuilder = Message.builder()
                     .setToken(fcmToken)

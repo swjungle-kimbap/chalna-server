@@ -10,13 +10,10 @@ import com.jungle.chalnaServer.global.util.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
-import static java.lang.Long.parseLong;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,13 +28,8 @@ public class MatchController {
         return CommonResponse.from(HttpStatus.OK, matchService.matchList(jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER))));
     }
     @PostMapping("/match")
-    public CommonResponse<Map<String, String>> matchMessageSend(@RequestBody MatchRequest.Send dto, HttpServletRequest request) throws Exception {
-        //todo: requestDto header의 loginToken, receiver userId 검증
-        //todo: response로 돌아오는 저장한 receiver userId 개수 requestDto receiver와 비교하여 성공 여부 검증
-        String token = jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER);
-        Long senderId = jwtService.getId(token);
-
-        return CommonResponse.from(HttpStatus.CREATED, matchService.matchMessageSend(dto, senderId));
+    public CommonResponse<MatchResponse.MESSAGE_SEND> matchMessageSend(@AuthUserId final Long id, @RequestBody MatchRequest.Send dto){
+        return CommonResponse.ok(matchService.matchMessageSend(dto, id));
     }
 
     @PostMapping("/match/accept/{notificationId}")
