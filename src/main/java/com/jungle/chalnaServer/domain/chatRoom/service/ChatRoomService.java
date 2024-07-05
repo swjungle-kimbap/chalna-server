@@ -135,7 +135,7 @@ public class ChatRoomService {
     // 채팅방 나가기(삭제)
     @Transactional
     public void leaveChatRoom(Long chatRoomId, Long memberId) {
-        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findById(chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId,chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
         // 채팅방 인원 변경
         chatRoomMember.getChatRoom().updateMemberCount(chatRoomMember.getChatRoom().getMemberCount() - 1);
         // session에서 삭제
