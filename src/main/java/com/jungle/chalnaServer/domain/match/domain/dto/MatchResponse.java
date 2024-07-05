@@ -11,6 +11,9 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 public class MatchResponse {
+    public record MESSAGE_SEND(int sendCount){
+    }
+
     public static Map<String, String> MatchMessageSend(String message) {
         Map<String, String> messageMap = new HashMap<>();
         messageMap.put("message", message);

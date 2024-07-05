@@ -3,7 +3,9 @@ package com.jungle.chalnaServer.domain.auth.service;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthRequest;
 import com.jungle.chalnaServer.domain.auth.domain.dto.AuthResponse;
 import com.jungle.chalnaServer.domain.auth.domain.dto.KakaoUserInfo;
+import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
 import com.jungle.chalnaServer.domain.auth.exception.InvalidKakaoTokenException;
+import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
@@ -11,6 +13,7 @@ import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.settings.domain.entity.MemberSetting;
 import com.jungle.chalnaServer.domain.settings.repository.MemberSettingRepository;
 import com.jungle.chalnaServer.global.auth.jwt.dto.Tokens;
+import com.jungle.chalnaServer.global.common.repository.DeviceInfoRepository;
 import com.jungle.chalnaServer.global.util.JwtService;
 import com.jungle.chalnaServer.global.util.TokenService;
 import lombok.AllArgsConstructor;
@@ -25,23 +28,22 @@ import java.util.Optional;
 @AllArgsConstructor
 @Transactional
 public class AuthService {
-    private final MemberRepository memberRepository;
     private final TokenService tokenService;
     private final JwtService jwtService;
     private final KakaoTokenService kakaoTokenService;
+
+    private final MemberRepository memberRepository;
     private final MemberSettingRepository memberSettingRepository;
+    private final AuthInfoRepository authInfoRepository;
+    private final DeviceInfoRepository deviceInfoRepository;
 
 
     public AuthResponse signup(AuthRequest.SIGNUP dto) {
         // db에서 아이디 중복 여부 확인
         String loginToken;
-//        String nickname;
-//        Long kakaoId;
         Optional<Member> findMember = memberRepository.findByKakaoId(dto.kakaoId());
         if (findMember.isPresent()) {
             loginToken = findMember.get().getLoginToken();
-//            nickname = dto.username();
-//            kakaoId = dto.kakaoId();
         } else {
             // kakao access token 검증
             boolean isValid = kakaoTokenService.verifyToken(dto.accessToken());
@@ -97,12 +99,16 @@ public class AuthService {
         Member member = memberRepository.findByLoginToken(dto.loginToken())
                 .orElseThrow(MemberNotFoundException::new);
 
-        member.updateInfo(dto.loginToken(),dto.deviceId(),dto.fcmToken());
+        String accessToken = jwtService.createAccessToken(member.getId(),dto.deviceId());
+        String refreshToken = jwtService.createRefreshToken(member.getId(),dto.deviceId());
 
-        String accessToken = jwtService.createAccessToken(member);
-        String refreshToken = jwtService.createRefreshToken(member);
+        // 인증 정보 저장
+        AuthInfo authInfo = new AuthInfo(member.getId(),dto.deviceId(), dto.fcmToken(), refreshToken);
+        authInfoRepository.save(authInfo);
 
-        member.updateRefreshToken(refreshToken);
+        // 기기 정보 저장
+        member.updateDeviceId(dto.deviceId());
+        deviceInfoRepository.save(dto.deviceId(),member.getId());
 
         return new Tokens(accessToken, refreshToken);
     }
@@ -117,8 +123,8 @@ public class AuthService {
     public void logout(final Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
-
-        member.removeInfo();
+        authInfoRepository.delete(member.getId());
+        deviceInfoRepository.delete(member.getDeviceId());
     }
 
 

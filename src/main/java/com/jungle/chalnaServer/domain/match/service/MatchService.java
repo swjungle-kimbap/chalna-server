@@ -1,8 +1,13 @@
 package com.jungle.chalnaServer.domain.match.service;
 
+import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
+import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomMemberNotFoundException;
+import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.chatRoom.service.ChatRoomService;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchResponse;
@@ -10,64 +15,67 @@ import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotification;
 import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus;
 import com.jungle.chalnaServer.domain.match.exception.NotificationNotFoundException;
 import com.jungle.chalnaServer.domain.match.repository.MatchNotificationRepository;
-import com.jungle.chalnaServer.domain.member.domain.entity.Member;
-import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
+import com.jungle.chalnaServer.global.common.repository.DeviceInfoRepository;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus.ACCEPT;
 import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus.SEND;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchService {
-    private final MemberRepository memberRepository;
-    private final MatchNotificationRepository matchNotiRepository;
+    private final FCMService fcmService;
     private final ChatRoomService chatRoomService;
-    private final ChatRepository chatRepository;
     private final RelationService relationService;
 
-    public synchronized Map<String, String> matchMessageSend(MatchRequest.Send dto, Long senderId){
-        Member member = memberRepository.findById(senderId)
-                .orElseThrow(MemberNotFoundException::new);
+    private final MatchNotificationRepository matchNotiRepository;
+    private final ChatRepository chatRepository;
+    private final MemberRepository memberRepository;
+    private final AuthInfoRepository authInfoRepository;
+    private final DeviceInfoRepository deviceInfoRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
+
+    public MatchResponse.MESSAGE_SEND matchMessageSend(MatchRequest.Send dto, Long senderId) {
 
         List<String> deviceIdList = dto.getDeviceIdList();
-
-        for (String deviceId: deviceIdList) {
+        int sendCount = 0;
+        for (String deviceId : deviceIdList) {
             //deviceIdList에서 하나씩 찾아서 바꿔주기
-            Member receiver = memberRepository.findByDeviceId(deviceId).orElseThrow(MemberNotFoundException::new);
+            Long receiverId = deviceInfoRepository.findById(deviceId);
+            if (receiverId == null) {
+                continue;
+            }
 
-            Long receiverId = receiver.getId();
+            AuthInfo authInfo = authInfoRepository.findById(receiverId);
+            if (authInfo == null)
+                continue;
 
-            RelationResponse relationResponse = relationService.findByOtherId(receiverId, senderId);
-
-
-            if (relationService.findByOtherId(receiverId, senderId).isBlocked()
-                    || relationService.findByOtherId(senderId, receiverId).isBlocked())
-                return MatchResponse.MatchMessageSend("차단된 유저 입니다.");
+            RelationResponse relation = relationService.findByOtherId(receiverId, senderId);
+            RelationResponse reverse = relationService.findByOtherId(senderId, receiverId);
+            if (relation.isBlocked() || reverse.isBlocked())
+                continue;
 
             // 중간 발표 테스트용 제한
             LocalDateTime tenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusMinutes(10L);
             List<MatchNotification> notifications = matchNotiRepository.findByReceiverIdAndSenderIdAndDeleteAtAfter(receiverId, senderId, tenMinutesAgo);
 
-            if (!notifications.isEmpty()) {
-                return MatchResponse.MatchMessageSend("이미 10분 내에 메시지를 보냈습니다.");
-            }
-
-            String fcmToken = receiver.getFcmToken();
+            if (!notifications.isEmpty())
+                continue;
 
             MatchNotification matchNotification = MatchNotification.builder()
                     .senderId(senderId)
@@ -79,13 +87,24 @@ public class MatchService {
 
             matchNotiRepository.save(matchNotification);
 
-            FCMService.sendFCM(fcmToken, FCMData.instanceOfMatchFCM(senderId.toString(), dto.getMessage(), matchNotification.getId().toString(), receiverId.toString()));
+            fcmService.sendFCM(
+                    authInfo.fcmToken(),
+                    FCMData.instanceOfMatchFCM(
+                            senderId.toString(),
+                            dto.getMessage(),
+                            matchNotification.getId().toString(),
+                            relation.overlapCount(),
+                            receiverId.toString()
+                    )
+            );
+            sendCount++;
         }
 
-        return MatchResponse.MatchMessageSend("인연 요청을 처리했습니다.");
+        return new MatchResponse.MESSAGE_SEND(sendCount);
     }
 
-    public Map<String, String> matchAccept(Long notificationId){
+    @Transactional
+    public Map<String, String> matchAccept(Long notificationId) {
         MatchNotification matchNotification = matchNotiRepository.findById(notificationId)
                 .orElseThrow(NotificationNotFoundException::new);
 
@@ -93,19 +112,15 @@ public class MatchService {
 
         // matchNotification 저장
         matchNotification.updateStatus(MatchNotificationStatus.ACCEPT);
-        matchNotiRepository.save(matchNotification);
 
-        if (matchNotification.getStatus() != ACCEPT) return MatchResponse.MatchReject("수락 처리 오류 입니다.");
-
-        List<Long> memberIdList = new ArrayList<>();
-        memberIdList.add(matchNotification.getSenderId());
-        memberIdList.add(matchNotification.getReceiverId());
+        List<Long> memberIdList = List.of(
+                matchNotification.getSenderId(),
+                matchNotification.getReceiverId()
+        );
         Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, 2, memberIdList);
 
-        // Redis 저장
-        Long chatId = chatRepository.getMessageId();
-
-        ChatMessage message = new ChatMessage(chatId,
+        ChatMessage message = new ChatMessage(
+                chatRepository.getMessageId(),
                 ChatMessage.MessageType.CHAT,
                 matchNotification.getSenderId(),
                 chatRoomId,
@@ -113,22 +128,21 @@ public class MatchService {
                 1,
                 LocalDateTime.now(ZoneId.of("Asia/Seoul")),
                 LocalDateTime.now(ZoneId.of("Asia/Seoul")));
-
         chatRepository.save(message);
 
-        // sender push 알림 추가
-        Member sender = memberRepository.findById(matchNotification.getSenderId()).orElseThrow(MemberNotFoundException::new);
-        String fcmToken = sender.getFcmToken();
+        ChatRoomMember reciever = chatRoomMemberRepository.findByMemberIdAndChatRoomId(matchNotification.getReceiverId(), chatRoomId)
+                .orElseThrow(ChatRoomMemberNotFoundException::new);
+        AuthInfo receiverInfo = authInfoRepository.findById(matchNotification.getReceiverId());
 
-        Member receiver = memberRepository.findById(matchNotification.getReceiverId()).orElseThrow(MemberNotFoundException::new);
-
-
-        FCMService.sendFCM(fcmToken, FCMData.instanceOfChatFCM(matchNotification.getReceiverId().toString(),
-                "인연과의 대화가 시작됐습니다.",
-                receiver.getUsername(),
-                chatRoomId.toString(),
-                ChatMessage.MessageType.CHAT.toString(),
-                "ALARM"));
+        fcmService.sendFCM(receiverInfo.fcmToken(),
+                FCMData.instanceOfChatFCM(
+                        matchNotification.getReceiverId().toString(),
+                        "인연과의 대화가 시작됐습니다.",
+                        reciever.getUserName(),
+                        chatRoomId.toString(),
+                        ChatMessage.MessageType.CHAT.toString(),
+                        "ALARM")
+        );
 
         return MatchResponse.MatchAccept(Long.toString(chatRoomId));
     }
@@ -166,8 +180,6 @@ public class MatchService {
                 })
                 .collect(Collectors.toList());
     }
-
-
 
 
     public Map<String, String> matchAllReject(Long receiverId) {

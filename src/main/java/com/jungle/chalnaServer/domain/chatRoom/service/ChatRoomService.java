@@ -99,15 +99,19 @@ public class ChatRoomService {
 
             stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
         }
-        scheduleRoomTermination(chatRoom, 5, TimeUnit.MINUTES);
+        scheduleRoomTermination(chatRoom.getId(), 5, TimeUnit.MINUTES);
 
         return chatRoom.getId();
     }
 
     // 채팅방 5분 스케줄러
-    public void scheduleRoomTermination(ChatRoom chatRoom, long delay, TimeUnit unit) {
+    public void scheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
         scheduler.schedule(() -> {
-            log.info("timeout roomId {}", chatRoom.getId());
+            log.info("timeout roomId {}", chatRoomId);
+            ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElse(null);
+            if(chatRoom != null) {
+                return;
+            }
             if (chatRoom.getType().equals(ChatRoom.ChatRoomType.MATCH)) {
                 // 채팅방의 상태를 대기 상태로 변경
                 chatRoom.updateType(ChatRoom.ChatRoomType.WAITING);
@@ -131,7 +135,7 @@ public class ChatRoomService {
     // 채팅방 나가기(삭제)
     @Transactional
     public void leaveChatRoom(Long chatRoomId, Long memberId) {
-        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findById(chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId,chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
         // 채팅방 인원 변경
         chatRoomMember.getChatRoom().updateMemberCount(chatRoomMember.getChatRoom().getMemberCount() - 1);
         // session에서 삭제
