@@ -117,7 +117,7 @@ public class MatchService {
                 matchNotification.getSenderId(),
                 matchNotification.getReceiverId()
         );
-        Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, 2, memberIdList);
+        Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH,  memberIdList);
 
         ChatMessage message = new ChatMessage(
                 chatRepository.getMessageId(),

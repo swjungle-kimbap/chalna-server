@@ -28,7 +28,7 @@ public class ChatRoomResponse {
         public CHATROOM(ChatRoom chatRoom, List<MemberInfo> memberInfos, ChatMessageResponse.MESSAGE recentMessage, Integer unreadMessageCount) {
             this.id = chatRoom.getId();
             this.type = chatRoom.getType();
-            this.memberCount = chatRoom.getMemberCount();
+            this.memberCount = chatRoom.getMemberIdList().size();
             this.members = memberInfos;
             this.recentMessage = recentMessage;
             this.unreadMessageCount = unreadMessageCount;

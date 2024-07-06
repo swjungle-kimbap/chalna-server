@@ -11,7 +11,6 @@ import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomNotFoundException;
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
-import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
@@ -62,11 +61,10 @@ public class ChatService {
             Set<ChatRoomMember> members = chatRoom.getMembers();
 
             for (ChatRoomMember chatRoomMember : members) {
-                Member member = chatRoomMember.getMember();
-                Long recieverId = member.getId();
-                if(offlineMembers.contains(recieverId) && !recieverId.equals(memberId)) {
-                    log.info("fcm send to {}",recieverId);
-                    AuthInfo authInfo = authInfoRepository.findById(recieverId);
+                Long receiverId = chatRoomMember.getMember().getId();
+                if(offlineMembers.contains(receiverId) && !receiverId.equals(memberId)) {
+                    log.info("fcm send to {}",receiverId);
+                    AuthInfo authInfo = authInfoRepository.findById(receiverId);
                     FCMData fcmData = FCMData.instanceOfChatFCM(
                             memberId.toString(),
                             req.content().toString(),
