@@ -7,9 +7,9 @@ public record MemberResponse(Long id, String username, String message) {
         return new MemberResponse(member.getId(), member.getUsername(), member.getMessage());
     }
 
-    public record UPLOAD(Long fileId, String presignedUrl) {
-        public static MemberResponse.UPLOAD of(Long fileId, String presignedUrl) {
-            return new MemberResponse.UPLOAD(fileId,presignedUrl);
+    public record PROFILE_IMAGE_UPLOAD(Long fileId, String presignedUrl) {
+        public static PROFILE_IMAGE_UPLOAD of(Long fileId, String presignedUrl) {
+            return new PROFILE_IMAGE_UPLOAD(fileId,presignedUrl);
         }
     }
 

@@ -7,9 +7,9 @@ import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberRequest;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.infra.file.domain.dto.FileRequest;
 import com.jungle.chalnaServer.infra.file.domain.entity.FileInfo;
 import com.jungle.chalnaServer.infra.file.repository.FileInfoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,7 +71,7 @@ public class MemberService {
 
 
     @Transactional
-    public MemberResponse.UPLOAD updateMemberInfo(final Long id, MemberRequest.UPLOAD memberDto) {
+    public MemberResponse.PROFILE_IMAGE_UPLOAD updateMemberInfo(final Long id, FileRequest.UPLOAD dto) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -80,12 +80,12 @@ public class MemberService {
         URL presignedUrl = null;
 
         // 파일명 uuid로 변환 (s3 파일명 생성)
-        s3FileName =  "profile/" + UUID.randomUUID().toString() + "_" + memberDto.fileName();
+        s3FileName =  "profile/" + UUID.randomUUID().toString() + "_" + dto.fileName();
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, s3FileName)
                 .withMethod(HttpMethod.PUT)
                 .withExpiration(createPreSignedUrlExpiration());
-        generatePresignedUrlRequest.addRequestParameter("Content-Type", memberDto.contentType());
+        generatePresignedUrlRequest.addRequestParameter("Content-Type", dto.contentType());
 
         presignedUrl = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
 
@@ -94,16 +94,16 @@ public class MemberService {
 
         // 파일 정보 저장
         FileInfo fileInfo = FileInfo.builder()
-                .originalFileName(memberDto.fileName())
+                .originalFileName(dto.fileName())
                 .s3FileName(s3FileName)
                 .fileUrl(fileUrl)
-                .fileSize(memberDto.fileSize())
+                .fileSize(dto.fileSize())
                 .uploadedBy(member)
                 .build();
 
         fileInfoRepository.save(fileInfo);
 
-        return MemberResponse.UPLOAD.of( fileInfoRepository.findById(id).orElseThrow().getId(),  presignedUrl.toString() );
+        return MemberResponse.PROFILE_IMAGE_UPLOAD.of( fileInfoRepository.findById(id).orElseThrow().getId(),  presignedUrl.toString() );
     }
 
     private Date createPreSignedUrlExpiration() {
