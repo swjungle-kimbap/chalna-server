@@ -23,10 +23,10 @@ public class ChatRoom extends BaseTimestampEntity {
     @Column(nullable = false)
     private ChatRoomType type;
 
-    @Column(nullable = false)
-    private Integer memberCount;
-
     private LocalDateTime removedAt;
+
+    @ElementCollection
+    private Set<Long> memberIdList = new HashSet<>();
 
     @OneToMany(mappedBy = "chatRoom" , cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     private Set<ChatRoomMember> members  = new HashSet<>();
@@ -39,17 +39,13 @@ public class ChatRoom extends BaseTimestampEntity {
         WAITING  // 채팅방 열린지 5분 지난 후. 친구 수락/거절 대기 상태
     }
 
-    public ChatRoom(ChatRoomType type, Integer memberCount) {
+    public ChatRoom(ChatRoomType type, Set<Long> memberIdList) {
         this.type = type;
-        this.memberCount = memberCount;
+        this.memberIdList = memberIdList;
     }
 
     public void updateType(ChatRoomType newType){
         this.type = newType;
-    }
-
-    public void updateMemberCount(Integer newCount) {
-        this.memberCount = newCount;
     }
 
     public void updateRemovedAt() {

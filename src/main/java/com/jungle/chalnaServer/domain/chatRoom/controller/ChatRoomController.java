@@ -45,6 +45,6 @@ public class ChatRoomController {
     @PostMapping
     public CommonResponse<Long> makeChatRoom(@RequestBody ChatRoomRequest chatRoomRequest) {
         List<Long> memberIdList = chatRoomRequest.getMemberIdList();
-        return CommonResponse.ok(chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, 2, memberIdList));
+        return CommonResponse.ok(chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH,  memberIdList));
     }
 }

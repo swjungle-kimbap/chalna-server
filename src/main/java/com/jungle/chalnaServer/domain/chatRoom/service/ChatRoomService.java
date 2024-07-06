@@ -27,6 +27,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -61,8 +62,8 @@ public class ChatRoomService {
                     ChatMessageResponse.MESSAGE recentMessageRes = recentMessage != null ? ChatMessageResponse.MESSAGE.of(recentMessage) : null;
                     return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount);
                 })
-                .sorted(Comparator.comparing((c)->
-                        c.getRecentMessage() == null ? null : c.getRecentMessage().createdAt()
+                .sorted(Comparator.comparing((c) ->
+                                c.getRecentMessage() == null ? null : c.getRecentMessage().createdAt()
                         , Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
     }
@@ -79,11 +80,12 @@ public class ChatRoomService {
 
         return new ChatRoomResponse.MESSAGES(chatRoomMember.getChatRoom(), getChatRoomMembers(chatRoomMember.getChatRoom()), messages);
     }
+
     // 채팅방 만들기
     @Transactional
-    public Long makeChatRoom(ChatRoom.ChatRoomType type, Integer memberCount, List<Long> memberIdList) {
+    public Long makeChatRoom(ChatRoom.ChatRoomType type, List<Long> memberIdList) {
         log.info("chatroom created");
-        ChatRoom chatRoom = new ChatRoom(type, memberCount);
+        ChatRoom chatRoom = new ChatRoom(type, Set.copyOf(memberIdList));
         chatRoomRepository.save(chatRoom);
 
         log.info("chatroom member join start");
@@ -94,12 +96,14 @@ public class ChatRoomService {
             }
             log.info("chatroom member {} joined", member.getId());
             ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
-            chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
+            if (type != ChatRoom.ChatRoomType.FRIEND)
+                chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
             chatRoomMemberRepository.save(chatRoomMember);
 
             stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
         }
-        scheduleRoomTermination(chatRoom.getId(), 5, TimeUnit.MINUTES);
+        if (type == ChatRoom.ChatRoomType.MATCH)
+            scheduleRoomTermination(chatRoom.getId(), 5, TimeUnit.MINUTES);
 
         return chatRoom.getId();
     }
@@ -109,7 +113,7 @@ public class ChatRoomService {
         scheduler.schedule(() -> {
             log.info("timeout roomId {}", chatRoomId);
             ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElse(null);
-            if(chatRoom != null) {
+            if (chatRoom != null) {
                 return;
             }
             if (chatRoom.getType().equals(ChatRoom.ChatRoomType.MATCH)) {
@@ -135,9 +139,9 @@ public class ChatRoomService {
     // 채팅방 나가기(삭제)
     @Transactional
     public void leaveChatRoom(Long chatRoomId, Long memberId) {
-        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId,chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
         // 채팅방 인원 변경
-        chatRoomMember.getChatRoom().updateMemberCount(chatRoomMember.getChatRoom().getMemberCount() - 1);
+        chatRoomMember.getChatRoom().getMemberIdList().remove(memberId);
         // session에서 삭제
         stomphandler.setMemberOnline(chatRoomId, memberId);
         // entity 삭제
@@ -154,10 +158,11 @@ public class ChatRoomService {
             if (chatRoomMember.getMember().getId().equals(member.getId()))
                 return;
         }
+        chatRoom.getMemberIdList().add(memberId);
         ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
+        if(chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND)
+            chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
         chatRoomMemberRepository.save(chatRoomMember);
-
-        chatRoom.updateMemberCount(chatRoom.getMemberCount() + 1);
         stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
     }
 
