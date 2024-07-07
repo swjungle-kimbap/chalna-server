@@ -7,6 +7,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 //@Builder
 @Getter
@@ -30,7 +31,7 @@ public class ChatMessage {
 
     public void read(){
         this.unreadCount--;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     public enum MessageType {
