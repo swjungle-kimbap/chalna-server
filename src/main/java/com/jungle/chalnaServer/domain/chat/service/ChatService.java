@@ -51,6 +51,16 @@ public class ChatService {
 
         log.info("sendMessage");
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        FCMData.CONTENT content;
+
+        if (req.type().equals(ChatMessage.MessageType.FILE)) {
+            content = FCMData.CONTENT.file(sendFile(memberId, roomId, req,now));
+        } else {
+            sendAndSaveMessage(roomId, memberId, req.content(), req.type(),now);
+            content = FCMData.CONTENT.message(req.content().toString());
+        }
+
+
         // push 알림 보내기. 채팅룸에 멤버 정보를 확인해서 다른 멤버가 채팅방에 없는 경우 알림 보내기
         if (stomphandler.getOfflineMemberCount(roomId.toString()) > 0) {
             ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
@@ -65,20 +75,16 @@ public class ChatService {
                     AuthInfo authInfo = authInfoRepository.findById(receiverId);
                     FCMData fcmData = FCMData.instanceOfChatFCM(
                             memberId.toString(),
-                            req.content().toString(),
+                            content,
+                            new FCMData.CHAT(
                             chatRoomMember.getUserName(),
-                            roomId.toString(),
-                            chatRoom.getType().toString(),
-                            req.type().toString());
+                            roomId,
+                            chatRoom.getType(),
+                            req.type())
+                    );
                     fcmService.sendFCM(authInfo.fcmToken(), fcmData);
                 }
             }
-        }
-
-        if (req.type().equals(ChatMessage.MessageType.FILE)) {
-            sendFile(memberId, roomId, req,now);
-        } else {
-            sendAndSaveMessage(roomId, memberId, req.content(), req.type(),now);
         }
     }
 
@@ -97,7 +103,7 @@ public class ChatService {
 
     }
 
-    private void sendFile(Long senderId, Long chatRoomId, ChatMessageRequest.SEND req,LocalDateTime now) {
+    private String sendFile(Long senderId, Long chatRoomId, ChatMessageRequest.SEND req,LocalDateTime now) {
         Map<String, Object> contentMap = (Map<String, Object>) req.content();
         Long fileId = Long.valueOf(contentMap.get("fileId").toString());
 
@@ -112,6 +118,7 @@ public class ChatService {
         sendContent.put("preSignedUrl", fileResponse.presignedUrl());
         sendAndSaveMessage(chatRoomId, senderId, sendContent, req.type(),now);
 
+        return fileResponse.presignedUrl();
     }
 
 
