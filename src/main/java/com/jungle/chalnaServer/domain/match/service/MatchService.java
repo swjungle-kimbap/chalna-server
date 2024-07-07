@@ -91,10 +91,11 @@ public class MatchService {
                     authInfo.fcmToken(),
                     FCMData.instanceOfMatchFCM(
                             senderId.toString(),
-                            dto.getMessage(),
-                            matchNotification.getId().toString(),
-                            relation.overlapCount(),
-                            receiverId.toString()
+                            FCMData.CONTENT.message(dto.getMessage()),
+                            new FCMData.MATCH(
+                                    matchNotification.getId(),
+                                    relation.overlapCount(),
+                                    receiverId)
                     )
             );
             sendCount++;
@@ -117,7 +118,7 @@ public class MatchService {
                 matchNotification.getSenderId(),
                 matchNotification.getReceiverId()
         );
-        Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH,  memberIdList);
+        Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, memberIdList);
 
         ChatMessage message = new ChatMessage(
                 chatRepository.getMessageId(),
@@ -137,12 +138,14 @@ public class MatchService {
         fcmService.sendFCM(receiverInfo.fcmToken(),
                 FCMData.instanceOfChatFCM(
                         matchNotification.getReceiverId().toString(),
-                        "인연과의 대화가 시작됐습니다.",
+                        FCMData.CONTENT.message("인연과의 대화가 시작됐습니다."),
+                        new FCMData.CHAT(
                         reciever.getUserName(),
-                        chatRoomId.toString(),
-                        ChatMessage.MessageType.CHAT.toString(),
-                        "ALARM")
-        );
+                                chatRoomId,
+                                ChatRoom.ChatRoomType.MATCH,
+                                ChatMessage.MessageType.CHAT
+                        )
+        ));
 
         return MatchResponse.MatchAccept(Long.toString(chatRoomId));
     }

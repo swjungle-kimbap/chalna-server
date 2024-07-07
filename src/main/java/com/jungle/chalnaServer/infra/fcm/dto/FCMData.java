@@ -1,8 +1,9 @@
 package com.jungle.chalnaServer.infra.fcm.dto;
 
-import lombok.Getter;
 import com.google.gson.Gson;
-import org.json.simple.JSONObject;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
+import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,50 +13,58 @@ public class FCMData {
     private final String senderId;
     private final String message;
     private final String fcmType;
-    private final Map<String, String> additionalData; //message 별로 추가 필요한 데이터 넣어주기
+    private final String additionalData; //message 별로 추가 필요한 데이터 넣어주기
 
-    private FCMData(String senderId, String message, String notificationId, Integer overlapCount,String receiverId) {
-        this.senderId = senderId;
-        this.message = message;
-        this.fcmType = "match";
-        this.additionalData = new HashMap<>();
-        this.additionalData.put("notificationId", notificationId);
-        this.additionalData.put("receiverId", receiverId);
-        this.additionalData.put("overlapCount", overlapCount.toString());
-    }
+    public static final String TYPE_MATCH = "match";
+    public static final String TYPE_CHAT = "chat";
 
-    private FCMData(String senderId, String message, String senderName, String chatRoomId, String chatRoomType, String messageType) {
+    private FCMData(String senderId, CONTENT message, String fcmType, Object data) {
+        Gson gson = new Gson();
         this.senderId = senderId;
-        this.message = message;
-        this.fcmType = "chat";
-        this.additionalData = new HashMap<>();
-        this.additionalData.put("senderName", senderName);
-        this.additionalData.put("chatRoomId", chatRoomId);
-        this.additionalData.put("chatRoomType", chatRoomType);
-        this.additionalData.put("messageType", messageType);
+        this.message = gson.toJson(message);
+        this.fcmType = fcmType;
+        this.additionalData = gson.toJson(data);
     }
 
 
     /*인연 FCMData 생성자*/
-    public static FCMData instanceOfMatchFCM(String senderId, String message, String notificationId,Integer overlapCount, String receiverId) {
-        return new FCMData(senderId, message, notificationId,overlapCount,receiverId);
+    public static FCMData instanceOfMatchFCM(String senderId, CONTENT message, MATCH data) {
+        return new FCMData(senderId, message, TYPE_MATCH, data);
     }
 
     /*ChatFCMData 생성자*/
-    public static FCMData instanceOfChatFCM(String senderId, String message, String senderName, String chatRoomId, String chatRoomType, String messageType) {
-        return new FCMData(senderId, message, senderName, chatRoomId, chatRoomType, messageType);
+    public static FCMData instanceOfChatFCM(String senderId, CONTENT message, CHAT data) {
+        return new FCMData(senderId, message, TYPE_CHAT, data);
     }
 
 
     public Map<String, String> toMap() {
-        Gson gson = new Gson();
-
         Map<String, String> map = new HashMap<>();
         map.put("senderId", this.senderId);
         map.put("message", this.message);
         map.put("fcmType", this.fcmType);
-        JSONObject additionalDataJson = new JSONObject(this.additionalData);
-        map.put("additionalData", additionalDataJson.toString());
+        map.put("additionalData", additionalData);
         return map;
     }
+
+    public record CHAT(String senderName, Long chatRoomId, ChatRoom.ChatRoomType chatRoomType,
+                       ChatMessage.MessageType messageType) {
+    }
+
+    public record MATCH(Long notificationId, int overlapCount, Long receiverId) {
+
+    }
+
+    public record CONTENT(String content, String contentType){
+        public static String TYPE_FILE = "FILE";
+        public static String TYPE_MESSAGE = "MESSAGE";
+
+        public static CONTENT message(String message){
+            return new CONTENT(message, TYPE_MESSAGE);
+        }
+        public static CONTENT file(String url){
+            return new CONTENT(url, TYPE_FILE);
+        }
+    }
+
 }
