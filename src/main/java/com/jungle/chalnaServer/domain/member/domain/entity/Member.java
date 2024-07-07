@@ -28,8 +28,8 @@ public class Member extends BaseTimestampEntity {
 
     private String message;
 
-    @Column(length = 256)
-    private String profileImageUrl = "/images/default_image.png";
+    @Builder.Default
+    private Long profileImageId = 0L;
 
     @Column(nullable = false,unique = true)
     private Long kakaoId;
@@ -53,7 +53,7 @@ public class Member extends BaseTimestampEntity {
         this.deviceId = deviceId;
     }
 
-    public void updateProfileImageUrl(String profileImageUrl) { // 이미지 URL 업데이트 메서드
-        this.profileImageUrl = profileImageUrl;
+    public void updateProfileImageId(Long profileImageId) { // 이미지 URL 업데이트 메서드
+        this.profileImageId = profileImageId;
     }
 }

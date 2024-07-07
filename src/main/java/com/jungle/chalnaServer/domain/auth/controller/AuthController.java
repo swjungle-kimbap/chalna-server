@@ -36,7 +36,7 @@ public class AuthController {
     public CommonResponse<?> login(@RequestBody AuthRequest.LOGIN dto, HttpServletResponse response) {
 
         Tokens tokens = memberService.login(dto);
-        MemberResponse responses = memberService.getMemberInfo(dto);
+        MemberResponse.INFO responses = memberService.getMemberInfo(dto);
 
         response.setHeader(JwtService.AUTHORIZATION_HEADER,tokens.accessToken());
         response.setHeader(JwtService.REFRESH_HEADER,tokens.refreshToken());

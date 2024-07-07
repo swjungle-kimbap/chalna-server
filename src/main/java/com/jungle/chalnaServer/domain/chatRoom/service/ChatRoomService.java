@@ -164,7 +164,7 @@ public class ChatRoomService {
         }
         chatRoom.getMemberIdList().add(memberId);
         ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
-        if(chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND)
+        if (chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND)
             chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
         chatRoomMemberRepository.save(chatRoomMember);
         stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
@@ -176,7 +176,7 @@ public class ChatRoomService {
             if (chatRoom.getType() == ChatRoom.ChatRoomType.FRIEND) {
                 list.add(MemberInfo.of(member.getMember()));
             } else {
-                list.add(new MemberInfo(member.getMember().getId(), member.getDisplayName()));
+                list.add(new MemberInfo(member.getMember().getId(), member.getDisplayName(),0L));
             }
         }
         return list;

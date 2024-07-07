@@ -15,17 +15,16 @@ public class FileController {
 
     private final FileService fileService;
 
-    @PostMapping("/upload/{chatRoomId}")
+    @PostMapping("/upload")
     public CommonResponse<FileResponse.UPLOAD> getUploadPreSignedUrl(@AuthUserId final Long id,
-                                                        @RequestBody FileRequest.UPLOAD fileDto,
-                                                        @PathVariable(value = "chatRoomId") Long chatId
+                                                        @RequestBody FileRequest.UPLOAD fileDto
                                                         ) {
-        return CommonResponse.ok(fileService.getUploadPreSignedUrl(id, fileDto, chatId));
+        return CommonResponse.ok(fileService.uploadFile(id, fileDto,FileService.FILE_DIRECTORY));
     }
 
     @GetMapping("/download/{fileId}")
     public CommonResponse<FileResponse.DOWNLOAD> getDownloadPreSignedUrl(@PathVariable(value = "fileId") final Long fileId) {
-        return CommonResponse.ok(fileService.getDownloadPreSignedUrl(fileId));
+        return CommonResponse.ok(fileService.downloadFile(fileId));
     }
 
     @DeleteMapping("/remove/{fileId}")
