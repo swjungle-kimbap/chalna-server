@@ -38,7 +38,7 @@ public class FriendService {
     private final ChatRoomService chatRoomService;
 
 
-    public List<MemberResponse> findFriends(Long id) {
+    public List<MemberResponse.INFO> findFriends(Long id) {
         return getMemberList(getFriendIdList(id));
     }
 
@@ -50,7 +50,7 @@ public class FriendService {
         Relation relation = relationService.findRelation(pk);
         Member otherMember = memberRepository.findById(otherId).orElseThrow(MemberNotFoundException::new);
         return new FriendReponse.DETAIL(otherId, otherMember.getUsername(), otherMember.getMessage(),
-                otherMember.getProfileImageUrl(), relation.getChatRoom().getId());
+                otherMember.getProfileImageId(), relation.getChatRoom().getId());
 
     }
 
@@ -88,8 +88,8 @@ public class FriendService {
         return friendIds;
     }
 
-    private List<MemberResponse> getMemberList(List<Long> ids) {
-        return memberRepository.findAllById(ids).stream().map(MemberResponse::of).collect(Collectors.toList());
+    private List<MemberResponse.INFO> getMemberList(List<Long> ids) {
+        return memberRepository.findAllById(ids).stream().map(MemberResponse.INFO::of).collect(Collectors.toList());
     }
 
 }

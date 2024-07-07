@@ -20,7 +20,7 @@ public class FriendController {
     private final FriendService friendService;
 
     @GetMapping
-    public CommonResponse<List<MemberResponse>> getFriends(@AuthUserId final Long id){
+    public CommonResponse<List<MemberResponse.INFO>> getFriends(@AuthUserId final Long id){
         return CommonResponse.ok(friendService.findFriends(id));
     }
 

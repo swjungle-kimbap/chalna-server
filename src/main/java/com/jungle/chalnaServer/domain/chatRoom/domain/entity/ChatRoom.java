@@ -28,6 +28,9 @@ public class ChatRoom extends BaseTimestampEntity {
     @ElementCollection
     private Set<Long> memberIdList = new HashSet<>();
 
+    @ElementCollection
+    private Set<Long> fileIdList = new HashSet<>();
+
     @OneToMany(mappedBy = "chatRoom" , cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     private Set<ChatRoomMember> members  = new HashSet<>();
 

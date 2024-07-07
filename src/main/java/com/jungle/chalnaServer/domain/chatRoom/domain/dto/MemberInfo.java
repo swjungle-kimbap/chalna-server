@@ -11,10 +11,11 @@ import lombok.NoArgsConstructor;
 public  class MemberInfo {
     private Long memberId;
     private String username;
+    private Long profileImageId = 0L;
 
 
     public static MemberInfo of(Member member) {
-        return new MemberInfo(member.getId(),member.getUsername());
+        return new MemberInfo(member.getId(),member.getUsername(),member.getProfileImageId());
     }
 
 }

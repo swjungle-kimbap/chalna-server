@@ -68,7 +68,7 @@ public class AuthService {
 
             loginToken = tokenService.generateToken();
             Member member= Member.builder()
-                    .profileImageUrl("/images/default_image.png")
+                    .profileImageId(0L)
                     .loginToken(loginToken)
                     .username(nickname)
                     .kakaoId(kakaoId)
@@ -113,10 +113,10 @@ public class AuthService {
         return new Tokens(accessToken, refreshToken);
     }
 
-    public MemberResponse getMemberInfo(AuthRequest.LOGIN dto) {
+    public MemberResponse.INFO getMemberInfo(AuthRequest.LOGIN dto) {
         Member member = memberRepository.findByLoginToken(dto.loginToken())
                 .orElseThrow(MemberNotFoundException::new);
-        return MemberResponse.of(member);
+        return MemberResponse.INFO.of(member);
     }
 
 
