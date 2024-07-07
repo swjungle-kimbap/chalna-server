@@ -1,9 +1,10 @@
 package com.jungle.chalnaServer.domain.match.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
 import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
-import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
+import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomMemberNotFoundException;
@@ -15,12 +16,13 @@ import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotification;
 import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus;
 import com.jungle.chalnaServer.domain.match.exception.NotificationNotFoundException;
 import com.jungle.chalnaServer.domain.match.repository.MatchNotificationRepository;
-import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
+import com.jungle.chalnaServer.global.common.entity.MessageType;
 import com.jungle.chalnaServer.global.common.repository.DeviceInfoRepository;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
+import com.jungle.chalnaServer.infra.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,13 +41,15 @@ import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificati
 @Service
 @RequiredArgsConstructor
 public class MatchService {
+    private final ObjectMapper objectMapper;
+
     private final FCMService fcmService;
     private final ChatRoomService chatRoomService;
+    private final ChatService chatService;
     private final RelationService relationService;
+    private final FileService fileService;
 
     private final MatchNotificationRepository matchNotiRepository;
-    private final ChatRepository chatRepository;
-    private final MemberRepository memberRepository;
     private final AuthInfoRepository authInfoRepository;
     private final DeviceInfoRepository deviceInfoRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
@@ -54,6 +58,20 @@ public class MatchService {
 
         List<String> deviceIdList = dto.getDeviceIdList();
         int sendCount = 0;
+
+        MessageType contentType = dto.getContentType();
+        String content;
+        FCMData.CONTENT message;
+        if (contentType == MessageType.FILE) {
+            content = dto.getContent();
+            message = FCMData.CONTENT.file(fileService.downloadFile(Long.valueOf(dto.getContent())).presignedUrl());
+        }
+        else {
+            content = dto.getContent();
+            message = FCMData.CONTENT.message(content);
+        }
+
+
         for (String deviceId : deviceIdList) {
             //deviceIdList에서 하나씩 찾아서 바꿔주기
             Long receiverId = deviceInfoRepository.findById(deviceId);
@@ -69,7 +87,6 @@ public class MatchService {
             RelationResponse reverse = relationService.findByOtherId(senderId, receiverId);
             if (relation.isBlocked() || reverse.isBlocked())
                 continue;
-
             // 중간 발표 테스트용 제한
             LocalDateTime tenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusMinutes(10L);
             List<MatchNotification> notifications = matchNotiRepository.findByReceiverIdAndSenderIdAndDeleteAtAfter(receiverId, senderId, tenMinutesAgo);
@@ -80,7 +97,8 @@ public class MatchService {
             MatchNotification matchNotification = MatchNotification.builder()
                     .senderId(senderId)
                     .receiverId(receiverId)
-                    .message(dto.getMessage())
+                    .message(content)
+                    .messageType(contentType)
                     .status(MatchNotificationStatus.SEND)
                     .deleteAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(10L))
                     .build();
@@ -91,7 +109,7 @@ public class MatchService {
                     authInfo.fcmToken(),
                     FCMData.instanceOfMatchFCM(
                             senderId.toString(),
-                            FCMData.CONTENT.message(dto.getMessage()),
+                            message,
                             new FCMData.MATCH(
                                     matchNotification.getId(),
                                     relation.overlapCount(),
@@ -120,18 +138,15 @@ public class MatchService {
         );
         Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, memberIdList);
 
-        ChatMessage message = new ChatMessage(
-                chatRepository.getMessageId(),
-                ChatMessage.MessageType.CHAT,
-                matchNotification.getSenderId(),
-                chatRoomId,
-                matchNotification.getMessage(),
-                1,
-                LocalDateTime.now(ZoneId.of("Asia/Seoul")),
-                LocalDateTime.now(ZoneId.of("Asia/Seoul")));
-        chatRepository.save(message);
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
-        ChatRoomMember reciever = chatRoomMemberRepository.findByMemberIdAndChatRoomId(matchNotification.getReceiverId(), chatRoomId)
+        if (matchNotification.getMessageType().equals(MessageType.FILE)) {
+            FCMData.CONTENT.file(chatService.sendFile(matchNotification.getSenderId(), chatRoomId,Long.valueOf(matchNotification.getMessage()),now));
+        } else {
+            chatService.sendAndSaveMessage(chatRoomId, matchNotification.getSenderId(), matchNotification.getMessage(), ChatMessage.MessageType.CHAT,now);
+        }
+
+        ChatRoomMember receiver = chatRoomMemberRepository.findByMemberIdAndChatRoomId(matchNotification.getReceiverId(), chatRoomId)
                 .orElseThrow(ChatRoomMemberNotFoundException::new);
         AuthInfo receiverInfo = authInfoRepository.findById(matchNotification.getReceiverId());
 
@@ -140,7 +155,7 @@ public class MatchService {
                         matchNotification.getReceiverId().toString(),
                         FCMData.CONTENT.message("인연과의 대화가 시작됐습니다."),
                         new FCMData.CHAT(
-                        reciever.getUserName(),
+                        receiver.getUserName(),
                                 chatRoomId,
                                 ChatRoom.ChatRoomType.MATCH,
                                 ChatMessage.MessageType.CHAT
