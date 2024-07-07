@@ -30,6 +30,7 @@ public class ChatMessage {
 
     public void read(){
         this.unreadCount--;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public enum MessageType {
