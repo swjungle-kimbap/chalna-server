@@ -50,7 +50,7 @@ public class ChatRoomMember extends BaseTimestampEntity {
         this.lastLeaveAt = lastLeaveAt;
     }
     public String getUserName(){
-        if(this.chatRoomType == ChatRoom.ChatRoomType.MATCH)
+        if(this.chatRoomType != ChatRoom.ChatRoomType.FRIEND)
             return displayName;
         else
             return member.getUsername();
