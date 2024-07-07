@@ -13,6 +13,7 @@ import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomNotFoundExcepti
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
+import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
 import com.jungle.chalnaServer.infra.file.repository.FileInfoRepository;
 import com.jungle.chalnaServer.infra.file.service.FileService;
 import jakarta.transaction.Transactional;
@@ -101,16 +102,14 @@ public class ChatService {
         Long fileId = Long.valueOf(contentMap.get("fileId").toString());
 
         // fileId로 preSignedUrl가져와서 보내기
-//        FileResponse.DOWNLOAD fileResponse = fileService.downloadFile(fileId);
+        FileResponse.DOWNLOAD fileResponse = fileService.downloadFile(fileId);
 
         ChatRoom chatroom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
         chatroom.getFileIdList().add(fileId);
 
-        String tmp = "url";
         Map<String, Object> sendContent = new HashMap<>();
         sendContent.put("fileId", fileId);
-//        sendContent.put("preSignedUrl", fileResponse.presignedUrl());
-        sendContent.put("preSignedUrl",tmp);
+        sendContent.put("preSignedUrl", fileResponse.presignedUrl());
         sendAndSaveMessage(chatRoomId, senderId, sendContent, req.type(),now);
 
     }
