@@ -7,7 +7,6 @@ import com.jungle.chalnaServer.domain.match.service.MatchService;
 import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +23,8 @@ public class MatchController {
     private final JwtService jwtService;
 
     @GetMapping("/match")
-    public CommonResponse<List<Map<String, String>>> matchMessageList(HttpServletRequest request) {
-        return CommonResponse.from(HttpStatus.OK, matchService.matchList(jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER))));
+    public CommonResponse<List<Map<String, String>>> matchMessageList(@AuthUserId final Long id) {
+        return CommonResponse.from(HttpStatus.OK, matchService.matchList(id));
     }
     @PostMapping("/match")
     public CommonResponse<MatchResponse.MESSAGE_SEND> matchMessageSend(@AuthUserId final Long id, @RequestBody MatchRequest.Send dto){

@@ -10,11 +10,11 @@ import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomNotFoundException;
+import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
-import com.jungle.chalnaServer.infra.file.repository.FileInfoRepository;
 import com.jungle.chalnaServer.infra.file.service.FileService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +42,8 @@ public class ChatService {
 
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final FileInfoRepository fileInfoRepository;
     private final AuthInfoRepository authInfoRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
 
     @Transactional
     // 채팅 보내기(+push 알림)
@@ -54,12 +54,11 @@ public class ChatService {
         FCMData.CONTENT content;
 
         if (req.type().equals(ChatMessage.MessageType.FILE)) {
-            content = FCMData.CONTENT.file(sendFile(memberId, roomId, req,now));
+            content = FCMData.CONTENT.file(sendFile(memberId, roomId, Long.valueOf(req.content()), now));
         } else {
             sendAndSaveMessage(roomId, memberId, req.content(), req.type(),now);
-            content = FCMData.CONTENT.message(req.content().toString());
+            content = FCMData.CONTENT.message(req.content());
         }
-
 
         // push 알림 보내기. 채팅룸에 멤버 정보를 확인해서 다른 멤버가 채팅방에 없는 경우 알림 보내기
         if (stomphandler.getOfflineMemberCount(roomId.toString()) > 0) {
@@ -67,6 +66,9 @@ public class ChatService {
             log.info("offline count {}", stomphandler.getOfflineMemberCount(roomId.toString()));
             Set<Long> offlineMembers = stomphandler.getOfflineMembers(roomId); // 오프라인 유저 정보
             Set<ChatRoomMember> members = chatRoom.getMembers();
+
+            ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, roomId).orElseThrow(ChatRoomNotFoundException::new);
+            String senderName = sender.getUserName();
 
             for (ChatRoomMember chatRoomMember : members) {
                 Long receiverId = chatRoomMember.getMember().getId();
@@ -77,10 +79,11 @@ public class ChatService {
                             memberId.toString(),
                             content,
                             new FCMData.CHAT(
-                            chatRoomMember.getUserName(),
+                                    senderName,
                             roomId,
                             chatRoom.getType(),
-                            req.type())
+                                    req.type()
+                            )
                     );
                     fcmService.sendFCM(authInfo.fcmToken(), fcmData);
                 }
@@ -103,10 +106,7 @@ public class ChatService {
 
     }
 
-    private String sendFile(Long senderId, Long chatRoomId, ChatMessageRequest.SEND req,LocalDateTime now) {
-        Map<String, Object> contentMap = (Map<String, Object>) req.content();
-        Long fileId = Long.valueOf(contentMap.get("fileId").toString());
-
+    public String sendFile(Long senderId, Long chatRoomId, Long fileId, LocalDateTime now) {
         // fileId로 preSignedUrl가져와서 보내기
         FileResponse.DOWNLOAD fileResponse = fileService.downloadFile(fileId);
 
@@ -116,7 +116,7 @@ public class ChatService {
         Map<String, Object> sendContent = new HashMap<>();
         sendContent.put("fileId", fileId);
         sendContent.put("preSignedUrl", fileResponse.presignedUrl());
-        sendAndSaveMessage(chatRoomId, senderId, sendContent, req.type(),now);
+        sendAndSaveMessage(chatRoomId, senderId, sendContent, ChatMessage.MessageType.FILE, now);
 
         return fileResponse.presignedUrl();
     }
