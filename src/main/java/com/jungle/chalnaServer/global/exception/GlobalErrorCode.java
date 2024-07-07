@@ -18,7 +18,7 @@ import com.jungle.chalnaServer.global.auth.jwt.exception.InvalidJwtTokenExceptio
 import com.jungle.chalnaServer.infra.fcm.exception.FCMTokenNotFoundException;
 import com.jungle.chalnaServer.infra.file.exception.FailToUploadS3Exception;
 import com.jungle.chalnaServer.infra.file.exception.MaxFileSizeException;
-import com.jungle.chalnaServer.infra.file.exception.NotFoundFileInfoException;
+import com.jungle.chalnaServer.infra.file.exception.FileInfoNotFoundException;
 import com.jungle.chalnaServer.infra.file.exception.NotFoundS3ObjectException;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -49,7 +49,7 @@ public enum GlobalErrorCode {
     FAIL_TO_UPLOAD_S3(HttpStatus.BAD_REQUEST,"S3 업로드를 실패했습니다.",Set.of(FailToUploadS3Exception.class)),
     CHATROOM_NOT_FOUND(HttpStatus.BAD_REQUEST,"채팅방을 찾을 수 없습니다.",Set.of(ChatRoomNotFoundException.class)),
     CHATROOM_MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST,"채팅방을 찾을 수 없습니다.",Set.of(ChatRoomMemberNotFoundException.class)),
-    NOT_FOUND_FILE_INFO(HttpStatus.BAD_REQUEST,"해당 파일을 찾을 수 없습니다.", Set.of(NotFoundFileInfoException.class)),
+    NOT_FOUND_FILE_INFO(HttpStatus.BAD_REQUEST,"해당 파일을 찾을 수 없습니다.", Set.of(FileInfoNotFoundException.class)),
     NOT_FOUND_S3_OBJECT(HttpStatus.BAD_REQUEST,"해당 파일의 만료기간이 지났습니다.",Set.of(NotFoundS3ObjectException.class)),
     NOT_FOUND_CHATROOM(HttpStatus.BAD_REQUEST,"해당 채팅방이 없습니다.",Set.of(NotFoundChatRoomException.class));
 

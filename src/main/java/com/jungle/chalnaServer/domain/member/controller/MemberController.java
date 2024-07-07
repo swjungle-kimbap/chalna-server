@@ -7,7 +7,6 @@ import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import com.jungle.chalnaServer.global.util.JwtService;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileRequest;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +19,7 @@ public class MemberController {
     private final JwtService jwtService;
 
     @PatchMapping("/profile")
-    public CommonResponse<MemberResponse> updateMemberProfile(@AuthUserId final Long id,
+    public CommonResponse<MemberResponse.INFO> updateMemberProfile(@AuthUserId final Long id,
                                                            @RequestBody MemberRequest.PROFILE memberDto) {
 
 
@@ -35,9 +34,8 @@ public class MemberController {
     }
 
     @GetMapping
-    public CommonResponse<MemberResponse> getMemberInfo(HttpServletRequest request) {
+    public CommonResponse<MemberResponse.INFO> getMemberInfo(@AuthUserId final Long id) {
 
-        Long id = jwtService.getId(jwtService.resolveToken(request, JwtService.AUTHORIZATION_HEADER));
         return CommonResponse.ok(memberService.getMemberInfo(id));
     }
 
