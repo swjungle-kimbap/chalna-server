@@ -1,13 +1,12 @@
 package com.jungle.chalnaServer.domain.match.domain.entity;
 
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
+import com.jungle.chalnaServer.global.common.entity.MessageType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,7 +22,11 @@ public class MatchNotification extends BaseTimestampEntity {
     private Long id;
     private Long senderId;
     private Long receiverId;
+
     private String message;
+
+    @Enumerated(EnumType.STRING)
+    private MessageType messageType;
 
     @Enumerated(EnumType.STRING)
     private MatchNotificationStatus status;
@@ -37,7 +40,8 @@ public class MatchNotification extends BaseTimestampEntity {
         this.deleteAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
-    public LocalDateTime getCreatedAt() {
-        return super.getCreatedAt();
+    public record MESSAGE(String content, MessageType messageType) {
+
     }
+
 }

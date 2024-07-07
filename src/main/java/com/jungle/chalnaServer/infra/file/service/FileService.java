@@ -76,7 +76,6 @@ public class FileService {
 
         FileInfo fileInfo = fileInfoRepository.findById(fileId).orElseThrow(FileInfoNotFoundException::new);
 
-        // S3 객체 존재 확인
         validateFileInfo(fileInfo);
 
         URL presignedUrl = getDownloadPresignedUrl(fileInfo);

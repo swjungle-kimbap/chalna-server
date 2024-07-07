@@ -3,6 +3,7 @@ package com.jungle.chalnaServer.infra.fcm.dto;
 import com.google.gson.Gson;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.global.common.entity.MessageType;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -55,15 +56,13 @@ public class FCMData {
 
     }
 
-    public record CONTENT(String content, String contentType){
-        public static String TYPE_FILE = "FILE";
-        public static String TYPE_MESSAGE = "MESSAGE";
+    public record CONTENT(String content, MessageType contentType){
 
         public static CONTENT message(String message){
-            return new CONTENT(message, TYPE_MESSAGE);
+            return new CONTENT(message, MessageType.MESSAGE);
         }
         public static CONTENT file(String url){
-            return new CONTENT(url, TYPE_FILE);
+            return new CONTENT(url, MessageType.FILE);
         }
     }
 
