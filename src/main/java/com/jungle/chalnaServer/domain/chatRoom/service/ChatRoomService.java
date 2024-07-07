@@ -1,9 +1,11 @@
 package com.jungle.chalnaServer.domain.chatRoom.service;
 
+import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageRequest;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 import com.jungle.chalnaServer.domain.chat.handler.StompHandler;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
+import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomResponse;
 import com.jungle.chalnaServer.domain.chatRoom.domain.dto.MemberInfo;
 import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
@@ -45,6 +47,7 @@ public class ChatRoomService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final StompHandler stomphandler;
+    private final ChatService chatService;
 
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -113,7 +116,7 @@ public class ChatRoomService {
         scheduler.schedule(() -> {
             log.info("timeout roomId {}", chatRoomId);
             ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElse(null);
-            if (chatRoom != null) {
+            if (chatRoom == null) {
                 return;
             }
             if (chatRoom.getType().equals(ChatRoom.ChatRoomType.MATCH)) {
@@ -131,7 +134,8 @@ public class ChatRoomService {
                         , 0
                         , now
                 );
-                messagingTemplate.convertAndSend("/api/sub/" + chatRoom.getId(), res);
+                ChatMessageRequest.SEND req = new ChatMessageRequest.SEND(ChatMessage.MessageType.TIMEOUT, "5분이 지났습니다.\n대화를 이어가려면 친구요청을 보내보세요.");
+                chatService.sendMessage(0L,chatRoomId,req);
             }
         }, delay, unit);
     }
