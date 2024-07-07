@@ -49,7 +49,7 @@ public class ChatService {
 
     @Transactional
     // 채팅 보내기(+push 알림)
-    public void sendMessage(Long memberId, Long roomId, ChatMessageRequest.SEND req) {
+    public void sendMessage(Long senderId, Long roomId, ChatMessageRequest.SEND req) {
 
         log.info("sendMessage");
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
@@ -62,11 +62,11 @@ public class ChatService {
 
             for (ChatRoomMember chatRoomMember : members) {
                 Long receiverId = chatRoomMember.getMember().getId();
-                if(offlineMembers.contains(receiverId) && !receiverId.equals(memberId)) {
+                if(offlineMembers.contains(receiverId) && !receiverId.equals(senderId)) {
                     log.info("fcm send to {}",receiverId);
                     AuthInfo authInfo = authInfoRepository.findById(receiverId);
                     FCMData fcmData = FCMData.instanceOfChatFCM(
-                            memberId.toString(),
+                            senderId.toString(),
                             req.content().toString(),
                             chatRoomMember.getUserName(),
                             roomId.toString(),
@@ -78,9 +78,9 @@ public class ChatService {
         }
 
         if (req.type().equals(ChatMessage.MessageType.FILE)) {
-            sendFile(memberId, roomId, req);
+            sendFile(senderId, roomId, req);
         } else {
-            sendAndSaveMessage(roomId, memberId, req.content(), req.type(),now);
+            sendAndSaveMessage(roomId, senderId, req.content(), req.type(),now);
         }
     }
 
