@@ -1,6 +1,5 @@
 package com.jungle.chalnaServer.domain.match.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
 import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
@@ -41,8 +40,6 @@ import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificati
 @Service
 @RequiredArgsConstructor
 public class MatchService {
-    private final ObjectMapper objectMapper;
-
     private final FCMService fcmService;
     private final ChatRoomService chatRoomService;
     private final ChatService chatService;
@@ -86,12 +83,6 @@ public class MatchService {
             RelationResponse relation = relationService.findByOtherId(receiverId, senderId);
             RelationResponse reverse = relationService.findByOtherId(senderId, receiverId);
             if (relation.isBlocked() || reverse.isBlocked())
-                continue;
-            // 중간 발표 테스트용 제한
-            LocalDateTime tenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusMinutes(10L);
-            List<MatchNotification> notifications = matchNotiRepository.findByReceiverIdAndSenderIdAndDeleteAtAfter(receiverId, senderId, tenMinutesAgo);
-
-            if (!notifications.isEmpty())
                 continue;
 
             MatchNotification matchNotification = MatchNotification.builder()
