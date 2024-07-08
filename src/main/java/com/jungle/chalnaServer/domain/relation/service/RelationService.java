@@ -1,9 +1,9 @@
 package com.jungle.chalnaServer.domain.relation.service;
 
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chat.exception.ChatRoomNotFoundException;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
-import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -30,7 +31,6 @@ public class RelationService {
     private final MemberRepository memberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final DeviceInfoRepository deviceInfoRepository;
-    private final ChatService chatService;
 
 
     public RelationResponse findByOtherId(final Long id, final Long otherId) {
@@ -87,7 +87,11 @@ public class RelationService {
                 relation.updateFriendStatus(FriendStatus.ACCEPTED);
                 reverse.updateFriendStatus(FriendStatus.ACCEPTED);
                 // 채팅방 상태 변경
-                chatService.updateChatRoomType(chatRoomId, ChatRoom.ChatRoomType.FRIEND);
+                chatRoom.updateType( ChatRoom.ChatRoomType.FRIEND);
+                Set<ChatRoomMember> members = chatRoom.getMembers();
+                for (ChatRoomMember member : members) {
+                    member.updateChatRoomType(ChatRoom.ChatRoomType.FRIEND);
+                }
                 relation.updateChatRoom(chatRoom);
                 reverse.updateChatRoom(chatRoom);
                 return "요청에 성공했습니다.";
