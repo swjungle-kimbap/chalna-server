@@ -93,7 +93,7 @@ public class StompHandler implements ChannelInterceptor {
 
     public void setMemberOnline(Long chatRoomId, Long memberId) {
         log.info("{} online (in {})", memberId, chatRoomId);
-        setOperations.remove(OFFLINE_KEY_PREFIX + chatRoomId, memberId);
+        setOperations.remove(OFFLINE_KEY_PREFIX + chatRoomId, memberId.toString());
     }
 
     public void setMemberOffline(Long chatRoomId, Long memberId) {
