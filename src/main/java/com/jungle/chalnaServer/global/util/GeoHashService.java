@@ -10,7 +10,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class GeoHashService {
-    public static final String GEO_LOC_PREFIX = "GEO_LOCATIONS:";
+    public static final String GEO_LOC_PREFIX = "geo:localchat:";
 
     private final GeoOperations<String, String> geoOperations;
 

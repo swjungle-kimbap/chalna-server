@@ -239,7 +239,7 @@ public class ChatService {
         return chatroomMembers.stream()
                 .map(chatRoomMember -> {
                     ChatRoom chatRoom = chatRoomMember.getChatRoom();
-                    ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId());
+                    ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId(),memberId);
 
                     Integer unreadMessageCount = chatRepository.getUnreadCount(chatRoom.getId(), chatRoomMember.getLastLeaveAt());
                     List<MemberInfo> memberInfos = getChatRoomMembers(chatRoom);

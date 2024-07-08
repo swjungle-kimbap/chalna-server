@@ -2,6 +2,7 @@ package com.jungle.chalnaServer.domain.chat.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ListOperations;
@@ -19,6 +20,7 @@ import java.util.List;
 public class ChatRepository {
 
     private final ObjectMapper objectMapper;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
 
     private final ListOperations<String, Object> listOperations;
     private final ValueOperations<String, Object> valueOperations;
@@ -59,12 +61,16 @@ public class ChatRepository {
     }
 
 
-    public ChatMessage getLatestMessage(Long chatRoomId) {
+    public ChatMessage getLatestMessage(Long chatRoomId,Long memberId) {
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).get();
+
         long len = listOperations.size(roomKey);
 
         for (long i = len - 1; i >= 0; i--) {
             ChatMessage message = objectMapper.convertValue(listOperations.index(roomKey, i), ChatMessage.class);
+            if(message.getCreatedAt().isBefore(chatRoomMember.getCreatedAt()))
+                return null;
             if (isChat(message)) {
                 return message;
             }
