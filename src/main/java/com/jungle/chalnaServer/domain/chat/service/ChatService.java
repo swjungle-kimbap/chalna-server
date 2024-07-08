@@ -4,14 +4,26 @@ import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
 import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageRequest;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
+import com.jungle.chalnaServer.domain.chat.domain.dto.ChatRoomResponse;
+import com.jungle.chalnaServer.domain.chat.domain.dto.MemberInfo;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomNotFoundException;
 import com.jungle.chalnaServer.domain.chat.handler.StompHandler;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
-import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomNotFoundException;
-import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberRepository;
-import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRoomMemberRepository;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
+import com.jungle.chalnaServer.domain.localchat.domain.entity.LocalChat;
+import com.jungle.chalnaServer.domain.localchat.repository.LocalChatRepository;
+import com.jungle.chalnaServer.domain.member.domain.entity.Member;
+import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.domain.relation.domain.entity.FriendStatus;
+import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
+import com.jungle.chalnaServer.domain.relation.repository.RelationRepository;
+import com.jungle.chalnaServer.domain.relation.service.RelationService;
+import com.jungle.chalnaServer.global.util.RandomUserNameService;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
@@ -24,9 +36,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -39,50 +52,76 @@ public class ChatService {
 
     private final FileService fileService;
     private final FCMService fcmService;
+    private final RelationService relationService;
+    private final RandomUserNameService randomUserNameService;
 
+    private final MemberRepository memberRepository;
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final AuthInfoRepository authInfoRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final RelationRepository relationRepository;
+    private final LocalChatRepository localChatRepository;
+
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Transactional
     // 채팅 보내기(+push 알림)
     public void sendMessage(Long memberId, Long roomId, ChatMessageRequest.SEND req) {
 
-        log.info("sendMessage");
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
+
+        // 친구 채팅일때 없으면 member에 추가하기
+        Relation relation = relationRepository.findByIdAndChatRoom(memberId, chatRoom).orElse(null);
+        if (relation != null) {
+            Relation reverse = relationService.findRelation(relation.getRelationPK().reverse());
+            if (!reverse.isBlocked()
+                    && relation.getFriendStatus() == FriendStatus.ACCEPTED) {
+                joinChatRoom(roomId, reverse.getRelationPK().getId());
+            }
+        }
+
+        // 메시지 생성 및 저장
         FCMData.CONTENT content;
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
         if (req.type().equals(ChatMessage.MessageType.FILE)) {
             content = FCMData.CONTENT.file(sendFile(memberId, roomId, Long.valueOf(req.content()), now));
         } else {
-            sendAndSaveMessage(roomId, memberId, req.content(), req.type(),now);
+            saveMessage(roomId, memberId, req.content(), req.type(),now);
             content = FCMData.CONTENT.message(req.content());
         }
 
+        // 보낸사람 이름 찾기
+        String senderName;
+        ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, roomId).orElse(null);
+        if(sender != null)
+            senderName = sender.getUserName();
+        else
+            senderName = "인연 채팅 알림";
+
         // push 알림 보내기. 채팅룸에 멤버 정보를 확인해서 다른 멤버가 채팅방에 없는 경우 알림 보내기
-        if (stomphandler.getOfflineMemberCount(roomId.toString()) > 0) {
-            ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
-            log.info("offline count {}", stomphandler.getOfflineMemberCount(roomId.toString()));
-            Set<Long> offlineMembers = stomphandler.getOfflineMembers(roomId); // 오프라인 유저 정보
-            Set<ChatRoomMember> members = chatRoom.getMembers();
+        sendChatFCMAlarm(chatRoom,memberId,senderName,content,req.type());
+    }
 
-            ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, roomId).orElseThrow(ChatRoomNotFoundException::new);
-            String senderName = sender.getUserName();
-
+    private void sendChatFCMAlarm(ChatRoom chatRoom, Long senderId, String senderName, FCMData.CONTENT content, ChatMessage.MessageType type){
+        log.info("fcm send start by [{},{}]", senderId,senderName);
+        if (stomphandler.getOfflineMemberCount(chatRoom.getId()) > 0) {
+            Set<Long> offlineMembers = stomphandler.getOfflineMembers(chatRoom.getId()); // 오프라인 유저 정보
+            List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(chatRoom.getId());
             for (ChatRoomMember chatRoomMember : members) {
                 Long receiverId = chatRoomMember.getMember().getId();
-                if(offlineMembers.contains(receiverId) && !receiverId.equals(memberId)) {
-                    log.info("fcm send to {}",receiverId);
+                log.info("fcm send start to {}",receiverId);
+                if(offlineMembers.contains(receiverId) && !receiverId.equals(senderId)) {
                     AuthInfo authInfo = authInfoRepository.findById(receiverId);
                     FCMData fcmData = FCMData.instanceOfChatFCM(
-                            memberId.toString(),
+                            senderId.toString(),
                             content,
                             new FCMData.CHAT(
-                                    senderName,
-                            roomId,
-                            chatRoom.getType(),
-                                    req.type()
+                                    senderName
+                                    , chatRoom.getId()
+                                    , chatRoom.getType()
+                                    , type
                             )
                     );
                     fcmService.sendFCM(authInfo.fcmToken(), fcmData);
@@ -90,11 +129,10 @@ public class ChatService {
             }
         }
     }
-
     // 메시지 보내기 + redis 저장
-    public void sendAndSaveMessage(Long chatRoomId, Long senderId, Object content, ChatMessage.MessageType type,LocalDateTime now) {
+    public void saveMessage(Long chatRoomId, Long senderId, Object content, ChatMessage.MessageType type, LocalDateTime now) {
         Long id = chatRepository.getMessageId();
-        Integer unreadCount = stomphandler.getOfflineMemberCount(chatRoomId.toString());
+        Integer unreadCount = stomphandler.getOfflineMemberCount(chatRoomId);
         ChatMessage message = new ChatMessage(id, type, senderId,
                 chatRoomId, content, unreadCount,
                 now, now);
@@ -116,10 +154,146 @@ public class ChatService {
         Map<String, Object> sendContent = new HashMap<>();
         sendContent.put("fileId", fileId);
         sendContent.put("preSignedUrl", fileResponse.presignedUrl());
-        sendAndSaveMessage(chatRoomId, senderId, sendContent, ChatMessage.MessageType.FILE, now);
+        saveMessage(chatRoomId, senderId, sendContent, ChatMessage.MessageType.FILE, now);
 
         return fileResponse.presignedUrl();
     }
+    // 채팅방 상태 변경
+    public void updateChatRoomType(Long chatRoomId, ChatRoom.ChatRoomType type) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
+
+        chatRoom.updateType(type);
+        chatRoomRepository.save(chatRoom);
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(chatRoomId);
+        for (ChatRoomMember member : members) {
+            member.updateChatRoomType(type);
+            chatRoomMemberRepository.save(member);
+        }
+    }
+
+    // 채팅방 만들기
+    @Transactional
+    public Long makeChatRoom(ChatRoom.ChatRoomType type, List<Long> memberIdList) {
+        log.info("chatroom created");
+        ChatRoom chatRoom = new ChatRoom(type);
+        chatRoomRepository.save(chatRoom);
+
+        log.info("chatroom member join start");
+        for (Long memberId : memberIdList) {
+            joinChatRoom(chatRoom.getId(), memberId);
+        }
+        if (type == ChatRoom.ChatRoomType.MATCH)
+            scheduleRoomTermination(chatRoom.getId(), 5, TimeUnit.MINUTES);
+
+        return chatRoom.getId();
+    }
+
+    @Transactional
+    public void joinChatRoom(Long chatRoomId, Long memberId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
+        log.info("{} join in {} start",memberId,chatRoomId);
+        // 채팅방에 있는지 확인
+        if (chatRoom.getMemberIdList().contains(memberId))
+            return;
+        Member member = memberRepository.findById(memberId).orElse(null);
+        if (member == null)
+            return;
+        log.info("{} joined chatroom {}", memberId, chatRoomId);
+        // 채팅방 맴버 생성
+        ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
+        if (chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND)
+            chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
+        chatRoomMemberRepository.save(chatRoomMember);
+        // 채팅방 목록 추가
+        chatRoom.getMemberIdList().add(memberId);
+        stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
+    }
+
+    @Transactional
+    public void leaveChatRoom(Long chatRoomId, Long memberId) {
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+        ChatRoom chatRoom = chatRoomMember.getChatRoom();
+        // 채팅방 인원 변경
+        chatRoom.getMemberIdList().remove(memberId);
+        // session에서 삭제
+        stomphandler.setMemberOnline(chatRoomId, memberId);
+        // entity 삭제
+        chatRoomMemberRepository.delete(chatRoomMember);
+        LocalChat localChat = localChatRepository.findByChatRoomId(chatRoomId).orElse(null);
+
+        // 채팅방 인원이 없으면
+        if (chatRoom.getMemberIdList().isEmpty()) {
+            chatRoomRepository.delete(chatRoom);
+            // 장소 채팅 삭제
+            if (localChat != null)
+                localChatRepository.delete(localChat);
+            chatRepository.removeChatRoom(chatRoomId);
+        } else if (localChat != null && localChat.getOwnerId().equals(memberId)) {
+            localChat.updateOwner(chatRoom.getMemberIdList().stream().findFirst().get());
+        }
+    }
+
+    // 채팅방 목록 요청
+    public List<ChatRoomResponse.CHATROOM> getChatRoomList(Long memberId) {
+        List<ChatRoomMember> chatroomMembers = chatRoomMemberRepository.findByMemberId(memberId);
+        return chatroomMembers.stream()
+                .map(chatRoomMember -> {
+                    ChatRoom chatRoom = chatRoomMember.getChatRoom();
+                    ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId());
+
+                    Integer unreadMessageCount = chatRepository.getUnreadCount(chatRoom.getId(), chatRoomMember.getLastLeaveAt());
+                    List<MemberInfo> memberInfos = getChatRoomMembers(chatRoom);
+                    ChatMessageResponse.MESSAGE recentMessageRes = recentMessage != null ? ChatMessageResponse.MESSAGE.of(recentMessage) : null;
+                    return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount);
+                })
+                .sorted(Comparator.comparing((c) ->
+                                c.getRecentMessage() == null ? null : c.getRecentMessage().createdAt()
+                        , Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+    }
+
+    // 채팅방 맴버 목록 조회
+    private List<MemberInfo> getChatRoomMembers(ChatRoom chatRoom) {
+        List<MemberInfo> list = new ArrayList<>();
+        for (ChatRoomMember member : chatRoom.getMembers()) {
+            if (chatRoom.getType() == ChatRoom.ChatRoomType.FRIEND) {
+                list.add(MemberInfo.of(member.getMember()));
+            } else {
+                list.add(new MemberInfo(member.getMember().getId(), member.getDisplayName(), 0L));
+            }
+        }
+        return list;
+    }
+
+    // 채팅방 메시지 요청
+    @Transactional
+    public ChatRoomResponse.MESSAGES getChatMessages(Long memberId, Long chatRoomId) {
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+        LocalDateTime lastLeaveAt = chatRoomMember.getLastLeaveAt();
+        chatRoomMember.updateLastLeaveAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+        List<ChatMessageResponse.MESSAGE> messages = chatRepository.getMessagesAfterUpdateDate(memberId, chatRoomId, lastLeaveAt).stream()
+                .map(ChatMessageResponse.MESSAGE::of)
+                .toList();
+
+        return new ChatRoomResponse.MESSAGES(chatRoomMember.getChatRoom(), getChatRoomMembers(chatRoomMember.getChatRoom()), messages);
+    }
 
 
+    // 채팅방 5분 스케줄러
+    private void scheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
+        scheduler.schedule(() -> {
+            log.info("timeout roomId {}", chatRoomId);
+            ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElse(null);
+            log.info("chatroom type {}", chatRoom.getType());
+            if (chatRoom == null) {
+                return;
+            }
+            if (chatRoom.getType().equals(ChatRoom.ChatRoomType.MATCH)) {
+                // 채팅방의 상태를 대기 상태로 변경
+                updateChatRoomType(chatRoomId, ChatRoom.ChatRoomType.WAITING);
+                ChatMessageRequest.SEND req = new ChatMessageRequest.SEND(ChatMessage.MessageType.TIMEOUT, "5분이 지났습니다.\n대화를 이어가려면 친구요청을 보내보세요.");
+                sendMessage(0L, chatRoomId, req);
+            }
+        }, delay, unit);
+    }
 }

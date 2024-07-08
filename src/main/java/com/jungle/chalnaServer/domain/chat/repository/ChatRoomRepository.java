@@ -1,6 +1,6 @@
-package com.jungle.chalnaServer.domain.chatRoom.repository;
+package com.jungle.chalnaServer.domain.chat.repository;
 
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

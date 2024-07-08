@@ -1,15 +1,13 @@
 package com.jungle.chalnaServer.domain.match.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
 import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.chat.service.ChatService;
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
-import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomMemberNotFoundException;
-import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberRepository;
-import com.jungle.chalnaServer.domain.chatRoom.service.ChatRoomService;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchResponse;
 import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotification;
@@ -41,10 +39,7 @@ import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificati
 @Service
 @RequiredArgsConstructor
 public class MatchService {
-    private final ObjectMapper objectMapper;
-
     private final FCMService fcmService;
-    private final ChatRoomService chatRoomService;
     private final ChatService chatService;
     private final RelationService relationService;
     private final FileService fileService;
@@ -86,12 +81,6 @@ public class MatchService {
             RelationResponse relation = relationService.findByOtherId(receiverId, senderId);
             RelationResponse reverse = relationService.findByOtherId(senderId, receiverId);
             if (relation.isBlocked() || reverse.isBlocked())
-                continue;
-            // 중간 발표 테스트용 제한
-            LocalDateTime tenMinutesAgo = LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusMinutes(10L);
-            List<MatchNotification> notifications = matchNotiRepository.findByReceiverIdAndSenderIdAndDeleteAtAfter(receiverId, senderId, tenMinutesAgo);
-
-            if (!notifications.isEmpty())
                 continue;
 
             MatchNotification matchNotification = MatchNotification.builder()
@@ -136,14 +125,14 @@ public class MatchService {
                 matchNotification.getSenderId(),
                 matchNotification.getReceiverId()
         );
-        Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, memberIdList);
+        Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, memberIdList);
 
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
         if (matchNotification.getMessageType().equals(MessageType.FILE)) {
             FCMData.CONTENT.file(chatService.sendFile(matchNotification.getSenderId(), chatRoomId,Long.valueOf(matchNotification.getMessage()),now));
         } else {
-            chatService.sendAndSaveMessage(chatRoomId, matchNotification.getSenderId(), matchNotification.getMessage(), ChatMessage.MessageType.CHAT,now);
+            chatService.saveMessage(chatRoomId, matchNotification.getSenderId(), matchNotification.getMessage(), ChatMessage.MessageType.CHAT,now);
         }
 
         ChatRoomMember receiver = chatRoomMemberRepository.findByMemberIdAndChatRoomId(matchNotification.getReceiverId(), chatRoomId)
@@ -210,41 +199,4 @@ public class MatchService {
 
         return MatchResponse.MatchReject("요청이 처리되었습니다.");
     }
-
-    //아직 미사용 코드
-//    public Map<String, String> matchCommon(MatchRequest.Send dto, Long senderId) throws Exception {
-//        Member member = memberRepository.findById(senderId)
-//                .orElseThrow(MemberNotFoundException::new);
-//
-//        Long receiverId = Long.parseLong(dto.getReceiverId());
-//        Map<String, String> result = null;
-//
-//        String message = dto.getMessage();
-//        if (message != null && !message.isEmpty()) {
-//            result = matchMessageSend(dto, senderId);
-//        }
-//
-//        matchOverlapCountUp(senderId, receiverId);
-//        return MatchResponse.MatchMessageSend("match 요청 처리했습니다.");
-//    }
-//
-//    public void matchOverlapCountUp(Long senderId, Long receiverId) throws MatchOverlapFailedException {
-//        RelationPK senderPK = new RelationPK(senderId, receiverId);
-//        RelationPK receiverPK = new RelationPK(receiverId, senderId);
-//
-//
-//        Optional<Relation> senderRelationOpt = relationRepository.findByRelationPK(senderPK);
-//        Optional<Relation> receiverRelationOpt = relationRepository.findByRelationPK(receiverPK);
-//
-//
-//        senderRelationOpt.ifPresent(senderRelation -> {
-//            senderRelation.increaseOverlapCount();
-//            relationRepository.save(senderRelation);
-//        });
-//
-//        receiverRelationOpt.ifPresent(receiverRelation -> {
-//            receiverRelation.increaseOverlapCount();
-//            relationRepository.save(receiverRelation);
-//        });
-//    }
 }

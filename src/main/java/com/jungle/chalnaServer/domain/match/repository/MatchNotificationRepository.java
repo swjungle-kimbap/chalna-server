@@ -13,5 +13,4 @@ public interface MatchNotificationRepository extends JpaRepository<MatchNotifica
     //todo: 기본 메서드 외에도 추가로 필요한 조회 메서드가 있을지
     List<MatchNotification> findByReceiverId(@Param("receiverId") Long receiverId);
 
-    List<MatchNotification> findByReceiverIdAndSenderIdAndDeleteAtAfter(Long receiverId, Long senderId, LocalDateTime deleteAt);
 }

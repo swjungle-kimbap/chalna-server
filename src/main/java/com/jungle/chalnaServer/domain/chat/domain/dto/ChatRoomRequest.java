@@ -1,4 +1,4 @@
-package com.jungle.chalnaServer.domain.chatRoom.domain.dto;
+package com.jungle.chalnaServer.domain.chat.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
