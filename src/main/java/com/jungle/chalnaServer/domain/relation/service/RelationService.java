@@ -1,7 +1,9 @@
 package com.jungle.chalnaServer.domain.relation.service;
 
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomNotFoundException;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
+import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
@@ -28,6 +30,7 @@ public class RelationService {
     private final MemberRepository memberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final DeviceInfoRepository deviceInfoRepository;
+    private final ChatService chatService;
 
 
     public RelationResponse findByOtherId(final Long id, final Long otherId) {
@@ -72,35 +75,27 @@ public class RelationService {
     }
 
     @Transactional
-    public String friendAccept(final Long id, final Long chatRoomId) {
-        Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findById(chatRoomId);
-        if (optionalChatRoom.isPresent()) {
-            ChatRoom chatRoom = optionalChatRoom.get();
-            Long otherId = chatRoom.getMembers().stream()
-                    .filter(chatRoomMember -> !chatRoomMember.getMember().getId().equals(id))
-                    .map(chatRoomMember -> chatRoomMember.getMember().getId())
-                    .findFirst()
-                    .orElse(null);
-
+    public String friendAccept(final Long id, final Long otherId, final Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
 
             RelationPK pk = new RelationPK(id, otherId);
-            Relation relation = findRelation(pk);
+
+        Relation relation = findRelation(pk);
             Relation reverse = findRelation(pk.reverse());
 
             if (relation.getFriendStatus() == FriendStatus.PENDING && reverse.getFriendStatus() != FriendStatus.ACCEPTED) {
                 relation.updateFriendStatus(FriendStatus.ACCEPTED);
                 reverse.updateFriendStatus(FriendStatus.ACCEPTED);
                 // 채팅방 상태 변경
-                chatRoom.updateType(ChatRoom.ChatRoomType.FRIEND);
+                chatService.updateChatRoomType(chatRoomId, ChatRoom.ChatRoomType.FRIEND);
                 relation.updateChatRoom(chatRoom);
                 reverse.updateChatRoom(chatRoom);
                 return "요청에 성공했습니다.";
-            } else {
+            }
+            else {
                 throw new CustomException("이미 친구거나, 요청하지 않은 상대입니다.");
             }
-        } else {
-            throw new CustomException("채팅방이 존재하지 않습니다.");
-        }
+
     }
 
     public String friendReject(final Long id, final Long otherId) {
@@ -110,38 +105,27 @@ public class RelationService {
 
 
         if (relation.getFriendStatus() == FriendStatus.PENDING && reverse.getFriendStatus() != FriendStatus.ACCEPTED) {
-            relation.updateFriendStatus(FriendStatus.NOTHING);
+            reverse.updateFriendStatus(FriendStatus.NOTHING);
             return "요청에 성공했습니다.";
         } else {
             throw new CustomException("이미 친구거나, 요청하지 않은 상대입니다.");
         }
     }
 
-    public String friendRequest(final Long id, final Long chatRoomId){
-        Optional<ChatRoom> optionalChatRoom = chatRoomRepository.findById(chatRoomId);
-        if (optionalChatRoom.isPresent()) {
-            ChatRoom chatRoom = optionalChatRoom.get();
-            Long otherId = chatRoom.getMembers().stream()
-                    .filter(chatRoomMember -> !chatRoomMember.getMember().getId().equals(id))
-                    .map(chatRoomMember -> chatRoomMember.getMember().getId())
-                    .findFirst()
-                    .orElse(null);
+    public String friendRequest(final Long id, final Long otherId){
 
             RelationPK pk = new RelationPK(id, otherId);
             Relation relation = findRelation(pk);
             Relation reverse = findRelation(pk.reverse());
 
             log.info("{} {} {}", id, otherId, pk);
-            if(relation.getFriendStatus() != FriendStatus.ACCEPTED && reverse.getFriendStatus() == FriendStatus.NOTHING){
+            if(!reverse.isBlocked() && relation.getFriendStatus() != FriendStatus.ACCEPTED && reverse.getFriendStatus() != FriendStatus.PENDING){
                 reverse.updateFriendStatus(FriendStatus.PENDING);
                 return "요청에 성공했습니다.";
             }
             else{
                 throw new CustomException("이미 친구거나, 요청한 상태입니다.");
             }
-        }else{
-            throw new CustomException("채팅방이 존재하지 않습니다.");
-        }
     }
 
 

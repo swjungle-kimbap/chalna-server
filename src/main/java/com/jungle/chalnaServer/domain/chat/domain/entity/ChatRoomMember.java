@@ -46,9 +46,14 @@ public class ChatRoomMember extends BaseTimestampEntity {
         this.displayName = displayName;
     }
 
+    public void updateChatRoomType(ChatRoom.ChatRoomType chatRoomType) {
+        this.chatRoomType = chatRoomType;
+    }
+
     public void updateLastLeaveAt(LocalDateTime lastLeaveAt) {
         this.lastLeaveAt = lastLeaveAt;
     }
+
     public String getUserName(){
         if(this.chatRoomType != ChatRoom.ChatRoomType.FRIEND)
             return displayName;

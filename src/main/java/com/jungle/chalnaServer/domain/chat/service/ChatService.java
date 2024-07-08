@@ -76,7 +76,6 @@ public class ChatService {
         if (relation != null) {
             Relation reverse = relationService.findRelation(relation.getRelationPK().reverse());
             if (!reverse.isBlocked()
-                    && reverse.getFriendStatus() == FriendStatus.ACCEPTED
                     && relation.getFriendStatus() == FriendStatus.ACCEPTED) {
                 joinChatRoom(roomId, reverse.getRelationPK().getId());
             }
@@ -158,6 +157,18 @@ public class ChatService {
         saveMessage(chatRoomId, senderId, sendContent, ChatMessage.MessageType.FILE, now);
 
         return fileResponse.presignedUrl();
+    }
+    // 채팅방 상태 변경
+    public void updateChatRoomType(Long chatRoomId, ChatRoom.ChatRoomType type) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
+
+        chatRoom.updateType(type);
+        chatRoomRepository.save(chatRoom);
+        List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(chatRoomId);
+        for (ChatRoomMember member : members) {
+            member.updateChatRoomType(type);
+            chatRoomMemberRepository.save(member);
+        }
     }
 
     // 채팅방 만들기
@@ -279,8 +290,7 @@ public class ChatService {
             }
             if (chatRoom.getType().equals(ChatRoom.ChatRoomType.MATCH)) {
                 // 채팅방의 상태를 대기 상태로 변경
-                chatRoom.updateType(ChatRoom.ChatRoomType.WAITING);
-                chatRoomRepository.save(chatRoom);
+                updateChatRoomType(chatRoomId, ChatRoom.ChatRoomType.WAITING);
                 ChatMessageRequest.SEND req = new ChatMessageRequest.SEND(ChatMessage.MessageType.TIMEOUT, "5분이 지났습니다.\n대화를 이어가려면 친구요청을 보내보세요.");
                 sendMessage(0L, chatRoomId, req);
             }
