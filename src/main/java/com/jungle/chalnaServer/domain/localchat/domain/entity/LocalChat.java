@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.domain.localchat.domain.entity;
 
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,5 +38,9 @@ public class LocalChat extends BaseTimestampEntity {
         this.chatRoom = chatRoom;
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public void updateOwner(Long owner){
+        this.ownerId = owner;
     }
 }

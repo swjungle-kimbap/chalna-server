@@ -5,6 +5,7 @@ import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Repository;
 
@@ -24,6 +25,7 @@ public class ChatRepository {
 
     private static final String ROOM_KEY_PREFIX = "chat:room:";
     private static final String MESSAGE_ID_KEY = "chat:message:id:";
+    private final RedisTemplate<String,Object> redisTemplate;
 
     public void save(ChatMessage chatMessage) {
         listOperations.rightPush(ROOM_KEY_PREFIX + chatMessage.getChatRoomId(), chatMessage);
@@ -93,9 +95,12 @@ public class ChatRepository {
 
     public boolean isChat(ChatMessage message) {
         ChatMessage.MessageType type = message.getType();
-        return type == ChatMessage.MessageType.CHAT
-                || type == ChatMessage.MessageType.FRIEND_REQUEST
-                || type == ChatMessage.MessageType.FILE;
+        return type != ChatMessage.MessageType.USER_ENTER;
+    }
+
+    public void removeChatRoom(Long chatRoomId) {
+        String roomKey = ROOM_KEY_PREFIX + chatRoomId;
+        redisTemplate.delete(roomKey);
     }
 
 }
