@@ -35,8 +35,8 @@ public class LocalChatController {
     }
 
     @DeleteMapping("/{id}")
-    public CommonResponse<String> deleteLocalChat(@PathVariable final Long id, @AuthUserId final Long ownerId){
-        return CommonResponse.ok(localChatService.removeLocalChat(id, ownerId));
+    public CommonResponse<String> deleteLocalChat(@PathVariable final Long id){
+        return CommonResponse.ok(localChatService.removeLocalChat(id));
     }
 
     @PostMapping("/{id}")

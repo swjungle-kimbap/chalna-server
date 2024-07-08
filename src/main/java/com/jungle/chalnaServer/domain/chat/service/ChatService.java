@@ -17,12 +17,14 @@ import com.jungle.chalnaServer.domain.chat.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.localchat.domain.entity.LocalChat;
 import com.jungle.chalnaServer.domain.localchat.repository.LocalChatRepository;
+import com.jungle.chalnaServer.domain.localchat.service.LocalChatService;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.entity.FriendStatus;
 import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
 import com.jungle.chalnaServer.domain.relation.repository.RelationRepository;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
+import com.jungle.chalnaServer.global.util.GeoHashService;
 import com.jungle.chalnaServer.global.util.RandomUserNameService;
 import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
@@ -54,6 +56,7 @@ public class ChatService {
     private final FCMService fcmService;
     private final RelationService relationService;
     private final RandomUserNameService randomUserNameService;
+    private final GeoHashService geoHashService;
 
     private final MemberRepository memberRepository;
     private final ChatRepository chatRepository;
@@ -225,8 +228,10 @@ public class ChatService {
         if (chatRoom.getMemberIdList().isEmpty()) {
             chatRoomRepository.delete(chatRoom);
             // 장소 채팅 삭제
-            if (localChat != null)
+            if (localChat != null) {
                 localChatRepository.delete(localChat);
+                geoHashService.delete(LocalChatService.REDIS_KEY, String.valueOf(localChat.getId()));
+            }
             chatRepository.removeChatRoom(chatRoomId);
         } else if (localChat != null && localChat.getOwnerId().equals(memberId)) {
             localChat.updateOwner(chatRoom.getMemberIdList().stream().findFirst().get());
