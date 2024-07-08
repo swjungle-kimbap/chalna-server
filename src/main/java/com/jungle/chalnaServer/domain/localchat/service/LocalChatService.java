@@ -1,13 +1,12 @@
 package com.jungle.chalnaServer.domain.localchat.service;
 
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
-import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomNotFoundException;
-import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
-import com.jungle.chalnaServer.domain.chatRoom.service.ChatRoomService;
+import com.jungle.chalnaServer.domain.chat.service.ChatService;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomNotFoundException;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.localchat.domain.dto.LocalChatRequest;
 import com.jungle.chalnaServer.domain.localchat.domain.dto.LocalChatResponse;
 import com.jungle.chalnaServer.domain.localchat.domain.entity.LocalChat;
-import com.jungle.chalnaServer.domain.localchat.exception.LocalChatJoinFailException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatNotFoundException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatNotOwnerException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatTooCloseException;
@@ -32,7 +31,7 @@ public class LocalChatService {
     public static final String REDIS_KEY = "LOCAL_CHAT";
 
     private final GeoHashService geoHashService;
-    private final ChatRoomService chatRoomService;
+    private final ChatService chatService;
     private final RelationService relationService;
 
     private final LocalChatRepository localChatRepository;
@@ -63,7 +62,7 @@ public class LocalChatService {
         if (!geoHashService.radius(REDIS_KEY, new Point(dto.longitude(), dto.latitude()), 100.0).isEmpty())
             throw new LocalChatTooCloseException();
 
-        Long chatRoomId = chatRoomService.makeChatRoom(ChatRoom.ChatRoomType.LOCAL, List.of(ownerId));
+        Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.LOCAL, List.of(ownerId));
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
 
         LocalChat localChat = localChatRepository.save(new LocalChat(ownerId, dto.name(), dto.description(), chatRoom, dto.latitude(), dto.longitude()));
@@ -85,10 +84,7 @@ public class LocalChatService {
 
     public String joinLocalChat(final Long id, final long joinId) {
         LocalChat localChat = localChatRepository.findById(id).orElseThrow(LocalChatNotFoundException::new);
-        if (localChat.getChatRoom().getMemberIdList().contains(joinId))
-            throw new LocalChatJoinFailException();
-
-        chatRoomService.joinChatRoom(localChat.getChatRoom().getId(), joinId);
+        chatService.joinChatRoom(localChat.getChatRoom().getId(),joinId);
         return "채팅방 입장에 성공했습니다.";
     }
 

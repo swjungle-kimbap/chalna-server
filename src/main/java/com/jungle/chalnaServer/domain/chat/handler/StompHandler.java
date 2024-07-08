@@ -1,10 +1,9 @@
 package com.jungle.chalnaServer.domain.chat.handler;
 
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
-import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomMemberNotFoundException;
-import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberRepository;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
-import com.jungle.chalnaServer.domain.member.service.MemberService;
 import com.jungle.chalnaServer.global.util.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +30,6 @@ import java.util.stream.Collectors;
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class StompHandler implements ChannelInterceptor {
     private final JwtService jwtUtil;
-    private final MemberService memberService;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final SetOperations<String, Object> setOperations;
 
@@ -104,10 +102,10 @@ public class StompHandler implements ChannelInterceptor {
                 .orElseThrow(ChatRoomMemberNotFoundException::new);
         member.updateLastLeaveAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
         chatRoomMemberRepository.save(member);
-        setOperations.add(OFFLINE_KEY_PREFIX + chatRoomId, memberId);
+        setOperations.add(OFFLINE_KEY_PREFIX + chatRoomId, memberId.toString());
     }
 
-    public Integer getOfflineMemberCount(String chatRoomId) {
+    public Integer getOfflineMemberCount(Long chatRoomId) {
         return setOperations.size(OFFLINE_KEY_PREFIX + chatRoomId).intValue();
     }
 

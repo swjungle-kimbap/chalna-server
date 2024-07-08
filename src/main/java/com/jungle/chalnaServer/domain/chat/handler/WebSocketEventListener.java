@@ -2,10 +2,10 @@ package com.jungle.chalnaServer.domain.chat.handler;
 
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
-import com.jungle.chalnaServer.domain.chatRoom.domain.dto.ChatRoomMemberResponse;
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
-import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomMemberNotFoundException;
-import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomMemberRepository;
+import com.jungle.chalnaServer.domain.chat.domain.dto.ChatRoomMemberResponse;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRoomMemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.event.EventListener;

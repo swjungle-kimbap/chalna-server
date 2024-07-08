@@ -1,7 +1,7 @@
-package com.jungle.chalnaServer.domain.chatRoom.domain.dto;
+package com.jungle.chalnaServer.domain.chat.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 
 import java.time.LocalDateTime;
 

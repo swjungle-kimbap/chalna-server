@@ -2,7 +2,7 @@ package com.jungle.chalnaServer.infra.fcm.dto;
 
 import com.google.gson.Gson;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.global.common.entity.MessageType;
 import lombok.Getter;
 
@@ -48,6 +48,14 @@ public class FCMData {
         return map;
     }
 
+    /**
+     * FCM CHAT 부가 정보
+     *
+     * @param senderName   보낸 사람 이름
+     * @param chatRoomId   채팅방 id
+     * @param chatRoomType 채팅방 유형
+     * @param messageType  메시지 유형  FILE,MESSAGE
+     */
     public record CHAT(String senderName, Long chatRoomId, ChatRoom.ChatRoomType chatRoomType,
                        ChatMessage.MessageType messageType) {
     }

@@ -1,4 +1,4 @@
-package com.jungle.chalnaServer.domain.chatRoom.domain.entity;
+package com.jungle.chalnaServer.domain.chat.domain.entity;
 
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
@@ -42,9 +42,8 @@ public class ChatRoom extends BaseTimestampEntity {
         WAITING  // 채팅방 열린지 5분 지난 후. 친구 수락/거절 대기 상태
     }
 
-    public ChatRoom(ChatRoomType type, Set<Long> memberIdList) {
+    public ChatRoom(ChatRoomType type) {
         this.type = type;
-        this.memberIdList = memberIdList;
     }
 
     public void updateType(ChatRoomType newType){

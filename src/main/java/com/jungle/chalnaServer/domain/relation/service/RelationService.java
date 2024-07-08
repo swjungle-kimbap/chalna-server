@@ -1,7 +1,7 @@
 package com.jungle.chalnaServer.domain.relation.service;
 
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
-import com.jungle.chalnaServer.domain.chatRoom.repository.ChatRoomRepository;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;

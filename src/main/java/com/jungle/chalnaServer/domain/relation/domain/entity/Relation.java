@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.domain.relation.domain.entity;
 
-import com.jungle.chalnaServer.domain.chatRoom.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
 import lombok.Getter;

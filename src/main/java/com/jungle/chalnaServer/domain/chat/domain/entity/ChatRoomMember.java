@@ -1,4 +1,4 @@
-package com.jungle.chalnaServer.domain.chatRoom.domain.entity;
+package com.jungle.chalnaServer.domain.chat.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;

@@ -1,9 +1,9 @@
 package com.jungle.chalnaServer.global.exception;
 
 import com.jungle.chalnaServer.domain.auth.exception.InvalidKakaoTokenException;
-import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomMemberNotFoundException;
-import com.jungle.chalnaServer.domain.chatRoom.exception.ChatRoomNotFoundException;
-import com.jungle.chalnaServer.domain.chatRoom.exception.NotFoundChatRoomException;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomNotFoundException;
+import com.jungle.chalnaServer.domain.chat.exception.NotFoundChatRoomException;
 import com.jungle.chalnaServer.domain.friend.exception.NotFriendException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatJoinFailException;
 import com.jungle.chalnaServer.domain.localchat.exception.LocalChatNotFoundException;
