@@ -6,6 +6,7 @@ import com.jungle.chalnaServer.domain.chat.exception.ChatRoomNotFoundException;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
+import com.jungle.chalnaServer.domain.relation.domain.dto.RelationRequest;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
 import com.jungle.chalnaServer.domain.relation.domain.entity.FriendStatus;
 import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
@@ -75,8 +76,8 @@ public class RelationService {
     }
 
     @Transactional
-    public String friendAccept(final Long id, final Long otherId, final Long chatRoomId) {
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
+    public String friendAccept(final Long id, final Long otherId, RelationRequest.ACCEPT dto) {
+        ChatRoom chatRoom = chatRoomRepository.findById(dto.chatRoomId()).orElseThrow(ChatRoomNotFoundException::new);
 
             RelationPK pk = new RelationPK(id, otherId);
 

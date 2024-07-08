@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.relation.controller;
 
+import com.jungle.chalnaServer.domain.relation.domain.dto.RelationRequest;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
 import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
@@ -43,12 +44,12 @@ public class RelationController {
     }
 
     @PatchMapping("/accept/{otherId}")
-    public CommonResponse<String> friendAccept(@AuthUserId final Long id, @PathVariable final Long otherId,@RequestParam final Long chatRoomId) {
-        return CommonResponse.from("200", null, relationService.friendAccept(id,otherId, chatRoomId));
+    public CommonResponse<String> friendAccept(@AuthUserId final Long id, @PathVariable final Long otherId,@RequestBody RelationRequest.ACCEPT dto) {
+        return CommonResponse.from("200", null, relationService.friendAccept(id,otherId, dto));
     }
 
     @PatchMapping("/reject/{otherId}")
-    public CommonResponse<String> friendReject(@AuthUserId final Long id, @RequestParam final Long otherId) {
+    public CommonResponse<String> friendReject(@AuthUserId final Long id, @PathVariable final Long otherId) {
         return CommonResponse.from("200", null, relationService.friendReject(id, otherId));
     }
 }
