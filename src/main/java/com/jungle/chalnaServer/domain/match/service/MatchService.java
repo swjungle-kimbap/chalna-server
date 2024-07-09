@@ -136,11 +136,14 @@ public class MatchService {
         ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(senderId, chatRoomId)
                 .orElseThrow(ChatRoomMemberNotFoundException::new);
 
+        ChatRoomMember receiver = chatRoomMemberRepository.findByMemberIdAndChatRoomId(receiverId, chatRoomId)
+                .orElseThrow(ChatRoomMemberNotFoundException::new);
+
         fcmService.sendFCM(senderInfo.fcmToken(),
                 FCMData.instanceOfChatFCM(senderId.toString(),
                         FCMData.CONTENT.message("인연과의 대화가 시작됐습니다."),
                         new FCMData.CHAT(
-                        sender.getUserName(),
+                            receiver.getUserName(),
                                 chatRoomId,
                                 ChatRoom.ChatRoomType.MATCH,
                                 ChatMessage.MessageType.CHAT
