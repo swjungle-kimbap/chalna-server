@@ -23,6 +23,8 @@ public class LocalChat extends BaseTimestampEntity {
 
     private String description;
 
+    private Long imageId;
+
     @OneToOne
     @JoinColumn(name = "chatRoomId")
     private ChatRoom chatRoom;
@@ -31,16 +33,13 @@ public class LocalChat extends BaseTimestampEntity {
 
     private Double longitude;
 
-    public LocalChat(Long ownerId,String name,String description,ChatRoom chatRoom,Double latitude, Double longitude) {
+    public LocalChat(Long ownerId,String name,String description,Long imageId,ChatRoom chatRoom,Double latitude, Double longitude) {
         this.ownerId = ownerId;
         this.name = name;
         this.description = description;
+        this.imageId = imageId;
         this.chatRoom = chatRoom;
         this.latitude = latitude;
         this.longitude = longitude;
-    }
-
-    public void updateOwner(Long owner){
-        this.ownerId = owner;
     }
 }
