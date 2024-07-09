@@ -233,8 +233,6 @@ public class ChatService {
                 geoHashService.delete(LocalChatService.REDIS_KEY, String.valueOf(localChat.getId()));
             }
             chatRepository.removeChatRoom(chatRoomId);
-        } else if (localChat != null && localChat.getOwnerId().equals(memberId)) {
-            localChat.updateOwner(chatRoom.getMemberIdList().stream().findFirst().get());
         }
     }
 
