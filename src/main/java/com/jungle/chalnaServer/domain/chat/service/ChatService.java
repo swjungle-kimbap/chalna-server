@@ -91,7 +91,7 @@ public class ChatService {
         if (req.type().equals(ChatMessage.MessageType.FILE)) {
             content = FCMData.CONTENT.file(sendFile(memberId, roomId, Long.valueOf(req.content()), now));
         } else {
-            saveMessage(roomId, memberId, req.content(), req.type(),now);
+            saveMessage(memberId, roomId, req.content(), req.type(),now);
             content = FCMData.CONTENT.message(req.content());
         }
 
@@ -157,7 +157,7 @@ public class ChatService {
         Map<String, Object> sendContent = new HashMap<>();
         sendContent.put("fileId", fileId);
         sendContent.put("preSignedUrl", fileResponse.presignedUrl());
-        saveMessage(chatRoomId, senderId, sendContent, ChatMessage.MessageType.FILE, now);
+        saveMessage(senderId, chatRoomId, sendContent, ChatMessage.MessageType.FILE, now);
 
         return fileResponse.presignedUrl();
     }
