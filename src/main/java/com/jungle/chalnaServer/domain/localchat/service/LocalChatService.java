@@ -28,6 +28,7 @@ import java.util.List;
 @Slf4j
 public class LocalChatService {
     public static final String REDIS_KEY = "localchat";
+    public static final double ADJUST_DISTANCE = 100.0;
 
     private final GeoHashService geoHashService;
     private final ChatService chatService;
@@ -58,13 +59,32 @@ public class LocalChatService {
 
     public LocalChatResponse.LOCAL_CHAT makeLocalChat(LocalChatRequest.ADD dto, final long ownerId) {
 
-        if (!geoHashService.radius(REDIS_KEY, new Point(dto.longitude(), dto.latitude()), 100.0).isEmpty())
-            throw new LocalChatTooCloseException();
+        // 인접한 내가 만든 로컬 채팅방 있는지 확인
+        List<LocalChat> adjustLocalChatList = localChatRepository.findAllById(
+                geoHashService.radius(REDIS_KEY, new Point(dto.longitude(), dto.latitude()), ADJUST_DISTANCE)
+                        .stream()
+                        .map(pos -> Long.valueOf(pos.name()))
+                        .toList());
+
+        for (LocalChat localChat : adjustLocalChatList) {
+            if (localChat.getOwnerId().equals(ownerId)) {
+                throw new LocalChatTooCloseException();
+            }
+        }
 
         Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.LOCAL, List.of(ownerId));
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
 
-        LocalChat localChat = localChatRepository.save(new LocalChat(ownerId, dto.name(), dto.description(), chatRoom, dto.latitude(), dto.longitude()));
+        LocalChat localChat = localChatRepository.save(new LocalChat(
+                ownerId,
+                dto.name(),
+                dto.description(),
+                dto.imageId(),
+                chatRoom,
+                dto.latitude(),
+                dto.longitude()
+        ));
+
         geoHashService.set(REDIS_KEY, new Point(dto.longitude(), dto.latitude()), String.valueOf(localChat.getId()));
 
         return LocalChatResponse.LOCAL_CHAT.of(localChat);
