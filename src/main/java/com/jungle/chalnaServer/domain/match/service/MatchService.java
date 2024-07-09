@@ -133,8 +133,6 @@ public class MatchService {
         else chatService.saveMessage(senderId, chatRoomId, message, ChatMessage.MessageType.CHAT, now);
 
         AuthInfo senderInfo = authInfoRepository.findById(senderId);
-        ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(senderId, chatRoomId)
-                .orElseThrow(ChatRoomMemberNotFoundException::new);
 
         ChatRoomMember receiver = chatRoomMemberRepository.findByMemberIdAndChatRoomId(receiverId, chatRoomId)
                 .orElseThrow(ChatRoomMemberNotFoundException::new);
