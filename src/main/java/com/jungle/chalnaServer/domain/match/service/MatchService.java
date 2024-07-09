@@ -137,11 +137,11 @@ public class MatchService {
 
         ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(matchNotification.getSenderId(), chatRoomId)
                 .orElseThrow(ChatRoomMemberNotFoundException::new);
-        AuthInfo receiverInfo = authInfoRepository.findById(matchNotification.getReceiverId());
+        AuthInfo senderInfo = authInfoRepository.findById(matchNotification.getSenderId());
 
-        fcmService.sendFCM(receiverInfo.fcmToken(),
+        fcmService.sendFCM(senderInfo.fcmToken(),
                 FCMData.instanceOfChatFCM(
-                        matchNotification.getReceiverId().toString(),
+                        matchNotification.getSenderId().toString(),
                         FCMData.CONTENT.message("인연과의 대화가 시작됐습니다."),
                         new FCMData.CHAT(
                         sender.getUserName(),
