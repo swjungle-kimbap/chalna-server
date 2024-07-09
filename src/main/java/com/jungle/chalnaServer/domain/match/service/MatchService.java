@@ -135,7 +135,7 @@ public class MatchService {
             chatService.saveMessage(chatRoomId, matchNotification.getSenderId(), matchNotification.getMessage(), ChatMessage.MessageType.CHAT,now);
         }
 
-        ChatRoomMember receiver = chatRoomMemberRepository.findByMemberIdAndChatRoomId(matchNotification.getReceiverId(), chatRoomId)
+        ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(matchNotification.getSenderId(), chatRoomId)
                 .orElseThrow(ChatRoomMemberNotFoundException::new);
         AuthInfo receiverInfo = authInfoRepository.findById(matchNotification.getReceiverId());
 
@@ -144,7 +144,7 @@ public class MatchService {
                         matchNotification.getReceiverId().toString(),
                         FCMData.CONTENT.message("인연과의 대화가 시작됐습니다."),
                         new FCMData.CHAT(
-                        receiver.getUserName(),
+                        sender.getUserName(),
                                 chatRoomId,
                                 ChatRoom.ChatRoomType.MATCH,
                                 ChatMessage.MessageType.CHAT
