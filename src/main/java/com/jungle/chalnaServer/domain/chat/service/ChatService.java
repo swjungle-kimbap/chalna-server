@@ -133,7 +133,7 @@ public class ChatService {
         }
     }
     // 메시지 보내기 + redis 저장
-    public void saveMessage(Long chatRoomId, Long senderId, Object content, ChatMessage.MessageType type, LocalDateTime now) {
+    public void saveMessage(Long senderId, Long chatRoomId, Object content, ChatMessage.MessageType type, LocalDateTime now) {
         Long id = chatRepository.getMessageId();
         Integer unreadCount = stomphandler.getOfflineMemberCount(chatRoomId);
         ChatMessage message = new ChatMessage(id, type, senderId,

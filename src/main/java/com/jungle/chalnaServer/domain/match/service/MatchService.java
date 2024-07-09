@@ -121,27 +121,23 @@ public class MatchService {
         // matchNotification 저장
         matchNotification.updateStatus(MatchNotificationStatus.ACCEPT);
 
-        List<Long> memberIdList = List.of(
-                matchNotification.getSenderId(),
-                matchNotification.getReceiverId()
-        );
-        Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, memberIdList);
+        Long senderId = matchNotification.getSenderId();
+        Long receiverId = matchNotification.getReceiverId();
+        Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, List.of(senderId, receiverId));
+        String message = matchNotification.getMessage();
 
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
-        if (matchNotification.getMessageType().equals(MessageType.FILE)) {
-            FCMData.CONTENT.file(chatService.sendFile(matchNotification.getSenderId(), chatRoomId,Long.valueOf(matchNotification.getMessage()),now));
-        } else {
-            chatService.saveMessage(chatRoomId, matchNotification.getSenderId(), matchNotification.getMessage(), ChatMessage.MessageType.CHAT,now);
-        }
+        if (matchNotification.getMessageType().equals(MessageType.FILE))
+            chatService.sendFile(senderId, chatRoomId, Long.valueOf(message), now);
+        else chatService.saveMessage(senderId, chatRoomId, message, ChatMessage.MessageType.CHAT, now);
 
-        ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(matchNotification.getSenderId(), chatRoomId)
+        AuthInfo senderInfo = authInfoRepository.findById(senderId);
+        ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(senderId, chatRoomId)
                 .orElseThrow(ChatRoomMemberNotFoundException::new);
-        AuthInfo senderInfo = authInfoRepository.findById(matchNotification.getSenderId());
 
         fcmService.sendFCM(senderInfo.fcmToken(),
-                FCMData.instanceOfChatFCM(
-                        matchNotification.getSenderId().toString(),
+                FCMData.instanceOfChatFCM(senderId.toString(),
                         FCMData.CONTENT.message("인연과의 대화가 시작됐습니다."),
                         new FCMData.CHAT(
                         sender.getUserName(),

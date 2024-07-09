@@ -47,10 +47,8 @@ public class ChatRepository {
         for (int i = rawMessages.size() - 1; i >= 0; i--) {
             ChatMessage message = objectMapper.convertValue(rawMessages.get(i), ChatMessage.class);
             if (message.getUpdatedAt().isAfter(lastLeaveAt)) {
-                if (!message.getSenderId().equals(memberId)) {
-                    message.read();
-                    listOperations.set(roomKey, i, message);
-                }
+                message.read();
+                listOperations.set(roomKey, i, message);
                 messages.add(0, message);
             } else {
                 break;
