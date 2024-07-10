@@ -68,8 +68,6 @@ public class ChatRepository {
         for (long i = len - 1; i >= 0; i--) {
             ChatMessage message = objectMapper.convertValue(listOperations.index(roomKey, i), ChatMessage.class);
             if (isChat(message)) {
-                log.info("message : {}",message.getCreatedAt());
-                log.info("member : {}", chatRoomMember.getCreatedAt());
                 if(message.getCreatedAt().isBefore(chatRoomMember.getCreatedAt()))
                     return null;
                 return message;
@@ -101,7 +99,7 @@ public class ChatRepository {
 
     public boolean isChat(ChatMessage message) {
         ChatMessage.MessageType type = message.getType();
-        return type != ChatMessage.MessageType.USER_ENTER;
+        return ChatMessage.MessageType.CHAT_TYPES.contains(type);
     }
 
     public void removeChatRoom(Long chatRoomId) {
