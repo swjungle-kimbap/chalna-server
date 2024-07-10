@@ -247,13 +247,13 @@ public class ChatService {
 
         // 채팅방 인원이 없으면
         if (chatRoom.getMemberIdList().isEmpty() && chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND) {
-            chatRoomRepository.delete(chatRoom);
             LocalChat localChat = localChatRepository.findByChatRoomId(chatRoomId).orElse(null);
             // 장소 채팅 삭제
             if (localChat != null) {
                 localChatRepository.delete(localChat);
                 geoHashService.delete(LocalChatService.REDIS_KEY, String.valueOf(localChat.getId()));
             }
+            chatRoomRepository.delete(chatRoom);
             chatRepository.removeChatRoom(chatRoomId);
         }
         // 퇴장 알림
