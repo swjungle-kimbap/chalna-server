@@ -194,20 +194,26 @@ public class ChatService {
     @Transactional
     public void joinChatRoom(Long chatRoomId, Long memberId) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
-        log.info("{} join in {} start",memberId,chatRoomId);
         // 채팅방에 있는지 확인
         if (chatRoom.getMemberIdList().contains(memberId))
             return;
         Member member = memberRepository.findById(memberId).orElse(null);
-        if (member == null)
-            return;
-        log.info("{} joined chatroom {}", memberId, chatRoomId);
+
         // 채팅방 맴버 생성
         ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
-        if (chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND)
+        if (member == null)
+            return;
+
+        // 친구 채팅이 아닐 경우 랜덤 이름 생성
+        if (chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND) {
             chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
-        chatRoomMemberRepository.save(chatRoomMember);
+        }
+        //  입장 알림
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        saveMessage(0L, chatRoomId, chatRoomMember.getUserName(), ChatMessage.MessageType.USER_JOIN, now);
+
         // 채팅방 목록 추가
+        chatRoomMemberRepository.save(chatRoomMember);
         chatRoom.getMemberIdList().add(memberId);
         stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
     }
@@ -222,11 +228,11 @@ public class ChatService {
         stomphandler.setMemberOnline(chatRoomId, memberId);
         // entity 삭제
         chatRoomMemberRepository.delete(chatRoomMember);
-        LocalChat localChat = localChatRepository.findByChatRoomId(chatRoomId).orElse(null);
 
         // 채팅방 인원이 없으면
         if (chatRoom.getMemberIdList().isEmpty()) {
             chatRoomRepository.delete(chatRoom);
+            LocalChat localChat = localChatRepository.findByChatRoomId(chatRoomId).orElse(null);
             // 장소 채팅 삭제
             if (localChat != null) {
                 localChatRepository.delete(localChat);
@@ -234,6 +240,9 @@ public class ChatService {
             }
             chatRepository.removeChatRoom(chatRoomId);
         }
+        // 퇴장 알림
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        saveMessage(0L, chatRoomId, chatRoomMember.getUserName(), ChatMessage.MessageType.USER_LEAVE, now);
     }
 
     // 채팅방 목록 요청
