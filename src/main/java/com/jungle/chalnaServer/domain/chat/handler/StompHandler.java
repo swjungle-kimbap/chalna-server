@@ -62,7 +62,8 @@ public class StompHandler implements ChannelInterceptor {
                     if (accessor.getFirstNativeHeader("chatRoomId") == null)
                         throw new Exception("chatRoomId is invalid");
                     Long chatRoomId = Long.valueOf(accessor.getFirstNativeHeader("chatRoomId"));
-                    if (!chatRoomMemberRepository.existsByMemberIdAndChatRoomId(id, Long.valueOf(chatRoomId)))
+                    ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(id,chatRoomId).orElse(null);
+                    if(chatRoomMember == null || !chatRoomMember.isJoined())
                         throw new Exception("jwt is invalid");
 
 
