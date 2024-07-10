@@ -195,15 +195,26 @@ public class ChatService {
     public void joinChatRoom(Long chatRoomId, Long memberId) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
         // 채팅방에 있는지 확인
-        if (chatRoom.getMemberIdList().contains(memberId))
-            return;
-        Member member = memberRepository.findById(memberId).orElse(null);
-
-        // 채팅방 맴버 생성
-        ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
-        if (member == null)
-            return;
-
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId)
+                .orElse(null);
+        // 채팅방에 이미 있거나 나간 상태 일때
+        if (chatRoomMember != null) {
+            log.info("채팅방에 이미 있거나 나간 상태");
+            // 이미 있다면 Pass
+            if(chatRoomMember.isJoined())
+                return;
+            log.info("채팅방에서 나간 상태");
+            chatRoomMember.updateIsJoined(true);
+        }
+        // 새로운 채팅방 맴버일 때
+        else {
+            log.info("새로운 채팅방 맴버일 때");
+            // 채팅방 맴버 생성
+            Member member = memberRepository.findById(memberId).orElse(null);
+            if (member == null)
+                return;
+            chatRoomMember = new ChatRoomMember(member, chatRoom);
+        }
         // 친구 채팅이 아닐 경우 랜덤 이름 생성
         if (chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND) {
             chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
@@ -215,7 +226,7 @@ public class ChatService {
         // 채팅방 목록 추가
         chatRoomMemberRepository.save(chatRoomMember);
         chatRoom.getMemberIdList().add(memberId);
-        stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
+        stomphandler.setMemberOffline(chatRoom.getId(), memberId);
     }
 
     @Transactional
