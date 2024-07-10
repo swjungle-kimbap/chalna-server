@@ -2,10 +2,7 @@ package com.jungle.chalnaServer.domain.chat.service;
 
 import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
 import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
-import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageRequest;
-import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
-import com.jungle.chalnaServer.domain.chat.domain.dto.ChatRoomResponse;
-import com.jungle.chalnaServer.domain.chat.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.chat.domain.dto.*;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
@@ -267,11 +264,11 @@ public class ChatService {
         return chatroomMembers.stream()
                 .filter(ChatRoomMember::isJoined)
                 .map(chatRoomMember -> {
+                    log.info("chatRoom find {}", chatRoomMember.getId());
                     ChatRoom chatRoom = chatRoomMember.getChatRoom();
-                    ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId(),memberId);
-
+                    ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId(),chatRoomMember);
                     Integer unreadMessageCount = chatRepository.getUnreadCount(chatRoom.getId(), chatRoomMember.getLastLeaveAt());
-                    List<MemberInfo> memberInfos = getChatRoomMembers(chatRoom);
+                    List<ChatRoomMemberResponse.INFO> memberInfos = getChatRoomMembers(chatRoom);
                     ChatMessageResponse.MESSAGE recentMessageRes = recentMessage != null ? ChatMessageResponse.MESSAGE.of(recentMessage) : null;
                     LocalDateTime lastReceivedAt = recentMessageRes != null ? recentMessageRes.createdAt() : chatRoomMember.getJoinedAt();
                     return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount,lastReceivedAt);
@@ -282,16 +279,10 @@ public class ChatService {
     }
 
     // 채팅방 맴버 목록 조회
-    private List<MemberInfo> getChatRoomMembers(ChatRoom chatRoom) {
-        List<MemberInfo> list = new ArrayList<>();
-        for (ChatRoomMember member : chatRoom.getMembers()) {
-            if (chatRoom.getType() == ChatRoom.ChatRoomType.FRIEND) {
-                list.add(MemberInfo.of(member.getMember()));
-            } else {
-                list.add(new MemberInfo(member.getMember().getId(), member.getDisplayName(), 0L));
-            }
-        }
-        return list;
+    private List<ChatRoomMemberResponse.INFO> getChatRoomMembers(ChatRoom chatRoom) {
+        return chatRoom.getMembers().stream()
+                .map(ChatRoomMemberResponse.INFO::of)
+                .toList();
     }
 
     // 채팅방 메시지 요청

@@ -59,9 +59,8 @@ public class ChatRepository {
     }
 
 
-    public ChatMessage getLatestMessage(Long chatRoomId,Long memberId) {
+    public ChatMessage getLatestMessage(Long chatRoomId,ChatRoomMember chatRoomMember) {
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
-        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).get();
 
         long len = listOperations.size(roomKey);
 
