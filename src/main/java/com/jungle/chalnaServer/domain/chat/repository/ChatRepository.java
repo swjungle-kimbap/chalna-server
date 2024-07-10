@@ -42,7 +42,7 @@ public class ChatRepository {
         return objectMapper.convertValue(listOperations.index(roomKey,listOperations.size(roomKey)-1),ChatMessage.class);
     }
 
-    public List<ChatMessage> getMessagesAfterUpdateDate(Long memberId, Long chatRoomId, LocalDateTime lastLeaveAt) {
+    public List<ChatMessage> getMessagesAfterUpdateDate(Long chatRoomId,LocalDateTime joinedAt, LocalDateTime lastLeaveAt) {
         List<ChatMessage> messages = new LinkedList<>();
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
         // Redis List의 길이 구하기
@@ -51,7 +51,7 @@ public class ChatRepository {
 
         for (int i = rawMessages.size() - 1; i >= 0; i--) {
             ChatMessage message = objectMapper.convertValue(rawMessages.get(i), ChatMessage.class);
-            if (message.getUpdatedAt().isAfter(lastLeaveAt)) {
+            if (!message.getCreatedAt().isBefore(joinedAt) && message.getUpdatedAt().isAfter(lastLeaveAt)) {
                 message.read();
                 listOperations.set(roomKey, i, message);
                 messages.add(0, message);
