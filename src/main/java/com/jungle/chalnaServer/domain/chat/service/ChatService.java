@@ -72,12 +72,14 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
 
         // 친구 채팅일때 없으면 member에 추가하기
-        Relation relation = relationRepository.findByIdAndChatRoom(memberId, chatRoom).orElse(null);
-        if (relation != null) {
-            Relation reverse = relationService.findRelation(relation.getRelationPK().reverse());
-            if (!reverse.isBlocked()
-                    && relation.getFriendStatus() == FriendStatus.ACCEPTED) {
-                joinChatRoom(roomId, reverse.getRelationPK().getId());
+        if(chatRoom.getType().equals(ChatRoom.ChatRoomType.FRIEND)) {
+            Relation relation = relationRepository.findByIdAndChatRoom(memberId, chatRoom).orElse(null);
+            if (relation != null) {
+                Relation reverse = relationService.findRelation(relation.getRelationPK().reverse());
+                if (!reverse.isBlocked()
+                        && relation.getFriendStatus() == FriendStatus.ACCEPTED) {
+                    joinChatRoom(roomId, reverse.getRelationPK().getId());
+                }
             }
         }
 
@@ -105,7 +107,6 @@ public class ChatService {
     }
 
     private void sendChatFCMAlarm(ChatRoom chatRoom, Long senderId, String senderName, FCMData.CONTENT content, ChatMessage.MessageType type){
-        log.info("fcm send start by [{},{}]", senderId,senderName);
         if (stomphandler.getOfflineMemberCount(chatRoom.getId()) > 0) {
             Set<Long> offlineMembers = stomphandler.getOfflineMembers(chatRoom.getId()); // 오프라인 유저 정보
             List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(chatRoom.getId());
@@ -113,7 +114,6 @@ public class ChatService {
                 if (!chatRoomMember.isJoined())
                     continue;
                 Long receiverId = chatRoomMember.getMember().getId();
-                log.info("fcm send start to {}",receiverId);
                 if(offlineMembers.contains(receiverId) && !receiverId.equals(senderId)) {
                     AuthInfo authInfo = authInfoRepository.findById(receiverId);
                     FCMData fcmData = FCMData.instanceOfChatFCM(
