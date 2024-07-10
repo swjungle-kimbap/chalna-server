@@ -229,6 +229,11 @@ public class ChatService {
     @Transactional
     public void leaveChatRoom(Long chatRoomId, Long memberId) {
         ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+
+        // 이미 나간 상태일 경우 pass
+        if(!chatRoomMember.isJoined())
+            return;
+
         ChatRoom chatRoom = chatRoomMember.getChatRoom();
         // 채팅방 인원 변경
         chatRoom.getMemberIdList().remove(memberId);
