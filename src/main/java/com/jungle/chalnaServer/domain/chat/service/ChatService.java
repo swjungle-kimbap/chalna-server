@@ -206,7 +206,6 @@ public class ChatService {
         }
         // 새로운 채팅방 맴버일 때
         else {
-            log.info("새로운 채팅방 맴버일 때");
             // 채팅방 맴버 생성
             Member member = memberRepository.findById(memberId).orElse(null);
             if (member == null)
