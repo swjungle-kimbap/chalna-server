@@ -249,6 +249,7 @@ public class ChatService {
     public List<ChatRoomResponse.CHATROOM> getChatRoomList(Long memberId) {
         List<ChatRoomMember> chatroomMembers = chatRoomMemberRepository.findByMemberId(memberId);
         return chatroomMembers.stream()
+                .filter(ChatRoomMember::isJoined)
                 .map(chatRoomMember -> {
                     ChatRoom chatRoom = chatRoomMember.getChatRoom();
                     ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId(),memberId);
