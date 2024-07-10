@@ -7,10 +7,19 @@ import java.time.LocalDateTime;
 
 public class ChatRoomMemberResponse {
 
-
-    public record INFO(Long memberId,@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime lastLeaveAt){
-        public static INFO of(ChatRoomMember member) {
-            return new INFO(member.getMember().getId(), member.getLastLeaveAt());
+    public record INFO(Long memberId,String username,Long profileImageId,boolean isJoined){
+        public static INFO of(ChatRoomMember chatRoomMember) {
+            return new INFO(
+                    chatRoomMember.getMember().getId(),
+                    chatRoomMember.getUserName(),
+                    chatRoomMember.getMember().getProfileImageId(),
+                    chatRoomMember.isJoined()
+            );
+        }
+    }
+    public record ENTER(Long memberId, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime lastLeaveAt){
+        public static ENTER of(ChatRoomMember member) {
+            return new ENTER(member.getMember().getId(), member.getLastLeaveAt());
         }
     }
 }

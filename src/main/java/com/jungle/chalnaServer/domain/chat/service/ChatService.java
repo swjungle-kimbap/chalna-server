@@ -2,10 +2,7 @@ package com.jungle.chalnaServer.domain.chat.service;
 
 import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
 import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
-import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageRequest;
-import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageResponse;
-import com.jungle.chalnaServer.domain.chat.domain.dto.ChatRoomResponse;
-import com.jungle.chalnaServer.domain.chat.domain.dto.MemberInfo;
+import com.jungle.chalnaServer.domain.chat.domain.dto.*;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
@@ -75,12 +72,14 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
 
         // 친구 채팅일때 없으면 member에 추가하기
-        Relation relation = relationRepository.findByIdAndChatRoom(memberId, chatRoom).orElse(null);
-        if (relation != null) {
-            Relation reverse = relationService.findRelation(relation.getRelationPK().reverse());
-            if (!reverse.isBlocked()
-                    && relation.getFriendStatus() == FriendStatus.ACCEPTED) {
-                joinChatRoom(roomId, reverse.getRelationPK().getId());
+        if(chatRoom.getType().equals(ChatRoom.ChatRoomType.FRIEND)) {
+            Relation relation = relationRepository.findByIdAndChatRoom(memberId, chatRoom).orElse(null);
+            if (relation != null) {
+                Relation reverse = relationService.findRelation(relation.getRelationPK().reverse());
+                if (!reverse.isBlocked()
+                        && relation.getFriendStatus() == FriendStatus.ACCEPTED) {
+                    joinChatRoom(roomId, reverse.getRelationPK().getId());
+                }
             }
         }
 
@@ -108,13 +107,13 @@ public class ChatService {
     }
 
     private void sendChatFCMAlarm(ChatRoom chatRoom, Long senderId, String senderName, FCMData.CONTENT content, ChatMessage.MessageType type){
-        log.info("fcm send start by [{},{}]", senderId,senderName);
         if (stomphandler.getOfflineMemberCount(chatRoom.getId()) > 0) {
             Set<Long> offlineMembers = stomphandler.getOfflineMembers(chatRoom.getId()); // 오프라인 유저 정보
             List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(chatRoom.getId());
             for (ChatRoomMember chatRoomMember : members) {
+                if (!chatRoomMember.isJoined())
+                    continue;
                 Long receiverId = chatRoomMember.getMember().getId();
-                log.info("fcm send start to {}",receiverId);
                 if(offlineMembers.contains(receiverId) && !receiverId.equals(senderId)) {
                     AuthInfo authInfo = authInfoRepository.findById(receiverId);
                     FCMData fcmData = FCMData.instanceOfChatFCM(
@@ -194,78 +193,96 @@ public class ChatService {
     @Transactional
     public void joinChatRoom(Long chatRoomId, Long memberId) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
-        log.info("{} join in {} start",memberId,chatRoomId);
         // 채팅방에 있는지 확인
-        if (chatRoom.getMemberIdList().contains(memberId))
-            return;
-        Member member = memberRepository.findById(memberId).orElse(null);
-        if (member == null)
-            return;
-        log.info("{} joined chatroom {}", memberId, chatRoomId);
-        // 채팅방 맴버 생성
-        ChatRoomMember chatRoomMember = new ChatRoomMember(member, chatRoom);
-        if (chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND)
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId)
+                .orElse(null);
+        // 채팅방에 이미 있거나 나간 상태 일때
+        if (chatRoomMember != null) {
+            // 이미 있다면 Pass
+            if(chatRoomMember.isJoined())
+                return;
+            // 나간 상태
+            chatRoomMember.updateIsJoined(true);
+        }
+        // 새로운 채팅방 맴버일 때
+        else {
+            // 채팅방 맴버 생성
+            Member member = memberRepository.findById(memberId).orElse(null);
+            if (member == null)
+                return;
+            chatRoomMember = new ChatRoomMember(member, chatRoom);
+        }
+        // 친구 채팅이 아닐 경우 랜덤 이름 생성
+        if (chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND) {
             chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
-        chatRoomMemberRepository.save(chatRoomMember);
+        }
+        //  입장 알림
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        saveMessage(0L, chatRoomId, chatRoomMember.getUserName(), ChatMessage.MessageType.USER_JOIN, now);
+
         // 채팅방 목록 추가
+        chatRoomMemberRepository.save(chatRoomMember);
         chatRoom.getMemberIdList().add(memberId);
-        stomphandler.setMemberOffline(chatRoom.getId(), member.getId());
+        stomphandler.setMemberOffline(chatRoom.getId(), memberId);
     }
 
     @Transactional
     public void leaveChatRoom(Long chatRoomId, Long memberId) {
         ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
+
+        // 이미 나간 상태일 경우 pass
+        if(!chatRoomMember.isJoined())
+            return;
+
         ChatRoom chatRoom = chatRoomMember.getChatRoom();
         // 채팅방 인원 변경
         chatRoom.getMemberIdList().remove(memberId);
         // session에서 삭제
         stomphandler.setMemberOnline(chatRoomId, memberId);
-        // entity 삭제
-        chatRoomMemberRepository.delete(chatRoomMember);
-        LocalChat localChat = localChatRepository.findByChatRoomId(chatRoomId).orElse(null);
+        // 채팅방 나감 처리
+        chatRoomMember.updateIsJoined(false);
 
         // 채팅방 인원이 없으면
-        if (chatRoom.getMemberIdList().isEmpty()) {
-            chatRoomRepository.delete(chatRoom);
+        if (chatRoom.getMemberIdList().isEmpty() && chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND) {
+            LocalChat localChat = localChatRepository.findByChatRoomId(chatRoomId).orElse(null);
             // 장소 채팅 삭제
             if (localChat != null) {
                 localChatRepository.delete(localChat);
                 geoHashService.delete(LocalChatService.REDIS_KEY, String.valueOf(localChat.getId()));
             }
+            chatRoomRepository.delete(chatRoom);
             chatRepository.removeChatRoom(chatRoomId);
         }
+        // 퇴장 알림
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        saveMessage(0L, chatRoomId, chatRoomMember.getUserName(), ChatMessage.MessageType.USER_LEAVE, now);
     }
 
     // 채팅방 목록 요청
     public List<ChatRoomResponse.CHATROOM> getChatRoomList(Long memberId) {
         List<ChatRoomMember> chatroomMembers = chatRoomMemberRepository.findByMemberId(memberId);
         return chatroomMembers.stream()
+                .filter(ChatRoomMember::isJoined)
                 .map(chatRoomMember -> {
+                    log.info("chatRoom find {}", chatRoomMember.getId());
                     ChatRoom chatRoom = chatRoomMember.getChatRoom();
-                    ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId(),memberId);
-
+                    ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId(),chatRoomMember);
                     Integer unreadMessageCount = chatRepository.getUnreadCount(chatRoom.getId(), chatRoomMember.getLastLeaveAt());
-                    List<MemberInfo> memberInfos = getChatRoomMembers(chatRoom);
+                    List<ChatRoomMemberResponse.INFO> memberInfos = getChatRoomMembers(chatRoom);
                     ChatMessageResponse.MESSAGE recentMessageRes = recentMessage != null ? ChatMessageResponse.MESSAGE.of(recentMessage) : null;
-                    return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount);
+                    LocalDateTime lastReceivedAt = recentMessageRes != null ? recentMessageRes.createdAt() : chatRoomMember.getJoinedAt();
+                    return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount,lastReceivedAt);
                 })
-                .sorted(Comparator.comparing((c) ->
-                                c.getRecentMessage() == null ? null : c.getRecentMessage().createdAt()
-                        , Comparator.nullsLast(Comparator.reverseOrder())))
+                .sorted(Comparator.comparing(ChatRoomResponse.CHATROOM::getLastReceivedAt
+                        , Comparator.reverseOrder()))
                 .toList();
     }
 
     // 채팅방 맴버 목록 조회
-    private List<MemberInfo> getChatRoomMembers(ChatRoom chatRoom) {
-        List<MemberInfo> list = new ArrayList<>();
-        for (ChatRoomMember member : chatRoom.getMembers()) {
-            if (chatRoom.getType() == ChatRoom.ChatRoomType.FRIEND) {
-                list.add(MemberInfo.of(member.getMember()));
-            } else {
-                list.add(new MemberInfo(member.getMember().getId(), member.getDisplayName(), 0L));
-            }
-        }
-        return list;
+    private List<ChatRoomMemberResponse.INFO> getChatRoomMembers(ChatRoom chatRoom) {
+        return chatRoom.getMembers().stream()
+                .map(ChatRoomMemberResponse.INFO::of)
+                .toList();
     }
 
     // 채팅방 메시지 요청

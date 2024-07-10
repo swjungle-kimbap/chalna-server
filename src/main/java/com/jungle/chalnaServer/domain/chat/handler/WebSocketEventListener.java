@@ -41,10 +41,10 @@ public class WebSocketEventListener {
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
         // 이 방에 사용자가 입장했다는 걸 알려주기.
-        ChatMessageResponse.MESSAGE<ChatRoomMemberResponse.INFO> res = new ChatMessageResponse.MESSAGE<>(
+        ChatMessageResponse.MESSAGE<ChatRoomMemberResponse.ENTER> res = new ChatMessageResponse.MESSAGE<>(
                 messageId
                 , ChatMessage.MessageType.USER_ENTER
-                , ChatRoomMemberResponse.INFO.of(chatRoomMember)
+                , ChatRoomMemberResponse.ENTER.of(chatRoomMember)
                 , 0L
                 , 0
                 , now

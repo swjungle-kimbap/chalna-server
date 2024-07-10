@@ -33,9 +33,13 @@ public class ChatRoomMember extends BaseTimestampEntity {
     @JoinColumn(name = "chat_room_id", nullable = false)
     private ChatRoom chatRoom;
 
+    private boolean isJoined = true;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime joinedAt = LocalDateTime.now();
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime lastLeaveAt;
-
 
     public ChatRoomMember(Member member, ChatRoom chatRoom) {
         this.member = member;
@@ -52,6 +56,12 @@ public class ChatRoomMember extends BaseTimestampEntity {
 
     public void updateLastLeaveAt(LocalDateTime lastLeaveAt) {
         this.lastLeaveAt = lastLeaveAt;
+    }
+
+    public void updateIsJoined(boolean isJoined) {
+        this.isJoined = isJoined;
+        if (isJoined)
+            this.joinedAt = LocalDateTime.now();
     }
 
     public String getUserName(){

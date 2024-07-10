@@ -64,17 +64,14 @@ public class ChatRepository {
     }
 
 
-    public ChatMessage getLatestMessage(Long chatRoomId,Long memberId) {
+    public ChatMessage getLatestMessage(Long chatRoomId,ChatRoomMember chatRoomMember) {
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
-        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).get();
 
         long len = listOperations.size(roomKey);
 
         for (long i = len - 1; i >= 0; i--) {
             ChatMessage message = objectMapper.convertValue(listOperations.index(roomKey, i), ChatMessage.class);
             if (isChat(message)) {
-                log.info("message : {}",message.getCreatedAt());
-                log.info("member : {}", chatRoomMember.getCreatedAt());
                 if(message.getCreatedAt().isBefore(chatRoomMember.getCreatedAt()))
                     return null;
                 return message;
@@ -106,7 +103,7 @@ public class ChatRepository {
 
     public boolean isChat(ChatMessage message) {
         ChatMessage.MessageType type = message.getType();
-        return type != ChatMessage.MessageType.USER_ENTER;
+        return ChatMessage.MessageType.CHAT_TYPES.contains(type);
     }
 
     public void removeChatRoom(Long chatRoomId) {

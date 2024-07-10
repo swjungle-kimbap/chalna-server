@@ -3,7 +3,7 @@ package com.jungle.chalnaServer.domain.localchat.domain.dto;
 import com.jungle.chalnaServer.domain.localchat.domain.entity.LocalChat;
 
 public class LocalChatResponse {
-    public record LOCAL_CHAT(Long id, Long ownerId, String name, String description, Long imageId,Long chatRoomId, Double latitude,
+    public record LOCAL_CHAT(Long id, Long ownerId, String name, String description, Long imageId,Long chatRoomId,Integer chatRoomMemberCount, Double latitude,
                              Double longitude) {
         public static LOCAL_CHAT of(LocalChat localChat) {
             return new LOCAL_CHAT(
@@ -13,6 +13,7 @@ public class LocalChatResponse {
                     localChat.getDescription(),
                     localChat.getImageId(),
                     localChat.getChatRoom().getId(),
+                    localChat.getChatRoom().getMemberIdList().size(),
                     localChat.getLatitude(),
                     localChat.getLongitude()
             );

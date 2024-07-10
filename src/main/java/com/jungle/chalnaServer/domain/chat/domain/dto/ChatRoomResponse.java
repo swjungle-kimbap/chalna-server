@@ -13,23 +13,27 @@ public class ChatRoomResponse {
         private final Long id;
         private final ChatRoom.ChatRoomType type;
         private final Integer memberCount;
-        private final List<MemberInfo> members;
+        private final List<ChatRoomMemberResponse.INFO> members;
         private final ChatMessageResponse.MESSAGE recentMessage;
         private final Integer unreadMessageCount;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-        private LocalDateTime createdAt;
+        private final LocalDateTime lastReceivedAt;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-        private LocalDateTime updatedAt;
+        private final LocalDateTime createdAt;
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        private final LocalDateTime updatedAt;
 
 
-        public CHATROOM(ChatRoom chatRoom, List<MemberInfo> memberInfos, ChatMessageResponse.MESSAGE recentMessage, Integer unreadMessageCount) {
+        public CHATROOM(ChatRoom chatRoom, List<ChatRoomMemberResponse.INFO> memberInfos, ChatMessageResponse.MESSAGE recentMessage, Integer unreadMessageCount,LocalDateTime lastReceivedAt) {
             this.id = chatRoom.getId();
             this.type = chatRoom.getType();
             this.memberCount = chatRoom.getMemberIdList().size();
             this.members = memberInfos;
             this.recentMessage = recentMessage;
+            this.lastReceivedAt = lastReceivedAt;
             this.unreadMessageCount = unreadMessageCount;
             this.createdAt = chatRoom.getCreatedAt();
             this.updatedAt = chatRoom.getUpdatedAt();
@@ -39,14 +43,14 @@ public class ChatRoomResponse {
     public static class MESSAGES{
         private final Long id;
         private final ChatRoom.ChatRoomType type;
-        private final List<MemberInfo> members;
+        private final List<ChatRoomMemberResponse.INFO> members;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private final LocalDateTime createdAt;
 
         private final List<ChatMessageResponse.MESSAGE> messages;
 
-        public MESSAGES(ChatRoom chatRoom,List<MemberInfo> memberInfos, List<ChatMessageResponse.MESSAGE> messages) {
+        public MESSAGES(ChatRoom chatRoom,List<ChatRoomMemberResponse.INFO> memberInfos, List<ChatMessageResponse.MESSAGE> messages) {
             this.id = chatRoom.getId();
             this.type = chatRoom.getType();
             this.members = memberInfos;

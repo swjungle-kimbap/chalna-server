@@ -8,6 +8,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Set;
 
 //@Builder
 @Getter
@@ -35,10 +36,13 @@ public class ChatMessage {
     }
 
     public enum MessageType {
-        CHAT, // 그냥 메시지
-        USER_ENTER, // 다른 사용자 입장
         FRIEND_REQUEST, // 친구 요청
         FILE,
-        TIMEOUT // 5분 타임아웃 알림
+        CHAT, // 그냥 메시지,
+        TIMEOUT, // 5분 타임아웃 알림
+        USER_ENTER, // 다른 사용자 입장
+        USER_JOIN,
+        USER_LEAVE;
+        public static Set<MessageType> CHAT_TYPES = Set.of(FRIEND_REQUEST, FILE, CHAT,TIMEOUT);
     }
 }
