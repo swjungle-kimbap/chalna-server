@@ -234,8 +234,8 @@ public class ChatService {
         chatRoom.getMemberIdList().remove(memberId);
         // session에서 삭제
         stomphandler.setMemberOnline(chatRoomId, memberId);
-        // entity 삭제
-        chatRoomMemberRepository.delete(chatRoomMember);
+        // 목록에서 제거
+        chatRoomMember.updateIsJoined(false);
 
         // 채팅방 인원이 없으면
         if (chatRoom.getMemberIdList().isEmpty()) {
