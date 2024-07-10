@@ -25,6 +25,8 @@ public class ChatRoomMember extends BaseTimestampEntity {
     @Enumerated(EnumType.STRING)
     private ChatRoom.ChatRoomType chatRoomType;
 
+    private boolean isJoined = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
