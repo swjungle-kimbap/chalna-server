@@ -6,6 +6,7 @@ import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
@@ -48,6 +49,7 @@ public class MatchService {
     private final AuthInfoRepository authInfoRepository;
     private final DeviceInfoRepository deviceInfoRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final ChatRepository chatRepository;
 
     public MatchResponse.MESSAGE_SEND matchMessageSend(MatchRequest.Send dto, Long senderId) {
 
@@ -128,9 +130,14 @@ public class MatchService {
 
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
+
         if (matchNotification.getMessageType().equals(MessageType.FILE))
             chatService.sendFile(senderId, chatRoomId, Long.valueOf(message), now);
         else chatService.saveMessage(senderId, chatRoomId, message, ChatMessage.MessageType.CHAT, now);
+
+        ChatMessage chatMessage = chatRepository.getLastChatMessage(chatRoomId);
+        chatMessage.read();
+        chatRepository.save(chatMessage);
 
         AuthInfo senderInfo = authInfoRepository.findById(senderId);
 
