@@ -113,6 +113,8 @@ public class ChatService {
             Set<Long> offlineMembers = stomphandler.getOfflineMembers(chatRoom.getId()); // 오프라인 유저 정보
             List<ChatRoomMember> members = chatRoomMemberRepository.findByChatRoomId(chatRoom.getId());
             for (ChatRoomMember chatRoomMember : members) {
+                if (!chatRoomMember.isJoined())
+                    continue;
                 Long receiverId = chatRoomMember.getMember().getId();
                 log.info("fcm send start to {}",receiverId);
                 if(offlineMembers.contains(receiverId) && !receiverId.equals(senderId)) {
@@ -240,11 +242,11 @@ public class ChatService {
         chatRoom.getMemberIdList().remove(memberId);
         // session에서 삭제
         stomphandler.setMemberOnline(chatRoomId, memberId);
-        // 목록에서 제거
+        // 채팅방 나감 처리
         chatRoomMember.updateIsJoined(false);
 
         // 채팅방 인원이 없으면
-        if (chatRoom.getMemberIdList().isEmpty()) {
+        if (chatRoom.getMemberIdList().isEmpty() && chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND) {
             chatRoomRepository.delete(chatRoom);
             LocalChat localChat = localChatRepository.findByChatRoomId(chatRoomId).orElse(null);
             // 장소 채팅 삭제
