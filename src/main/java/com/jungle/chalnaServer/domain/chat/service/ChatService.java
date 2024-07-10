@@ -202,6 +202,7 @@ public class ChatService {
             // 이미 있다면 Pass
             if(chatRoomMember.isJoined())
                 return;
+            // 나간 상태
             chatRoomMember.updateIsJoined(true);
         }
         // 새로운 채팅방 맴버일 때
@@ -270,11 +271,11 @@ public class ChatService {
                     Integer unreadMessageCount = chatRepository.getUnreadCount(chatRoom.getId(), chatRoomMember.getLastLeaveAt());
                     List<MemberInfo> memberInfos = getChatRoomMembers(chatRoom);
                     ChatMessageResponse.MESSAGE recentMessageRes = recentMessage != null ? ChatMessageResponse.MESSAGE.of(recentMessage) : null;
-                    return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount);
+                    LocalDateTime lastReceivedAt = recentMessageRes != null ? recentMessageRes.createdAt() : chatRoomMember.getJoinedAt();
+                    return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount,lastReceivedAt);
                 })
-                .sorted(Comparator.comparing((c) ->
-                                c.getRecentMessage() == null ? null : c.getRecentMessage().createdAt()
-                        , Comparator.nullsLast(Comparator.reverseOrder())))
+                .sorted(Comparator.comparing(ChatRoomResponse.CHATROOM::getLastReceivedAt
+                        , Comparator.reverseOrder()))
                 .toList();
     }
 
