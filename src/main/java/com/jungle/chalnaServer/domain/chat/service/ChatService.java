@@ -199,11 +199,9 @@ public class ChatService {
                 .orElse(null);
         // 채팅방에 이미 있거나 나간 상태 일때
         if (chatRoomMember != null) {
-            log.info("채팅방에 이미 있거나 나간 상태");
             // 이미 있다면 Pass
             if(chatRoomMember.isJoined())
                 return;
-            log.info("채팅방에서 나간 상태");
             chatRoomMember.updateIsJoined(true);
         }
         // 새로운 채팅방 맴버일 때
