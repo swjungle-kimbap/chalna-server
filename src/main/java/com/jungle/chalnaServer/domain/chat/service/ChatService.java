@@ -300,7 +300,7 @@ public class ChatService {
 
 
     // 채팅방 5분 스케줄러
-    private void scheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
+    public void scheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
         scheduler.schedule(() -> {
             log.info("timeout roomId {}", chatRoomId);
             ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElse(null);
