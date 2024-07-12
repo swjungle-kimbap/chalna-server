@@ -26,12 +26,12 @@ public class MemberController {
         return CommonResponse.ok(memberService.updateMemberProfile(id, memberDto));
     }
 
-    @PatchMapping("/profileImage")
-    public CommonResponse<MemberResponse.PROFILE_IMAGE_UPLOAD> updateMemberInfo(@AuthUserId final Long id
-            , @RequestBody FileRequest.UPLOAD dto) {
-
-        return CommonResponse.ok(memberService.updateMemberInfo(id,dto));
-    }
+//    @PatchMapping("/profileImage")
+//    public CommonResponse<MemberResponse.PROFILE_IMAGE_UPLOAD> updateMemberInfo(@AuthUserId final Long id
+//            , @RequestBody FileRequest.UPLOAD dto) {
+//
+//        return CommonResponse.ok(memberService.updateMemberInfo(id,dto));
+//    }
 
     @GetMapping
     public CommonResponse<MemberResponse.INFO> getMemberInfo(@AuthUserId final Long id) {
