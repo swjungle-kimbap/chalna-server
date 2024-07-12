@@ -18,7 +18,7 @@ public class MemberController {
     private final MemberService memberService;
     private final JwtService jwtService;
 
-    @PatchMapping("/profile")
+    @PatchMapping
     public CommonResponse<MemberResponse.INFO> updateMemberProfile(@AuthUserId final Long id,
                                                            @RequestBody MemberRequest.PROFILE memberDto) {
 
