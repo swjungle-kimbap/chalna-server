@@ -8,6 +8,7 @@ import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRepository;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomMemberRepository;
+import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchResponse;
@@ -32,6 +33,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus.SEND;
@@ -50,6 +53,7 @@ public class MatchService {
     private final DeviceInfoRepository deviceInfoRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final ChatRepository chatRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
     public MatchResponse.MESSAGE_SEND matchMessageSend(MatchRequest.Send dto, Long senderId) {
 
@@ -125,7 +129,20 @@ public class MatchService {
 
         Long senderId = matchNotification.getSenderId();
         Long receiverId = matchNotification.getReceiverId();
-        Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, List.of(senderId, receiverId));
+
+        Long chatRoomId;
+        Optional<ChatRoom> optionalChatRoom = chatRoomMemberRepository.findChatRoomIdByMembers(senderId, receiverId);
+        if(optionalChatRoom.isPresent()) {
+            ChatRoom chatRoom = optionalChatRoom.get();
+            chatRoom.updateType(ChatRoom.ChatRoomType.MATCH);
+            chatRoomRepository.save(chatRoom);
+            chatRoomId = chatRoom.getId();
+            chatService.scheduleRoomTermination(chatRoomId, 5, TimeUnit.MINUTES);
+        }else{
+            chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, List.of(senderId, receiverId));
+        }
+
+//        Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, List.of(senderId, receiverId));
         String message = matchNotification.getMessage();
 
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
