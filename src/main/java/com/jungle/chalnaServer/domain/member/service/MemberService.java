@@ -23,6 +23,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final FileService fileService;
 
+
     @Transactional
     public MemberResponse.INFO updateMemberProfile(final Long id, MemberRequest.PROFILE memberDto){
 
@@ -39,6 +40,11 @@ public class MemberService {
         memberDto.message().ifPresent(message-> {
             finalMember.updateMessage(message);
         });
+
+        memberDto.profileImageId().ifPresent(profileImageId -> {
+            finalMember.updateProfileImageId(profileImageId);
+        });
+
 
         member = memberRepository.save(member);
         log.info("Updated member: {}", member);
