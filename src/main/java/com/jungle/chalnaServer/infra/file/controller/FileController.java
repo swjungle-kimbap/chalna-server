@@ -19,7 +19,7 @@ public class FileController {
     public CommonResponse<FileResponse.UPLOAD> getUploadPreSignedUrl(@AuthUserId final Long id,
                                                         @RequestBody FileRequest.UPLOAD fileDto
                                                         ) {
-        return CommonResponse.ok(fileService.uploadFile(id, fileDto,FileService.FILE_DIRECTORY));
+        return CommonResponse.ok(fileService.uploadFile(id, fileDto));
     }
 
     @GetMapping("/download/{fileId}")

@@ -47,17 +47,17 @@ public class MemberService {
     }
 
 
-    @Transactional
-    public MemberResponse.PROFILE_IMAGE_UPLOAD updateMemberInfo(final Long id, FileRequest.UPLOAD fileDto) {
-        Member member = memberRepository.findById(id)
-                .orElseThrow(MemberNotFoundException::new);
-
-        FileResponse.UPLOAD upload = fileService.uploadFile(id, fileDto, FileService.PROFILE_IMAGE_DIRECTORY);
-
-        member.updateProfileImageId(upload.fileId());
-
-        return MemberResponse.PROFILE_IMAGE_UPLOAD.of(upload);
-    }
+//    @Transactional
+//    public MemberResponse.PROFILE_IMAGE_UPLOAD updateMemberInfo(final Long id, FileRequest.UPLOAD fileDto) {
+//        Member member = memberRepository.findById(id)
+//                .orElseThrow(MemberNotFoundException::new);
+//
+//        FileResponse.UPLOAD upload = fileService.uploadFile(id, fileDto, FileService.PROFILE_IMAGE_DIRECTORY);
+//
+//        member.updateProfileImageId(upload.fileId());
+//
+//        return MemberResponse.PROFILE_IMAGE_UPLOAD.of(upload);
+//    }
 
 
     /* 사용자 정보를 조회하는 메서드 */

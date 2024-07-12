@@ -6,6 +6,9 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.jungle.chalnaServer.domain.member.domain.entity.Member;
+import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
+import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileRequest;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
 import com.jungle.chalnaServer.infra.file.domain.entity.FileInfo;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 
@@ -31,7 +35,8 @@ public class FileService {
 
 
     public static final String FILE_DIRECTORY = "file/";
-    public static final String PROFILE_IMAGE_DIRECTORY = "profile/";
+    public static final String PROFILE_IMAGE_DIRECTORY = "PROFILEIMAGE";
+    private final MemberRepository memberRepository;
 
     private static final long MAX_UPLOAD_SIZE = 10_000_000L; // 10MB
     private static final long UPLOAD_LINK_EXPIRATION = 1000 * 60 * 15;
@@ -44,11 +49,12 @@ public class FileService {
     private String bucketName;
 
     @Transactional
-    public FileResponse.UPLOAD uploadFile(final long memberId, FileRequest.UPLOAD fileDto, String directory) {
+    public FileResponse.UPLOAD uploadFile(final long memberId, FileRequest.UPLOAD fileDto) {
+
         validateFileSize(fileDto.fileSize());
 
         // 파일명 uuid로 변환 (s3 파일명 생성)
-        String s3FileName = directory  + UUID.randomUUID();
+        String s3FileName = fileDto.fileType() + "/" + UUID.randomUUID();
 
         // File Info 생성
         FileInfo fileInfo = FileInfo.builder()
@@ -64,6 +70,14 @@ public class FileService {
 
         // 파일 정보 저장
         fileInfoRepository.save(fileInfo);
+
+        if (Objects.equals(fileDto.fileType(), PROFILE_IMAGE_DIRECTORY)) {
+
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(MemberNotFoundException::new);
+            // member 프로필 이미지 id 업데이트
+            member.updateProfileImageId(fileInfo.getId());
+        }
 
         return new FileResponse.UPLOAD(fileInfo.getId(), presignedUrl.toString());
 
