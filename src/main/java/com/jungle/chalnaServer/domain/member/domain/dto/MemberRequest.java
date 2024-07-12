@@ -11,5 +11,5 @@ import java.util.Optional;
 @Builder
 public class MemberRequest {
 
-    public record PROFILE(Optional<String> username,Optional<String> message ) {}
+    public record PROFILE(Optional<String> username,Optional<String> message, Optional<Long> profileImageId) {}
 }

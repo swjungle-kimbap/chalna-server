@@ -71,13 +71,13 @@ public class FileService {
         // 파일 정보 저장
         fileInfoRepository.save(fileInfo);
 
-        if (Objects.equals(fileDto.fileType(), PROFILE_IMAGE_DIRECTORY)) {
-
-            Member member = memberRepository.findById(memberId)
-                    .orElseThrow(MemberNotFoundException::new);
-            // member 프로필 이미지 id 업데이트
-            member.updateProfileImageId(fileInfo.getId());
-        }
+//        if (Objects.equals(fileDto.fileType(), PROFILE_IMAGE_DIRECTORY)) {
+//
+//            Member member = memberRepository.findById(memberId)
+//                    .orElseThrow(MemberNotFoundException::new);
+//            // member 프로필 이미지 id 업데이트
+//            member.updateProfileImageId(fileInfo.getId());
+//        }
 
         return new FileResponse.UPLOAD(fileInfo.getId(), presignedUrl.toString());
 
