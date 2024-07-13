@@ -4,6 +4,9 @@ import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chat.exception.ChatRoomNotFoundException;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
+import com.jungle.chalnaServer.domain.location.domain.dto.EncounterRequest;
+import com.jungle.chalnaServer.domain.location.domain.entity.Encounter;
+import com.jungle.chalnaServer.domain.location.repository.EncounterRepository;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
 import com.jungle.chalnaServer.domain.member.repository.MemberRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationRequest;
@@ -32,13 +35,13 @@ public class RelationService {
     private final MemberRepository memberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final DeviceInfoRepository deviceInfoRepository;
-
+    private final EncounterRepository encounterRepository;
 
     public RelationResponse findByOtherId(final Long id, final Long otherId) {
         return RelationResponse.of(findRelation(new RelationPK(id, otherId)));
     }
 
-    public RelationResponse findAndIncreaseOverlap(final Long id, final String deviceId) {
+    public RelationResponse findAndIncreaseOverlap(final Long id, final String deviceId, EncounterRequest.LOCATION dto) {
         Long otherId = deviceInfoRepository.findById(deviceId);
         if(otherId == null){
             throw new MemberNotFoundException();
@@ -47,10 +50,24 @@ public class RelationService {
 
         Relation relation = findRelation(pk);
         Relation reverse = findRelation(pk.reverse());
-        relation.increaseOverlapCount();
+        boolean increaseOverlapCount = relation.increaseOverlapCount();
         reverse.increaseOverlapCount();
+
+        if (increaseOverlapCount) {
+            // Loaction 생성
+            Encounter location = Encounter.builder()
+                    .memberId(id)
+                    .otherId(otherId)
+                    .latitude(dto.latitude())
+                    .longitude(dto.longitude())
+                    .build();
+
+            encounterRepository.save(location);
+        }
+
         return RelationResponse.of(relation);
     }
+
     public String friendUnblock(final Long id,final Long otherId){
         RelationPK pk = new RelationPK(id, otherId);
         Relation relation = findRelation(pk);

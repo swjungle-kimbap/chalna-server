@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Getter
@@ -61,7 +62,7 @@ public class ChatRoomMember extends BaseTimestampEntity {
     public void updateIsJoined(boolean isJoined) {
         this.isJoined = isJoined;
         if (isJoined)
-            this.joinedAt = LocalDateTime.now();
+            this.joinedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     public String getUserName(){
