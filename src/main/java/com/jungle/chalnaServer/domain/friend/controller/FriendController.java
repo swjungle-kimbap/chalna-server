@@ -18,10 +18,30 @@ public class FriendController {
     private final FriendService friendService;
 
 
-    @PostMapping
+    @PostMapping("/request/")
     public CommonResponse<String> friendRequest(@AuthUserId Long userId, @RequestBody FriendRequest.REQUEST dto) {
         return CommonResponse.ok(friendService.friendRequest(userId, dto));
     }
+
+    @GetMapping("/request/send")
+    public CommonResponse<List<FriendReponse.REQUEST>> getSendRequests(@AuthUserId Long memberId) {
+        return CommonResponse.ok(friendService.getSendRequest(memberId));
+    }
+
+    @GetMapping("/request/receive")
+    public CommonResponse<List<FriendReponse.REQUEST>> getReceiveRequests(@AuthUserId Long memberId) {
+        return CommonResponse.ok(friendService.getReceiveRequest(memberId));
+    }
+
+//    @PostMapping("/request/reject/{requestId}")
+//    public CommonResponse<String> rejectRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
+//        return CommonResponse.ok(friendService.friendRequest(userId, dto));
+//    }
+//
+//    @PostMapping("/request/accept/{requestId}")
+//    public CommonResponse<String> acceptRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
+//        return CommonResponse.ok(friendService.friendRequest(userId, dto));
+//    }
 
 
     @GetMapping

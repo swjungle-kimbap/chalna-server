@@ -46,7 +46,21 @@ public class FriendService {
     private final RelationService relationService;
     private final ChatService chatService;
 
+    public List<FriendReponse.REQUEST> getSendRequest(Long senderId){
+        return toResponseList(requestRepository.findAllByMemberId(senderId));
+    }
 
+    public List<FriendReponse.REQUEST> getReceiveRequest(Long receiverId){
+        return toResponseList(requestRepository.findAllByOtherId(receiverId));
+    }
+
+    private List<FriendReponse.REQUEST> toResponseList(List<Request> requests){
+        return requests.stream()
+                .map(FriendReponse.REQUEST::of)
+                .toList();
+    }
+
+    @Transactional
     public String friendRequest(Long memberId, FriendRequest.REQUEST dto) {
         RelationPK pk = new RelationPK(memberId, dto.otherId());
         if(isFriend(pk))
