@@ -1,8 +1,8 @@
-package com.jungle.chalnaServer.domain.location.service;
+package com.jungle.chalnaServer.domain.encounter.service;
 
-import com.jungle.chalnaServer.domain.location.domain.dto.EncounterResponse;
-import com.jungle.chalnaServer.domain.location.domain.entity.Encounter;
-import com.jungle.chalnaServer.domain.location.repository.EncounterRepository;
+import com.jungle.chalnaServer.domain.encounter.domain.dto.EncounterResponse;
+import com.jungle.chalnaServer.domain.encounter.domain.entity.Encounter;
+import com.jungle.chalnaServer.domain.encounter.repository.EncounterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

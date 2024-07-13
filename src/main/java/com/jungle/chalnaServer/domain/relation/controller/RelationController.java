@@ -1,6 +1,6 @@
 package com.jungle.chalnaServer.domain.relation.controller;
 
-import com.jungle.chalnaServer.domain.location.domain.dto.EncounterRequest;
+import com.jungle.chalnaServer.domain.encounter.domain.dto.EncounterRequest;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationRequest;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
