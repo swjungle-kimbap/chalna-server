@@ -1,7 +1,7 @@
-package com.jungle.chalnaServer.domain.location.controller;
+package com.jungle.chalnaServer.domain.encounter.controller;
 
-import com.jungle.chalnaServer.domain.location.domain.dto.EncounterResponse;
-import com.jungle.chalnaServer.domain.location.service.EncounterService;
+import com.jungle.chalnaServer.domain.encounter.domain.dto.EncounterResponse;
+import com.jungle.chalnaServer.domain.encounter.service.EncounterService;
 import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.jungle.chalnaServer.domain.location.domain.dto;
+package com.jungle.chalnaServer.domain.encounter.domain.dto;
 
 public class EncounterRequest {
 

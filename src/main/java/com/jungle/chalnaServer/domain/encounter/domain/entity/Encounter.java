@@ -1,4 +1,4 @@
-package com.jungle.chalnaServer.domain.location.domain.entity;
+package com.jungle.chalnaServer.domain.encounter.domain.entity;
 
 
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;

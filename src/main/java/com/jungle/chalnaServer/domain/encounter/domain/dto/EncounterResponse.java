@@ -1,6 +1,6 @@
-package com.jungle.chalnaServer.domain.location.domain.dto;
+package com.jungle.chalnaServer.domain.encounter.domain.dto;
 
-import com.jungle.chalnaServer.domain.location.domain.entity.Encounter;
+import com.jungle.chalnaServer.domain.encounter.domain.entity.Encounter;
 
 public class EncounterResponse {
     public record LOCATION(Long memberId, Long otherId,Double latitude, Double longitude) {}
