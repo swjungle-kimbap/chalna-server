@@ -286,11 +286,11 @@ public class ChatService {
 
     // 채팅방 메시지 요청
     @Transactional
-    public ChatRoomResponse.MESSAGES getChatMessages(Long memberId, Long chatRoomId) {
+    public ChatRoomResponse.MESSAGES getChatMessages(Long memberId, Long chatRoomId, boolean includePrevious) {
         ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
         LocalDateTime lastLeaveAt = chatRoomMember.getLastLeaveAt();
         chatRoomMember.updateLastLeaveAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
-        List<ChatMessageResponse.MESSAGE> messages = chatRepository.getMessagesAfterUpdateDate(chatRoomId,chatRoomMember.getJoinedAt(), lastLeaveAt).stream()
+        List<ChatMessageResponse.MESSAGE> messages = chatRepository.getMessagesAfterUpdateDate(chatRoomId,chatRoomMember.getJoinedAt(), lastLeaveAt, includePrevious).stream()
                 .map(ChatMessageResponse.MESSAGE::of)
                 .toList();
 

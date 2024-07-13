@@ -42,12 +42,14 @@ public class ChatRepository {
         return objectMapper.convertValue(listOperations.index(roomKey,listOperations.size(roomKey)-1),ChatMessage.class);
     }
 
-    public List<ChatMessage> getMessagesAfterUpdateDate(Long chatRoomId,LocalDateTime joinedAt, LocalDateTime lastLeaveAt) {
+    public List<ChatMessage> getMessagesAfterUpdateDate(Long chatRoomId,LocalDateTime joinedAt, LocalDateTime lastLeaveAt, boolean includePrevious) {
         List<ChatMessage> messages = new LinkedList<>();
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
+
         // Redis List의 길이 구하기
         Long len = listOperations.size(roomKey);
         List<Object> rawMessages = listOperations.range(roomKey, 0, len - 1);
+        int previousMessageCnt = 100;
 
         for (int i = rawMessages.size() - 1; i >= 0; i--) {
             ChatMessage message = objectMapper.convertValue(rawMessages.get(i), ChatMessage.class);
@@ -56,6 +58,11 @@ public class ChatRepository {
                 listOperations.set(roomKey, i, message);
                 messages.add(0, message);
             } else {
+                if (includePrevious && previousMessageCnt > 0) {
+                    messages.add(0, message);
+                    previousMessageCnt--;
+                    continue;
+                }
                 break;
             }
         }
