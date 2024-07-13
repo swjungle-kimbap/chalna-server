@@ -72,7 +72,7 @@ public class ChatRepository {
         for (long i = len - 1; i >= 0; i--) {
             ChatMessage message = objectMapper.convertValue(listOperations.index(roomKey, i), ChatMessage.class);
             if (isChat(message)) {
-                if(message.getCreatedAt().isBefore(chatRoomMember.getCreatedAt()))
+                if(message.getCreatedAt().isBefore(chatRoomMember.getJoinedAt()))
                     return null;
                 return message;
             }
