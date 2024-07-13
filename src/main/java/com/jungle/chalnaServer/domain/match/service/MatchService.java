@@ -137,7 +137,7 @@ public class MatchService {
             chatRoom.updateType(ChatRoom.ChatRoomType.MATCH);
             chatRoomRepository.save(chatRoom);
             chatRoomId = chatRoom.getId();
-            chatService.scheduleRoomTermination(chatRoomId, 5, TimeUnit.MINUTES);
+            chatService.rescheduleRoomTermination(chatRoomId, 5, TimeUnit.MINUTES);
         }else{
             chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, List.of(senderId, receiverId));
         }
