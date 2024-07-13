@@ -1,11 +1,16 @@
 package com.jungle.chalnaServer.domain.friend.service;
 
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
+import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
+import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomMemberRepository;
 import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.friend.domain.dto.FriendReponse;
+import com.jungle.chalnaServer.domain.friend.domain.dto.FriendRequest;
+import com.jungle.chalnaServer.domain.friend.domain.entity.Request;
 import com.jungle.chalnaServer.domain.friend.exception.NotFriendException;
+import com.jungle.chalnaServer.domain.friend.repository.RequestRepository;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.domain.member.exception.MemberNotFoundException;
@@ -16,6 +21,7 @@ import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
 import com.jungle.chalnaServer.domain.relation.domain.entity.RelationPK;
 import com.jungle.chalnaServer.domain.relation.repository.RelationRepository;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
+import com.jungle.chalnaServer.global.exception.CustomException;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +40,27 @@ public class FriendService {
     private final RelationRepository relationRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final RequestRepository requestRepository;
+
+
     private final RelationService relationService;
     private final ChatService chatService;
 
+
+    public String friendRequest(Long memberId, FriendRequest.REQUEST dto) {
+        RelationPK pk = new RelationPK(memberId, dto.otherId());
+        if(isFriend(pk))
+            throw new CustomException("이미 친구 상태입니다.");
+        Request request = requestRepository.findByMemberIdAndOtherId(memberId, dto.otherId()).orElse(null);
+        // 이미 요청이 있음
+        if(request != null)
+            throw new CustomException("이미 요청한 상태입니다.");
+
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, dto.chatRoomId()).orElseThrow(ChatRoomMemberNotFoundException::new);
+        request = new Request(memberId, dto.otherId(), dto.chatRoomId(), chatRoomMember.getUserName());
+        requestRepository.save(request);
+        return "친구 요청이 완료되었습니다.";
+    }
 
     public List<MemberResponse.INFO> findFriends(Long id) {
         return getMemberList(getFriendIdList(id));
@@ -45,7 +69,8 @@ public class FriendService {
     @Transactional
     public FriendReponse.DETAIL getFriend(Long id, Long otherId) {
         RelationPK pk = new RelationPK(id, otherId);
-        checkFriend(pk);
+        if(!isFriend(pk))
+            throw new NotFriendException();
         makeChatRoom(pk);
         Relation relation = relationService.findRelation(pk);
         Member otherMember = memberRepository.findById(otherId).orElseThrow(MemberNotFoundException::new);
@@ -67,14 +92,12 @@ public class FriendService {
         }
     }
 
-    private void checkFriend(RelationPK pk) {
+    private boolean isFriend(RelationPK pk) {
         Relation relation = relationService.findRelation(pk);
         Relation reverse = relationService.findRelation(pk.reverse());
-        if (relation.getFriendStatus() != FriendStatus.ACCEPTED
+        return !(relation.getFriendStatus() != FriendStatus.ACCEPTED
                 || reverse.getFriendStatus() != FriendStatus.ACCEPTED
-                || relation.isBlocked()) {
-            throw new NotFriendException();
-        }
+                || relation.isBlocked());
     }
 
     private List<Long> getFriendIdList(Long id) {

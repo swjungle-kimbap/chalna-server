@@ -4,4 +4,5 @@ public class FriendReponse {
     public record DETAIL(Long id,String username,String message,Long profileImageUrl,Long chatRoomId){
 
     }
+
 }
