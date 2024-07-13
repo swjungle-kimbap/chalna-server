@@ -30,8 +30,8 @@ public class ChatRoomController {
 
     // 채팅 메시지 목록 조회
     @GetMapping("/message/{chatRoomId}")
-    public CommonResponse<ChatRoomResponse.MESSAGES> getChatRoomMessage(@PathVariable Long chatRoomId,@AuthUserId final Long memberId) {
-        return CommonResponse.ok(chatService.getChatMessages(memberId, chatRoomId));
+    public CommonResponse<ChatRoomResponse.MESSAGES> getChatRoomMessage(@PathVariable Long chatRoomId,@AuthUserId final Long memberId, @RequestParam(defaultValue = "false") boolean includePrevious) {
+        return CommonResponse.ok(chatService.getChatMessages(memberId, chatRoomId, includePrevious));
     }
 
     // 채팅방 나가기
