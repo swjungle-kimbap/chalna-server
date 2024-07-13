@@ -36,9 +36,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 @Service
@@ -64,6 +62,7 @@ public class ChatService {
     private final LocalChatRepository localChatRepository;
 
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private Map<Long, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
 
     @Transactional
     // 채팅 보내기(+push 알림)
@@ -301,7 +300,7 @@ public class ChatService {
 
     // 채팅방 5분 스케줄러
     public void scheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
-        scheduler.schedule(() -> {
+        ScheduledFuture<?> scheduledFuture =  scheduler.schedule(() -> {
             log.info("timeout roomId {}", chatRoomId);
             ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElse(null);
             log.info("chatroom type {}", chatRoom.getType());
@@ -315,5 +314,18 @@ public class ChatService {
                 sendMessage(0L, chatRoomId, req);
             }
         }, delay, unit);
+
+        scheduledTasks.put(chatRoomId, scheduledFuture);
+    }
+
+    public void rescheduleRoomTermination(Long chatRoomId, long delay, TimeUnit unit) {
+        // 기존 스케줄러 취소
+        ScheduledFuture<?> existingTask = scheduledTasks.get(chatRoomId);
+        if (existingTask != null) {
+            existingTask.cancel(true);
+        }
+
+        // 새 스케줄 생성
+        scheduleRoomTermination(chatRoomId, delay, unit);
     }
 }
