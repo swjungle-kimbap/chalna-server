@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.relation.controller;
 
+import com.jungle.chalnaServer.domain.location.domain.dto.EncounterRequest;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationRequest;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
@@ -22,8 +23,9 @@ public class RelationController {
     }
 
     @PostMapping("/{deviceId}")
-    public CommonResponse<RelationResponse> overLap(@AuthUserId final Long id, @PathVariable final String deviceId) {
-        return CommonResponse.ok(relationService.findAndIncreaseOverlap(id, deviceId));
+    public CommonResponse<RelationResponse> overLap(@AuthUserId final Long id, @PathVariable(name = "deviceId") final String deviceId, @RequestBody EncounterRequest.LOCATION dto) {
+
+        return CommonResponse.ok(relationService.findAndIncreaseOverlap(id, deviceId, dto));
     }
 
     @PatchMapping("/unblock/{otherId}")
