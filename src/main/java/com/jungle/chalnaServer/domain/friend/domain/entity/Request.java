@@ -2,13 +2,11 @@ package com.jungle.chalnaServer.domain.friend.domain.entity;
 
 import com.jungle.chalnaServer.global.common.entity.BaseTimestampEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Request extends BaseTimestampEntity {
     @Id
@@ -16,15 +14,20 @@ public class Request extends BaseTimestampEntity {
     private Long id;
 
     @Column(nullable = false)
-    private Long memberId;
+    private Long senderId;
 
     @Column(nullable = false)
-    private Long otherId;
+    private Long receiverId;
 
     private Long chatRoomId;
 
     private String username;
 
-    public Request(Long memberId, Long otherId, Long chatRoomId, String username) {}
+    public Request(Long senderId, Long receiverId, Long chatRoomId, String username) {
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.chatRoomId = chatRoomId;
+        this.username = username;
+    }
 
 }

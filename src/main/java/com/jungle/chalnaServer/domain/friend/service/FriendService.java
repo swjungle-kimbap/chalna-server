@@ -47,11 +47,11 @@ public class FriendService {
     private final ChatService chatService;
 
     public List<FriendReponse.REQUEST> getSendRequest(Long senderId){
-        return toResponseList(requestRepository.findAllByMemberId(senderId));
+        return toResponseList(requestRepository.findAllBySenderId(senderId));
     }
 
     public List<FriendReponse.REQUEST> getReceiveRequest(Long receiverId){
-        return toResponseList(requestRepository.findAllByOtherId(receiverId));
+        return toResponseList(requestRepository.findAllByReceiverId(receiverId));
     }
 
     private List<FriendReponse.REQUEST> toResponseList(List<Request> requests){
@@ -61,17 +61,17 @@ public class FriendService {
     }
 
     @Transactional
-    public String friendRequest(Long memberId, FriendRequest.REQUEST dto) {
-        RelationPK pk = new RelationPK(memberId, dto.otherId());
+    public String friendRequest(Long senderId, FriendRequest.REQUEST dto) {
+        RelationPK pk = new RelationPK(senderId, dto.otherId());
         if(isFriend(pk))
             throw new CustomException("이미 친구 상태입니다.");
-        Request request = requestRepository.findByMemberIdAndOtherId(memberId, dto.otherId()).orElse(null);
+        Request request = requestRepository.findBySenderIdAndReceiverId(senderId, dto.otherId()).orElse(null);
         // 이미 요청이 있음
         if(request != null)
             throw new CustomException("이미 요청한 상태입니다.");
 
-        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, dto.chatRoomId()).orElseThrow(ChatRoomMemberNotFoundException::new);
-        request = new Request(memberId, dto.otherId(), dto.chatRoomId(), chatRoomMember.getUserName());
+        ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(senderId, dto.chatRoomId()).orElseThrow(ChatRoomMemberNotFoundException::new);
+        request = new Request(senderId, dto.otherId(), dto.chatRoomId(), chatRoomMember.getUserName());
         requestRepository.save(request);
         return "친구 요청이 완료되었습니다.";
     }

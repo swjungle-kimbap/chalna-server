@@ -18,9 +18,9 @@ public class FriendController {
     private final FriendService friendService;
 
 
-    @PostMapping("/request/")
-    public CommonResponse<String> friendRequest(@AuthUserId Long userId, @RequestBody FriendRequest.REQUEST dto) {
-        return CommonResponse.ok(friendService.friendRequest(userId, dto));
+    @PostMapping("/request")
+    public CommonResponse<String> friendRequest(@AuthUserId Long memberId, @RequestBody FriendRequest.REQUEST dto) {
+        return CommonResponse.ok(friendService.friendRequest(memberId, dto));
     }
 
     @GetMapping("/request/send")
