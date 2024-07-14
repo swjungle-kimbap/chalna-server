@@ -216,8 +216,10 @@ public class ChatService {
             chatRoomMember.updateDisplayName(randomUserNameService.getRandomUserName());
         }
         //  입장 알림
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-        saveMessage(0L, chatRoomId, chatRoomMember.getUserName(), ChatMessage.MessageType.USER_JOIN, now);
+        if(chatRoom.getType().equals(ChatRoom.ChatRoomType.LOCAL)) {
+            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+            saveMessage(0L, chatRoomId, chatRoomMember.getUserName(), ChatMessage.MessageType.USER_JOIN, now);
+        }
 
         // 채팅방 목록 추가
         chatRoomMemberRepository.save(chatRoomMember);
@@ -253,8 +255,10 @@ public class ChatService {
             chatRepository.removeChatRoom(chatRoomId);
         }
         // 퇴장 알림
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-        saveMessage(0L, chatRoomId, chatRoomMember.getUserName(), ChatMessage.MessageType.USER_LEAVE, now);
+        if(chatRoom.getType().equals(ChatRoom.ChatRoomType.LOCAL)) {
+            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+            saveMessage(0L, chatRoomId, chatRoomMember.getUserName(), ChatMessage.MessageType.USER_LEAVE, now);
+        }
     }
 
     // 채팅방 목록 요청
