@@ -4,9 +4,12 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ChatRoomMemberResponse {
+    public record MEMBERS(List<INFO> members,int memberCount){
 
+    }
     public record INFO(Long memberId,String username,Long profileImageId,boolean isJoined){
         public static INFO of(ChatRoomMember chatRoomMember) {
             return new INFO(

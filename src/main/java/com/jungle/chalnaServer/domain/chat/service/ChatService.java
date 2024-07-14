@@ -246,12 +246,12 @@ public class ChatService {
         // 채팅방 인원이 없으면
         if (chatRoom.getMemberIdList().isEmpty() && chatRoom.getType() != ChatRoom.ChatRoomType.FRIEND) {
             LocalChat localChat = localChatRepository.findByChatRoomId(chatRoomId).orElse(null);
-            // 장소 채팅 삭제
+            // 장소 채팅일 경우 채팅방 삭제
             if (localChat != null) {
                 localChatRepository.delete(localChat);
                 geoHashService.delete(LocalChatService.REDIS_KEY, String.valueOf(localChat.getId()));
+                chatRoomRepository.delete(chatRoom);
             }
-            chatRoomRepository.delete(chatRoom);
             chatRepository.removeChatRoom(chatRoomId);
         }
         // 퇴장 알림
@@ -271,7 +271,7 @@ public class ChatService {
                     ChatRoom chatRoom = chatRoomMember.getChatRoom();
                     ChatMessage recentMessage = chatRepository.getLatestMessage(chatRoom.getId(),chatRoomMember);
                     Integer unreadMessageCount = chatRepository.getUnreadCount(chatRoom.getId(), chatRoomMember.getLastLeaveAt());
-                    List<ChatRoomMemberResponse.INFO> memberInfos = getChatRoomMembers(chatRoom);
+                    ChatRoomMemberResponse.MEMBERS memberInfos = getChatRoomMembers(chatRoom);
                     ChatMessageResponse.MESSAGE recentMessageRes = recentMessage != null ? ChatMessageResponse.MESSAGE.of(recentMessage) : null;
                     LocalDateTime lastReceivedAt = recentMessageRes != null ? recentMessageRes.createdAt() : chatRoomMember.getJoinedAt();
                     return new ChatRoomResponse.CHATROOM(chatRoom, memberInfos, recentMessageRes, unreadMessageCount,lastReceivedAt);
@@ -280,12 +280,20 @@ public class ChatService {
                         , Comparator.reverseOrder()))
                 .toList();
     }
+    public ChatRoomMemberResponse.MEMBERS getChatRoomMembers(Long memberId,Long chatRoomId){
+        if(!chatRoomMemberRepository.existsByMemberIdAndChatRoomId(memberId,chatRoomId))
+            throw new ChatRoomMemberNotFoundException();
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
+        return getChatRoomMembers(chatRoom);
+    }
 
     // 채팅방 맴버 목록 조회
-    private List<ChatRoomMemberResponse.INFO> getChatRoomMembers(ChatRoom chatRoom) {
-        return chatRoom.getMembers().stream()
+    private ChatRoomMemberResponse.MEMBERS getChatRoomMembers(ChatRoom chatRoom) {
+        return new ChatRoomMemberResponse.MEMBERS(
+                chatRoom.getMembers().stream()
                 .map(ChatRoomMemberResponse.INFO::of)
-                .toList();
+                .toList(),
+                chatRoom.getMemberIdList().size());
     }
 
     // 채팅방 메시지 요청
