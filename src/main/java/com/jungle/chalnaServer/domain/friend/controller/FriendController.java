@@ -1,15 +1,13 @@
 package com.jungle.chalnaServer.domain.friend.controller;
 
 import com.jungle.chalnaServer.domain.friend.domain.dto.FriendReponse;
+import com.jungle.chalnaServer.domain.friend.domain.dto.FriendRequest;
 import com.jungle.chalnaServer.domain.friend.service.FriendService;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.global.auth.jwt.annotation.AuthUserId;
 import com.jungle.chalnaServer.global.common.dto.CommonResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,6 +16,33 @@ import java.util.List;
 @RequestMapping("/api/v1/friend")
 public class FriendController {
     private final FriendService friendService;
+
+
+    @PostMapping("/request")
+    public CommonResponse<String> friendRequest(@AuthUserId Long memberId, @RequestBody FriendRequest.REQUEST dto) {
+        return CommonResponse.ok(friendService.friendRequest(memberId, dto));
+    }
+
+    @GetMapping("/request/send")
+    public CommonResponse<List<FriendReponse.REQUEST>> getSendRequests(@AuthUserId Long memberId) {
+        return CommonResponse.ok(friendService.getSendRequest(memberId));
+    }
+
+    @GetMapping("/request/receive")
+    public CommonResponse<List<FriendReponse.REQUEST>> getReceiveRequests(@AuthUserId Long memberId) {
+        return CommonResponse.ok(friendService.getReceiveRequest(memberId));
+    }
+
+//    @PostMapping("/request/reject/{requestId}")
+//    public CommonResponse<String> rejectRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
+//        return CommonResponse.ok(friendService.friendRequest(userId, dto));
+//    }
+//
+//    @PostMapping("/request/accept/{requestId}")
+//    public CommonResponse<String> acceptRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
+//        return CommonResponse.ok(friendService.friendRequest(userId, dto));
+//    }
+
 
     @GetMapping
     public CommonResponse<List<MemberResponse.INFO>> getFriends(@AuthUserId final Long id){

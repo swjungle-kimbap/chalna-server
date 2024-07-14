@@ -12,8 +12,7 @@ public class ChatRoomResponse {
     public static class CHATROOM {
         private final Long id;
         private final ChatRoom.ChatRoomType type;
-        private final Integer memberCount;
-        private final List<ChatRoomMemberResponse.INFO> members;
+        private final ChatRoomMemberResponse.MEMBERS chatRoomMemberInfo;
         private final ChatMessageResponse.MESSAGE recentMessage;
         private final Integer unreadMessageCount;
 
@@ -27,11 +26,10 @@ public class ChatRoomResponse {
         private final LocalDateTime updatedAt;
 
 
-        public CHATROOM(ChatRoom chatRoom, List<ChatRoomMemberResponse.INFO> memberInfos, ChatMessageResponse.MESSAGE recentMessage, Integer unreadMessageCount,LocalDateTime lastReceivedAt) {
+        public CHATROOM(ChatRoom chatRoom, ChatRoomMemberResponse.MEMBERS chatRoomMemberInfo, ChatMessageResponse.MESSAGE recentMessage, Integer unreadMessageCount, LocalDateTime lastReceivedAt) {
             this.id = chatRoom.getId();
             this.type = chatRoom.getType();
-            this.memberCount = chatRoom.getMemberIdList().size();
-            this.members = memberInfos;
+            this.chatRoomMemberInfo = chatRoomMemberInfo;
             this.recentMessage = recentMessage;
             this.lastReceivedAt = lastReceivedAt;
             this.unreadMessageCount = unreadMessageCount;
@@ -43,17 +41,17 @@ public class ChatRoomResponse {
     public static class MESSAGES{
         private final Long id;
         private final ChatRoom.ChatRoomType type;
-        private final List<ChatRoomMemberResponse.INFO> members;
+        private final ChatRoomMemberResponse.MEMBERS chatRoomMemberInfo;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private final LocalDateTime createdAt;
 
         private final List<ChatMessageResponse.MESSAGE> messages;
 
-        public MESSAGES(ChatRoom chatRoom,List<ChatRoomMemberResponse.INFO> memberInfos, List<ChatMessageResponse.MESSAGE> messages) {
+        public MESSAGES(ChatRoom chatRoom, ChatRoomMemberResponse.MEMBERS chatRoomMemberInfo, List<ChatMessageResponse.MESSAGE> messages) {
             this.id = chatRoom.getId();
             this.type = chatRoom.getType();
-            this.members = memberInfos;
+            this.chatRoomMemberInfo = chatRoomMemberInfo;
             this.createdAt = chatRoom.getCreatedAt();
             this.messages = messages;
 

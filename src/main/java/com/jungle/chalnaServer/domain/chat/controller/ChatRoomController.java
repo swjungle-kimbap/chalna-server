@@ -1,5 +1,6 @@
 package com.jungle.chalnaServer.domain.chat.controller;
 
+import com.jungle.chalnaServer.domain.chat.domain.dto.ChatRoomMemberResponse;
 import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatRoomRequest;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatRoomResponse;
@@ -26,6 +27,11 @@ public class ChatRoomController {
     @GetMapping
     public CommonResponse<List<ChatRoomResponse.CHATROOM>> getChatRoomList(@AuthUserId final Long id) {
         return CommonResponse.ok(chatService.getChatRoomList(id));
+    }
+
+    @GetMapping("/members/{chatRoomId}")
+    public CommonResponse<ChatRoomMemberResponse.MEMBERS> getChatRoomMemberList(@AuthUserId final Long id,@PathVariable final Long chatRoomId) {
+        return CommonResponse.ok(chatService.getChatRoomMembers(id,chatRoomId));
     }
 
     // 채팅 메시지 목록 조회
