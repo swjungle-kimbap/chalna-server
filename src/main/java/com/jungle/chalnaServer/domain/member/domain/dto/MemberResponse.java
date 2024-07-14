@@ -4,9 +4,9 @@ import com.jungle.chalnaServer.domain.member.domain.entity.Member;
 import com.jungle.chalnaServer.infra.file.domain.dto.FileResponse;
 
 public class MemberResponse {
-    public record INFO(Long id, String username, String message, Long profileImageId) {
+    public record INFO(Long id, String deviceId,String username, String message, Long profileImageId) {
         public static INFO of(Member member) {
-            return new INFO(member.getId(), member.getUsername(), member.getMessage(), member.getProfileImageId());
+            return new INFO(member.getId(), member.getDeviceId(),member.getUsername(), member.getMessage(), member.getProfileImageId());
         }
     }
 
