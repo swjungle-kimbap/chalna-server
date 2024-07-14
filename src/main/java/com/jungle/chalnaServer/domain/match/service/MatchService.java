@@ -207,9 +207,7 @@ public class MatchService {
         else chatService.saveMessage(senderId, chatRoomId, message, ChatMessage.MessageType.CHAT, now);
 
         // 보낸사람 읽음 처리
-        ChatMessage chatMessage = chatRepository.getLastChatMessage(chatRoomId);
-        chatMessage.read();
-        chatRepository.save(chatMessage);
+        chatRepository.readLastChatMessage(chatRoomId);
 
         // fcm 메시지 구성
         AuthInfo senderInfo = authInfoRepository.findById(senderId);

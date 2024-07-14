@@ -37,9 +37,11 @@ public class ChatRepository {
         return valueOperations.increment(MESSAGE_ID_KEY, 1);
     }
 
-    public ChatMessage getLastChatMessage(Long chatRoomId){
+    public void readLastChatMessage(Long chatRoomId){
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
-        return objectMapper.convertValue(listOperations.index(roomKey,listOperations.size(roomKey)-1),ChatMessage.class);
+        long idx = listOperations.size(roomKey)-1;
+        ChatMessage message = objectMapper.convertValue(listOperations.index(roomKey,idx),ChatMessage.class);
+        listOperations.set(roomKey, idx, message);
     }
 
     public List<ChatMessage> getMessagesAfterUpdateDate(Long chatRoomId,LocalDateTime joinedAt, LocalDateTime lastLeaveAt, boolean includePrevious) {
