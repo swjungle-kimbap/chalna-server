@@ -16,6 +16,9 @@ import java.time.ZoneId;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(indexes = {
+        @Index(name = "idx_find_delete_notification", columnList = "senderId, receiverId, deleteAt")
+})
 public class MatchNotification extends BaseTimestampEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -38,10 +41,6 @@ public class MatchNotification extends BaseTimestampEntity {
     public void updateStatus(MatchNotificationStatus newStatus) {
         this.status = newStatus;
         this.deleteAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-    }
-
-    public record MESSAGE(String content, MessageType messageType) {
-
     }
 
 }
