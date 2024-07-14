@@ -10,6 +10,7 @@ import com.jungle.chalnaServer.domain.friend.domain.dto.FriendReponse;
 import com.jungle.chalnaServer.domain.friend.domain.dto.FriendRequest;
 import com.jungle.chalnaServer.domain.friend.domain.entity.Request;
 import com.jungle.chalnaServer.domain.friend.exception.NotFriendException;
+import com.jungle.chalnaServer.domain.friend.exception.RequestNotFoundException;
 import com.jungle.chalnaServer.domain.friend.repository.RequestRepository;
 import com.jungle.chalnaServer.domain.member.domain.dto.MemberResponse;
 import com.jungle.chalnaServer.domain.member.domain.entity.Member;
@@ -76,6 +77,41 @@ public class FriendService {
         return "친구 요청이 완료되었습니다.";
     }
 
+    @Transactional
+    public String friendRequestAccept(Long memberId, Long requestId) {
+        Request request = requestRepository.findById(requestId).orElseThrow(RequestNotFoundException::new);
+        if (!request.getReceiverId().equals(memberId))
+            throw new CustomException("올바른 요청이 아닙니다.");
+
+        RelationPK pk = new RelationPK(request.getSenderId(), memberId);
+        Relation relation = relationService.findRelation(pk);
+        Relation reverse = relationService.findRelation(pk.reverse());
+
+        relation.updateFriendStatus(FriendStatus.ACCEPTED);
+        reverse.updateFriendStatus(FriendStatus.ACCEPTED);
+
+        ChatRoom chatRoom = relation.getChatRoom();
+        if (chatRoom == null) {
+            Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.FRIEND, List.of(pk.getId(), pk.getOtherId()));
+            chatRoom = chatRoomRepository.findById(chatRoomId).get();
+            relation.updateChatRoom(chatRoom);
+            reverse.updateChatRoom(chatRoom);
+        } else {
+            chatService.updateChatRoomType(chatRoom.getId(), ChatRoom.ChatRoomType.FRIEND);
+        }
+        requestRepository.delete(request);
+
+        return "친구 요청 수락이 성공했습니다.";
+    }
+
+    public String friendRequestReject(Long memberId, Long requestId) {
+        Request request = requestRepository.findById(requestId).orElseThrow(RequestNotFoundException::new);
+        if (!request.getReceiverId().equals(memberId))
+            throw new CustomException("올바른 요청이 아닙니다.");
+        requestRepository.delete(request);
+        return "친구 요청 거절이 성공했습니다.";
+    }
+
     public List<MemberResponse.INFO> findFriends(Long id) {
         return getMemberList(getFriendIdList(id));
     }
@@ -108,10 +144,8 @@ public class FriendService {
 
     private boolean isFriend(RelationPK pk) {
         Relation relation = relationService.findRelation(pk);
-        Relation reverse = relationService.findRelation(pk.reverse());
-        return !(relation.getFriendStatus() != FriendStatus.ACCEPTED
-                || reverse.getFriendStatus() != FriendStatus.ACCEPTED
-                || relation.isBlocked());
+        return (relation.getFriendStatus().equals(FriendStatus.ACCEPTED)
+                && !relation.isBlocked());
     }
 
     private List<Long> getFriendIdList(Long id) {

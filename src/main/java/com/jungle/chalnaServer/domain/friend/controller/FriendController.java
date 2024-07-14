@@ -33,15 +33,15 @@ public class FriendController {
         return CommonResponse.ok(friendService.getReceiveRequest(memberId));
     }
 
-//    @PostMapping("/request/reject/{requestId}")
-//    public CommonResponse<String> rejectRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
-//        return CommonResponse.ok(friendService.friendRequest(userId, dto));
-//    }
-//
-//    @PostMapping("/request/accept/{requestId}")
-//    public CommonResponse<String> acceptRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
-//        return CommonResponse.ok(friendService.friendRequest(userId, dto));
-//    }
+    @DeleteMapping("/request/reject/{requestId}")
+    public CommonResponse<String> rejectRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
+        return CommonResponse.ok(friendService.friendRequestReject(userId, requestId));
+    }
+
+    @PostMapping("/request/accept/{requestId}")
+    public CommonResponse<String> acceptRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
+        return CommonResponse.ok(friendService.friendRequestAccept(userId, requestId));
+    }
 
 
     @GetMapping
