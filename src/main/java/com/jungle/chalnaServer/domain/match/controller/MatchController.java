@@ -27,7 +27,7 @@ public class MatchController {
         return CommonResponse.from(HttpStatus.OK, matchService.matchList(id));
     }
     @PostMapping("/match")
-    public CommonResponse<MatchResponse.MESSAGE_SEND> matchMessageSend(@AuthUserId final Long id, @RequestBody MatchRequest.Send dto){
+    public CommonResponse<List<MatchResponse.SEND_INFO>> matchMessageSend(@AuthUserId final Long id, @RequestBody MatchRequest.Send dto){
         return CommonResponse.ok(matchService.matchMessageSend(dto, id));
     }
 

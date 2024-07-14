@@ -11,15 +11,9 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 public class MatchResponse {
-    public record MESSAGE_SEND(int sendCount){
+    public record SEND_INFO(String deviceId, SendStatus status){
     }
 
-    public static Map<String, String> MatchMessageSend(String message) {
-        Map<String, String> messageMap = new HashMap<>();
-        messageMap.put("message", message);
-
-        return messageMap;
-    }
 
     public static Map<String, String> MatchReject(String message) {
         Map<String, String> messageMap = new HashMap<>();

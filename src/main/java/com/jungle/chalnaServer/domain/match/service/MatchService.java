@@ -12,11 +12,15 @@ import com.jungle.chalnaServer.domain.chat.repository.ChatRoomRepository;
 import com.jungle.chalnaServer.domain.chat.service.ChatService;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchRequest;
 import com.jungle.chalnaServer.domain.match.domain.dto.MatchResponse;
+import com.jungle.chalnaServer.domain.match.domain.dto.SendStatus;
 import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotification;
 import com.jungle.chalnaServer.domain.match.domain.entity.MatchNotificationStatus;
 import com.jungle.chalnaServer.domain.match.exception.NotificationNotFoundException;
 import com.jungle.chalnaServer.domain.match.repository.MatchNotificationRepository;
 import com.jungle.chalnaServer.domain.relation.domain.dto.RelationResponse;
+import com.jungle.chalnaServer.domain.relation.domain.entity.FriendStatus;
+import com.jungle.chalnaServer.domain.relation.domain.entity.Relation;
+import com.jungle.chalnaServer.domain.relation.domain.entity.RelationPK;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
 import com.jungle.chalnaServer.global.common.entity.MessageType;
 import com.jungle.chalnaServer.global.common.repository.DeviceInfoRepository;
@@ -31,9 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -55,66 +59,93 @@ public class MatchService {
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
 
-    public MatchResponse.MESSAGE_SEND matchMessageSend(MatchRequest.Send dto, Long senderId) {
+    @Transactional
+    public List<MatchResponse.SEND_INFO> matchMessageSend(MatchRequest.Send dto, Long senderId) {
 
-        List<String> deviceIdList = dto.getDeviceIdList();
-        int sendCount = 0;
-
+        List<MatchResponse.SEND_INFO> sendInfos = new ArrayList<>();
         MessageType contentType = dto.getContentType();
         String content;
         FCMData.CONTENT message;
+
         if (contentType == MessageType.FILE) {
             content = dto.getContent();
             message = FCMData.CONTENT.file(fileService.downloadFile(Long.valueOf(dto.getContent())).presignedUrl());
-        }
-        else {
+        } else {
             content = dto.getContent();
             message = FCMData.CONTENT.message(content);
         }
 
-
-        for (String deviceId : deviceIdList) {
-            //deviceIdList에서 하나씩 찾아서 바꿔주기
-            Long receiverId = deviceInfoRepository.findById(deviceId);
-            if (receiverId == null) {
-                continue;
-            }
-
-            AuthInfo authInfo = authInfoRepository.findById(receiverId);
-            if (authInfo == null)
-                continue;
-
-            RelationResponse relation = relationService.findByOtherId(receiverId, senderId);
-            RelationResponse reverse = relationService.findByOtherId(senderId, receiverId);
-            if (relation.isBlocked() || reverse.isBlocked())
-                continue;
-
-            MatchNotification matchNotification = MatchNotification.builder()
-                    .senderId(senderId)
-                    .receiverId(receiverId)
-                    .message(content)
-                    .messageType(contentType)
-                    .status(MatchNotificationStatus.SEND)
-                    .deleteAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(10L))
-                    .build();
-
-            matchNotiRepository.save(matchNotification);
-
-            fcmService.sendFCM(
-                    authInfo.fcmToken(),
-                    FCMData.instanceOfMatchFCM(
-                            senderId.toString(),
-                            message,
-                            new FCMData.MATCH(
-                                    matchNotification.getId(),
-                                    relation.overlapCount(),
-                                    receiverId)
-                    )
-            );
-            sendCount++;
+        for (String deviceId : dto.getDeviceIdList()) {
+            SendStatus status = processDeviceId(deviceId, senderId, contentType, content, message);
+            sendInfos.add(new MatchResponse.SEND_INFO(deviceId, status));
         }
 
-        return new MatchResponse.MESSAGE_SEND(sendCount);
+        return sendInfos;
+    }
+
+    private SendStatus processDeviceId(String deviceId, Long senderId, MessageType contentType, String content, FCMData.CONTENT message) {
+        // 수신자 조회
+        Long receiverId = deviceInfoRepository.findById(deviceId);
+        if (receiverId == null) {
+            return SendStatus.FAIL;
+        }
+
+        // 수신자 인증정보 조회
+        AuthInfo authInfo = authInfoRepository.findById(receiverId);
+        if (authInfo == null) {
+            return SendStatus.FAIL;
+        }
+
+        // 차단 여부 조회
+        RelationPK pk = new RelationPK(senderId, receiverId);
+        Relation relation = relationService.findRelation(pk);
+        Relation reverse = relationService.findRelation(pk.reverse());
+        if (relation.isBlocked() || reverse.isBlocked()) {
+            return SendStatus.FAIL;
+        }
+
+        // 친구 여부 조회
+        if (relation.getFriendStatus().equals(FriendStatus.ACCEPTED)) {
+            return SendStatus.FRIEND;
+        }
+
+        // 인연 채팅 중 확인
+        ChatRoom chatRoom = relation.getChatRoom();
+        if (chatRoom != null && chatRoom.getType().equals(ChatRoom.ChatRoomType.MATCH)) {
+            return SendStatus.MATCHING;
+        }
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        // 이미 보낸 인연 있는지 확인
+        if(matchNotiRepository.existsBySenderIdAndReceiverIdAndDeleteAtIsAfter(senderId,receiverId,now))
+            return SendStatus.SEND;
+
+
+        // 매치 생성
+        MatchNotification matchNotification = MatchNotification.builder()
+                .senderId(senderId)
+                .receiverId(receiverId)
+                .message(content)
+                .messageType(contentType)
+                .status(MatchNotificationStatus.SEND)
+                .deleteAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(10L))
+                .build();
+
+        matchNotiRepository.save(matchNotification);
+
+        // 푸시알림 전송
+        fcmService.sendFCM(
+                authInfo.fcmToken(),
+                FCMData.instanceOfMatchFCM(
+                        senderId.toString(),
+                        message,
+                        new FCMData.MATCH(
+                                matchNotification.getId(),
+                                relation.getOverlapCount(),
+                                receiverId)
+                )
+        );
+
+        return SendStatus.SUCCESS;
     }
 
     @Transactional
@@ -124,56 +155,91 @@ public class MatchService {
 
         if (matchNotification.getStatus() != SEND) return MatchResponse.MatchReject("이미 처리된 요청입니다.");
 
+        // 인연 메시지 전송
+        Long chatRoomId = sendMatchMessage(
+                matchNotification.getSenderId(),
+                matchNotification.getReceiverId(),
+                matchNotification.getMessage(),
+                matchNotification.getMessageType()
+        );
+
         // matchNotification 저장
         matchNotification.updateStatus(MatchNotificationStatus.ACCEPT);
 
-        Long senderId = matchNotification.getSenderId();
-        Long receiverId = matchNotification.getReceiverId();
+        return MatchResponse.MatchAccept(Long.toString(chatRoomId));
+    }
 
+    @Transactional
+    public Long sendMatchMessage(Long senderId,Long receiverId,String message,MessageType messageType){
+
+        RelationPK pk = new RelationPK(senderId, receiverId);
+        // 1:1 채팅방 탐색
+        Relation relation = relationService.findRelation(pk);
+        Relation reverse = relationService.findRelation(pk.reverse());
+        ChatRoom chatRoom = relation.getChatRoom();
         Long chatRoomId;
-        Optional<ChatRoom> optionalChatRoom = chatRoomMemberRepository.findChatRoomIdByMembers(senderId, receiverId);
-        if(optionalChatRoom.isPresent()) {
-            ChatRoom chatRoom = optionalChatRoom.get();
-            chatRoom.updateType(ChatRoom.ChatRoomType.MATCH);
-            chatRoomRepository.save(chatRoom);
+        boolean created = false;
+
+        if (chatRoom != null) {
             chatRoomId = chatRoom.getId();
-            chatService.rescheduleRoomTermination(chatRoomId, 5, TimeUnit.MINUTES);
+            // 채팅방 맴버 참여
+            chatService.joinChatRoom(chatRoomId,senderId);
+            chatService.joinChatRoom(chatRoomId,receiverId);
+            // 친구가 아닐 때는 MATCH 갱신
+            if (!chatRoom.getType().equals(ChatRoom.ChatRoomType.FRIEND)) {
+                chatService.updateChatRoomType(chatRoomId, ChatRoom.ChatRoomType.MATCH);
+                chatService.rescheduleRoomTermination(chatRoomId, 5, TimeUnit.MINUTES);
+            }
         }else{
+            // 채팅방 생성
             chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, List.of(senderId, receiverId));
+            chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(NotificationNotFoundException::new);
+            // 채팅방 연결
+            relation.updateChatRoom(chatRoom);
+            reverse.updateChatRoom(chatRoom);
+            created = true;
         }
-
-//        Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.MATCH, List.of(senderId, receiverId));
-        String message = matchNotification.getMessage();
-
+        // 채팅 메시지 생성
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
-
-        if (matchNotification.getMessageType().equals(MessageType.FILE))
+        if (messageType.equals(MessageType.FILE))
             chatService.sendFile(senderId, chatRoomId, Long.valueOf(message), now);
         else chatService.saveMessage(senderId, chatRoomId, message, ChatMessage.MessageType.CHAT, now);
 
+        // 보낸사람 읽음 처리
         ChatMessage chatMessage = chatRepository.getLastChatMessage(chatRoomId);
         chatMessage.read();
         chatRepository.save(chatMessage);
 
+        // fcm 메시지 구성
         AuthInfo senderInfo = authInfoRepository.findById(senderId);
-
+        ChatRoomMember sender = chatRoomMemberRepository.findByMemberIdAndChatRoomId(receiverId, chatRoomId)
+                .orElseThrow(ChatRoomMemberNotFoundException::new);
         ChatRoomMember receiver = chatRoomMemberRepository.findByMemberIdAndChatRoomId(receiverId, chatRoomId)
                 .orElseThrow(ChatRoomMemberNotFoundException::new);
 
+        FCMData.CONTENT fcmMessage = FCMData.CONTENT.message(
+                created ?
+                        sender.getUserName() + "님이 인연 메시지를 보냈습니다."
+                        :
+                        "새로운 인연과의 대화가 시작됐습니다."
+        );
+        log.info("push alarm {}", fcmMessage.content());
+        // 푸시알림 전송
         fcmService.sendFCM(senderInfo.fcmToken(),
                 FCMData.instanceOfChatFCM(senderId.toString(),
-                        FCMData.CONTENT.message("인연과의 대화가 시작됐습니다."),
+                        fcmMessage,
                         new FCMData.CHAT(
-                            receiver.getUserName(),
+                                receiver.getUserName(),
                                 chatRoomId,
                                 ChatRoom.ChatRoomType.MATCH,
                                 ChatMessage.MessageType.CHAT
                         )
-        ));
+                ));
 
-        return MatchResponse.MatchAccept(Long.toString(chatRoomId));
+        return chatRoomId;
     }
+
 
     public Map<String, String> matchReject(Long notificationId) {
         MatchNotification matchNotification = matchNotiRepository.findById(notificationId)
