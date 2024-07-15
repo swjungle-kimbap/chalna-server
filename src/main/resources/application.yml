@@ -50,11 +50,10 @@ firebase:
 
 cloud:
   aws:
-    credentials:
-      accessKey: ${CLOUD_S3_ACCESSKEY}
-      secretKey: ${CLOUD_S3_SECRETKEY}
     s3:
       bucket: ${CLOUD_BUCKET_NAME}
+      accessKey: ${CLOUD_S3_ACCESSKEY}
+      secretKey: ${CLOUD_S3_SECRETKEY}
     region:
       static: ${CLOUD_AWS_REGION}
     stack:

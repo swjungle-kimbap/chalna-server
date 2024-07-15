@@ -6,6 +6,7 @@ import com.google.firebase.messaging.Message;
 import com.jungle.chalnaServer.infra.fcm.dto.FCMData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class FCMService {
+    @Async("taskExecutor")
     public void sendFCM(String fcmToken, FCMData fcmData){
+
         try {
             Message.Builder messageBuilder = Message.builder()
                     .setToken(fcmToken)
@@ -21,13 +24,10 @@ public class FCMService {
                     .setAndroidConfig(AndroidConfig.builder()
                             .setPriority(AndroidConfig.Priority.HIGH)
                             .build());
-
             Message message = messageBuilder.build();
 
-            String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("Successfully sent message: " + response);
+            FirebaseMessaging.getInstance().send(message);
         } catch (Exception e) {
-            System.out.println("Failed to send FCM message" + e);
         }
     }
 }
