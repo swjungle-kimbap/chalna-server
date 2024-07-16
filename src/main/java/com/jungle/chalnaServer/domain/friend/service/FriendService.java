@@ -124,8 +124,14 @@ public class FriendService {
         makeChatRoom(pk);
         Relation relation = relationService.findRelation(pk);
         Member otherMember = memberRepository.findById(otherId).orElseThrow(MemberNotFoundException::new);
-        return new FriendReponse.DETAIL(otherId, otherMember.getUsername(), otherMember.getMessage(),
-                otherMember.getProfileImageId(), relation.getChatRoom().getId());
+        return new FriendReponse.DETAIL(
+                otherId,
+                otherMember.getUsername(),
+                otherMember.getMessage(),
+                otherMember.getProfileImageId(),
+                relation.getChatRoom().getId(),
+                otherMember.getDeviceId()
+        );
 
     }
 
