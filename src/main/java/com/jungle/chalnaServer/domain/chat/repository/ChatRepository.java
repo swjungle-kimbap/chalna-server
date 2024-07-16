@@ -41,6 +41,7 @@ public class ChatRepository {
         String roomKey = ROOM_KEY_PREFIX + chatRoomId;
         long idx = listOperations.size(roomKey)-1;
         ChatMessage message = objectMapper.convertValue(listOperations.index(roomKey,idx),ChatMessage.class);
+        message.read();
         listOperations.set(roomKey, idx, message);
     }
 
