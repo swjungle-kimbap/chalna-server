@@ -304,7 +304,7 @@ public class ChatService {
     public ChatRoomResponse.MESSAGES getChatMessages(Long memberId, Long chatRoomId, boolean includePrevious) {
         ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(memberId, chatRoomId).orElseThrow(ChatRoomMemberNotFoundException::new);
         LocalDateTime lastLeaveAt = chatRoomMember.getLastLeaveAt();
-        chatRoomMember.updateLastLeaveAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+//        chatRoomMember.updateLastLeaveAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
         List<ChatMessageResponse.MESSAGE> messages = chatRepository.getMessagesAfterUpdateDate(chatRoomId,chatRoomMember.getJoinedAt(), lastLeaveAt, includePrevious).stream()
                 .map(ChatMessageResponse.MESSAGE::of)
                 .toList();
