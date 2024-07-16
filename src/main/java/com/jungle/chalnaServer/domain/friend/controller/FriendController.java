@@ -19,7 +19,7 @@ public class FriendController {
 
 
     @PostMapping("/request")
-    public CommonResponse<String> friendRequest(@AuthUserId Long memberId, @RequestBody FriendRequest.REQUEST dto) {
+    public CommonResponse<FriendReponse.REQUEST> friendRequest(@AuthUserId Long memberId, @RequestBody FriendRequest.REQUEST dto) {
         return CommonResponse.ok(friendService.friendRequest(memberId, dto));
     }
 

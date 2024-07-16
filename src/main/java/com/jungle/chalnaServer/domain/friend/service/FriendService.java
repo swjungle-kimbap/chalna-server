@@ -62,7 +62,7 @@ public class FriendService {
     }
 
     @Transactional
-    public String friendRequest(Long senderId, FriendRequest.REQUEST dto) {
+    public FriendReponse.REQUEST friendRequest(Long senderId, FriendRequest.REQUEST dto) {
         RelationPK pk = new RelationPK(senderId, dto.otherId());
         if(isFriend(pk))
             throw new CustomException("이미 친구 상태입니다.");
@@ -72,9 +72,8 @@ public class FriendService {
             throw new CustomException("이미 요청한 상태입니다.");
 
         ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(senderId, dto.chatRoomId()).orElseThrow(ChatRoomMemberNotFoundException::new);
-        request = new Request(senderId, dto.otherId(), dto.chatRoomId(), chatRoomMember.getUserName());
-        requestRepository.save(request);
-        return "친구 요청이 완료되었습니다.";
+        request = requestRepository.save(new Request(senderId, dto.otherId(), dto.chatRoomId(), chatRoomMember.getUserName()));
+        return FriendReponse.REQUEST.of(request);
     }
 
     @Transactional
