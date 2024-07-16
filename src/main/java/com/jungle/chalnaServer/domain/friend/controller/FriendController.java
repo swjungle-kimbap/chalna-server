@@ -39,7 +39,7 @@ public class FriendController {
     }
 
     @PostMapping("/request/accept/{requestId}")
-    public CommonResponse<String> acceptRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
+    public CommonResponse<FriendReponse.DETAIL> acceptRequest(@AuthUserId Long userId, @PathVariable Long requestId) {
         return CommonResponse.ok(friendService.friendRequestAccept(userId, requestId));
     }
 

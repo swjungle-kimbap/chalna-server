@@ -78,7 +78,7 @@ public class FriendService {
     }
 
     @Transactional
-    public String friendRequestAccept(Long memberId, Long requestId) {
+    public FriendReponse.DETAIL friendRequestAccept(Long memberId, Long requestId) {
         Request request = requestRepository.findById(requestId).orElseThrow(RequestNotFoundException::new);
         if (!request.getReceiverId().equals(memberId))
             throw new CustomException("올바른 요청이 아닙니다.");
@@ -101,7 +101,7 @@ public class FriendService {
         }
         requestRepository.delete(request);
 
-        return "친구 요청 수락이 성공했습니다.";
+        return getFriend(request.getReceiverId(), request.getSenderId());
     }
 
     public String friendRequestReject(Long memberId, Long requestId) {
