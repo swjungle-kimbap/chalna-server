@@ -6,7 +6,7 @@ import com.jungle.chalnaServer.domain.friend.domain.entity.Request;
 import java.time.LocalDateTime;
 
 public class FriendReponse {
-    public record DETAIL(Long id,String username,String message,Long profileImageUrl,Long chatRoomId,String deviceId){
+    public record DETAIL(Long id,String username,String message,Long profileImageId,Long chatRoomId,String deviceId){
 
     }
 
