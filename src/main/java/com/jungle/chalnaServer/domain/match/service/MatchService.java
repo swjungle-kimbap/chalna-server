@@ -127,7 +127,7 @@ public class MatchService {
                 .message(content)
                 .messageType(contentType)
                 .status(MatchNotificationStatus.SEND)
-                .deleteAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(10L))
+                .deleteAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusMinutes(5L))
                 .build();
 
         matchNotiRepository.save(matchNotification);
