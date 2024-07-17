@@ -1,5 +1,7 @@
 package com.jungle.chalnaServer.domain.friend.service;
 
+import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
+import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chat.exception.ChatRoomMemberNotFoundException;
@@ -23,6 +25,7 @@ import com.jungle.chalnaServer.domain.relation.domain.entity.RelationPK;
 import com.jungle.chalnaServer.domain.relation.repository.RelationRepository;
 import com.jungle.chalnaServer.domain.relation.service.RelationService;
 import com.jungle.chalnaServer.global.exception.CustomException;
+import com.jungle.chalnaServer.infra.fcm.FCMService;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +49,8 @@ public class FriendService {
 
     private final RelationService relationService;
     private final ChatService chatService;
+    private final FCMService fcmService;
+    private final AuthInfoRepository authInfoRepository;
 
     public List<FriendReponse.REQUEST> getSendRequest(Long senderId){
         return toResponseList(requestRepository.findAllBySenderId(senderId));
@@ -73,6 +78,15 @@ public class FriendService {
 
         ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByMemberIdAndChatRoomId(senderId, dto.chatRoomId()).orElseThrow(ChatRoomMemberNotFoundException::new);
         request = requestRepository.save(new Request(senderId, dto.otherId(), dto.chatRoomId(), chatRoomMember.getUserName()));
+
+
+        AuthInfo authInfo = authInfoRepository.findById(dto.otherId());
+
+        fcmService.sendFCMNotification(
+                authInfo.fcmToken(),
+                "친구 요청이 왔어요.",
+                chatRoomMember.getUserName() + "님이 친구 요청을 보냈어요!");
+
         return FriendReponse.REQUEST.of(request);
     }
 
@@ -99,6 +113,14 @@ public class FriendService {
             chatService.updateChatRoomType(chatRoom.getId(), ChatRoom.ChatRoomType.FRIEND);
         }
         requestRepository.delete(request);
+
+        AuthInfo authInfo = authInfoRepository.findById(request.getSenderId());
+        Member member = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+
+        fcmService.sendFCMNotification(
+                authInfo.fcmToken(),
+                "친구 요청이 수락되었어요.",
+                member.getUsername() + "님과 친구가 되었어요!");
 
         return getFriend(request.getReceiverId(), request.getSenderId());
     }

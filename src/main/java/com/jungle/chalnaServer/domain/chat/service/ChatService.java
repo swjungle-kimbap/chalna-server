@@ -128,7 +128,7 @@ public class ChatService {
                                     , type
                             )
                     );
-                    fcmService.sendFCM(authInfo.fcmToken(), fcmData);
+                    fcmService.sendFCMData(authInfo.fcmToken(), fcmData);
                 }
             }
         }

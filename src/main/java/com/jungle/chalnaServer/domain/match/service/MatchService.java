@@ -133,7 +133,7 @@ public class MatchService {
         matchNotiRepository.save(matchNotification);
 
         // 푸시알림 전송
-        fcmService.sendFCM(
+        fcmService.sendFCMData(
                 authInfo.fcmToken(),
                 FCMData.instanceOfMatchFCM(
                         senderId.toString(),
@@ -224,7 +224,7 @@ public class MatchService {
         );
         log.info("push alarm {}", fcmMessage.content());
         // 푸시알림 전송
-        fcmService.sendFCM(senderInfo.fcmToken(),
+        fcmService.sendFCMData(senderInfo.fcmToken(),
                 FCMData.instanceOfChatFCM(senderId.toString(),
                         fcmMessage,
                         new FCMData.CHAT(

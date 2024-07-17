@@ -1,5 +1,7 @@
 package com.jungle.chalnaServer.domain.relation.service;
 
+import com.jungle.chalnaServer.domain.auth.domain.entity.AuthInfo;
+import com.jungle.chalnaServer.domain.auth.repository.AuthInfoRepository;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoom;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatRoomMember;
 import com.jungle.chalnaServer.domain.chat.exception.ChatRoomNotFoundException;
@@ -18,6 +20,7 @@ import com.jungle.chalnaServer.domain.relation.exception.RelationIdInvalidExcept
 import com.jungle.chalnaServer.domain.relation.repository.RelationRepository;
 import com.jungle.chalnaServer.global.common.repository.DeviceInfoRepository;
 import com.jungle.chalnaServer.global.exception.CustomException;
+import com.jungle.chalnaServer.infra.fcm.FCMService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,9 @@ public class RelationService {
     private final ChatRoomRepository chatRoomRepository;
     private final DeviceInfoRepository deviceInfoRepository;
     private final EncounterRepository encounterRepository;
+    private final AuthInfoRepository authInfoRepository;
+
+    private final FCMService fcmService;
 
     public RelationResponse findByOtherId(final Long id, final Long otherId) {
         return RelationResponse.of(findRelation(new RelationPK(id, otherId)));
@@ -63,6 +69,11 @@ public class RelationService {
                     .build();
 
             encounterRepository.save(location);
+
+            if(relation.getFriendStatus() == FriendStatus.ACCEPTED) {
+                AuthInfo authInfo = authInfoRepository.findById(id);
+                fcmService.sendFCMNotification(authInfo.fcmToken(), "주위에 친구가 있어요.", "찰나를 열어보세요!");
+            }
         }
 
         return RelationResponse.of(relation);
