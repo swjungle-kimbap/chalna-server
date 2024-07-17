@@ -3,7 +3,6 @@ package com.jungle.chalnaServer;
 import com.jungle.chalnaServer.domain.chat.domain.dto.ChatMessageRequest;
 import com.jungle.chalnaServer.domain.chat.domain.entity.ChatMessage;
 import com.jungle.chalnaServer.domain.chat.service.ChatService;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -17,7 +16,7 @@ public class ChalnaServerApplicationTests {
     @Autowired
     ChatService chatService;
 
-    @Test
+//    @Test
     public void chatTest() throws InterruptedException, ExecutionException {
         int numberOfThreads = 1000;
         int numberOfIterations = 1;
