@@ -66,11 +66,8 @@ public class LocalChatService {
                         .map(pos -> Long.valueOf(pos.name()))
                         .toList());
 
-        for (LocalChat localChat : adjustLocalChatList) {
-            if (localChat.getOwnerId().equals(ownerId)) {
+        if(adjustLocalChatList.size() > 3)
                 throw new LocalChatTooCloseException();
-            }
-        }
 
         Long chatRoomId = chatService.makeChatRoom(ChatRoom.ChatRoomType.LOCAL, List.of(ownerId));
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(ChatRoomNotFoundException::new);
