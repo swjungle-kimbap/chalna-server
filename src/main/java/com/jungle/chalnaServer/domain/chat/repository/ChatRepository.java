@@ -61,7 +61,7 @@ public class ChatRepository {
                 listOperations.set(roomKey, i, message);
                 messages.add(0, message);
             } else {
-                if (includePrevious && previousMessageCnt > 0) {
+                if (includePrevious && previousMessageCnt > 0 && message.getType() != ChatMessage.MessageType.USER_JOIN && message.getType() != ChatMessage.MessageType.USER_LEAVE) {
                     messages.add(0, message);
                     previousMessageCnt--;
                     continue;
